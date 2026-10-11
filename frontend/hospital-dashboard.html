@@ -159,6 +159,22 @@
         .notif-content p { font-size: 0.75rem; color: var(--text-secondary); }
         .notif-time { font-size: 0.7rem; color: var(--text-secondary); white-space: nowrap; margin-left: auto; }
 
+        /* Modal Styles */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 999; }
+        .modal-overlay.active { display: flex; }
+        .modal-card { background: var(--bg-white); border-radius: 16px; width: 480px; max-width: 90vw; padding: 28px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15); animation: modalIn 0.25s ease-out; }
+        @keyframes modalIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-light); padding-bottom: 12px; }
+        .modal-header h3 { font-size: 1.2rem; color: var(--text-dark); }
+        .modal-close { background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--text-secondary); }
+        .stock-edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 24px; }
+        .stock-edit-item { display: flex; align-items: center; justify-content: space-between; background: var(--bg-light-gray); padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border-light); }
+        .stock-input { width: 60px; padding: 6px 8px; border: 1px solid var(--border-light); border-radius: 6px; text-align: center; font-weight: 600; font-size: 0.95rem; outline: none; }
+        .stock-input:focus { border-color: var(--brand-primary); }
+        .modal-actions { display: flex; gap: 12px; justify-content: flex-end; }
+        .modal-actions button { padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.9rem; border: none; }
+        .btn-cancel { background: var(--bg-light-gray); color: var(--text-secondary); }
+        .btn-save-stock { background: var(--brand-primary); color: white; }
     </style>
 </head>
 <body>
@@ -179,23 +195,22 @@
         </div>
 
         <ul class="nav-list">
-            <a href="#" class="nav-item active"><span>🏥</span> Dashboard</a>
-            <a href="#" class="nav-item"><span>📄</span> Blood Requests</a>
-            <a href="#" class="nav-item"><span>💧</span> Blood Inventory</a>
-            <a href="#" class="nav-item"><span>🔍</span> Find Donors</a>
-            <a href="#" class="nav-item"><span>👥</span> Donor Management</a>
-            <a href="#" class="nav-item"><span>🏥</span> Hospital Profile</a>
-            <a href="#" class="nav-item"><span>🔔</span> Notifications <span class="badge">5</span></a>
-            <a href="#" class="nav-item"><span>📊</span> Reports</a>
-            <a href="#" class="nav-item"><span>⚙️</span> Settings</a>
-            <a href="#" class="nav-item"><span>🚪</span> Logout</a>
+            <a href="hospital-dashboard.html" class="nav-item active"><span>🏥</span> Dashboard</a>
+            <a href="nearby-request.html" class="nav-item"><span>📄</span> Blood Requests</a>
+            <a href="#inventory-section" class="nav-item"><span>💧</span> Blood Inventory</a>
+            <a href="find-donors.html" class="nav-item"><span>🔍</span> Find Donors</a>
+            <a href="find-donors.html" class="nav-item"><span>👥</span> Donor Management</a>
+            <a href="my-profile.html" class="nav-item"><span>🏥</span> Hospital Profile</a>
+            <a href="notifications.html" class="nav-item"><span>🔔</span> Notifications <span class="badge">5</span></a>
+            <a href="settings.html" class="nav-item"><span>⚙️</span> Settings</a>
+            <a href="auth.html" class="nav-item" id="hospital-logout-btn"><span>🚪</span> Logout</a>
         </ul>
 
         <div class="sidebar-cta">
             <div style="font-size: 2rem; color: var(--brand-primary); margin-bottom: 8px;">♡</div>
             <h4>Together<br>We Save Lives</h4>
             <p>Access donors, manage requests and help patients in critical need.</p>
-            <button>Request Blood →</button>
+            <button type="button" onclick="window.location.href='blood-request.html'">Request Blood →</button>
         </div>
     </aside>
 
@@ -204,11 +219,11 @@
         <header class="topbar">
             <div class="search-bar">
                 <span>🔍</span>
-                <input type="text" placeholder="Search requests, donors, patients...">
+                <input type="text" id="hospital-search-input" placeholder="Search requests, donors, patients...">
             </div>
             <div class="topbar-right">
-                <div class="notif-icon">🔔<div class="notif-dot">5</div></div>
-                <div class="user-profile-mini">
+                <div class="notif-icon" onclick="window.location.href='notifications.html'" style="cursor: pointer;">🔔<div class="notif-dot">5</div></div>
+                <div class="user-profile-mini" onclick="window.location.href='my-profile.html'" style="cursor: pointer;">
                     <img src="https://via.placeholder.com/40" alt="Hospital Logo">
                     <div>
                         <h5 style="font-size: 0.9rem;">City Care Hospital</h5>
@@ -242,32 +257,32 @@
                         <div class="stat-icon" style="background: var(--bg-pink); color: var(--brand-primary);">💧</div>
                         <div class="stat-info">
                             <p>Active Requests</p>
-                            <h4>42</h4>
-                            <div class="trend-up">↑ 12% this week</div>
+                            <h4 id="hospital-kpi-active-requests">0</h4>
+                            <div class="trend-up">Live DB Synced</div>
                         </div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-icon" style="background: #DCFCE7; color: var(--status-available);">👥</div>
                         <div class="stat-info">
                             <p>Registered Donors</p>
-                            <h4>1,280</h4>
-                            <div class="trend-up">↑ 8% this month</div>
+                            <h4 id="hospital-kpi-donors">0</h4>
+                            <div class="trend-up">100km Network</div>
                         </div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-icon" style="background: #EFF6FF; color: var(--status-info);">📋</div>
                         <div class="stat-info">
-                            <p>Units Received</p>
-                            <h4>356</h4>
-                            <div class="trend-up">↑ 24% this month</div>
+                            <p>Units in Stock</p>
+                            <h4 id="hospital-kpi-units">147</h4>
+                            <div class="trend-up">Blood Bank Stock</div>
                         </div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-icon" style="background: #FEF3C7; color: var(--status-pending);">🫂</div>
                         <div class="stat-info">
                             <p>Successful Donations</p>
-                            <h4>24</h4>
-                            <div class="trend-up">↑ 18% this month</div>
+                            <h4 id="hospital-kpi-fulfilled">0</h4>
+                            <div class="trend-up">Fulfilled Cases</div>
                         </div>
                     </div>
                 </div>
@@ -278,7 +293,7 @@
                     <div class="card">
                         <div class="card-header">
                             <h3>Recent Blood Requests</h3>
-                            <a href="#" class="view-all">View All →</a>
+                            <a href="nearby-request.html" class="view-all">View All →</a>
                         </div>
                         <table>
                             <thead>
@@ -293,55 +308,41 @@
                                     <th>Actions</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <tr>
-                                    <td>#BR-1052</td><td>Rohan Sharma</td><td style="color: var(--brand-primary); font-weight: 700;">O+</td><td>2</td><td><span class="status-tag tag-urgent">Urgent</span></td><td><span style="color: var(--status-pending); font-size: 0.75rem; font-weight: 600;">Finding Donors</span></td><td>30 Oct</td><td><button class="btn-view">View</button></td>
-                                </tr>
-                                <tr>
-                                    <td>#BR-1051</td><td>Pooja Verma</td><td style="color: var(--brand-primary); font-weight: 700;">A-</td><td>1</td><td><span class="status-tag tag-critical">Critical</span></td><td><span style="color: var(--status-available); font-size: 0.75rem; font-weight: 600;">Donors Found</span></td><td>29 Oct</td><td><button class="btn-view">View</button></td>
-                                </tr>
-                                <tr>
-                                    <td>#BR-1050</td><td>Amit Kumar</td><td style="color: var(--brand-primary); font-weight: 700;">B+</td><td>3</td><td><span class="status-tag tag-urgent">Urgent</span></td><td><span style="color: #EA580C; font-size: 0.75rem; font-weight: 600;">Pending</span></td><td>29 Oct</td><td><button class="btn-view">View</button></td>
-                                </tr>
-                                <tr>
-                                    <td>#BR-1049</td><td>Neha Singh</td><td style="color: var(--brand-primary); font-weight: 700;">O-</td><td>2</td><td><span class="status-tag tag-normal">Normal</span></td><td><span style="color: var(--status-available); font-size: 0.75rem; font-weight: 600;">Fulfilled</span></td><td>28 Oct</td><td><button class="btn-view">View</button></td>
-                                </tr>
-                                <tr>
-                                    <td>#BR-1048</td><td>Suresh Yadav</td><td style="color: var(--brand-primary); font-weight: 700;">AB+</td><td>1</td><td><span class="status-tag tag-critical">Critical</span></td><td><span style="color: #9333EA; font-size: 0.75rem; font-weight: 600;">In Progress</span></td><td>28 Oct</td><td><button class="btn-view">View</button></td>
-                                </tr>
+                            <tbody id="hospital-recent-requests-tbody">
+                                <!-- Populated dynamically from blood_requests table -->
                             </tbody>
                         </table>
                     </div>
 
                     <!-- Blood Inventory -->
-                    <div class="card">
+                    <div class="card" id="inventory-section">
                         <div class="card-header">
                             <h3>Blood Inventory</h3>
-                            <a href="#" class="view-all">View All →</a>
+                            <button type="button" id="btn-edit-inventory-link" style="background: none; border: none; color: var(--brand-primary); font-size: 0.85rem; font-weight: 500; cursor: pointer;">Manage Stock ✎</button>
                         </div>
-                        <div class="inventory-list">
-                            <div class="inventory-item">
+                        <div class="inventory-list" id="hospital-inventory-list-container">
+                            <div class="inventory-item" data-group="O+">
                                 <div class="blood-badge">O+</div><div class="progress-track"><div class="progress-fill" style="width: 85%;"></div></div><div class="unit-count">45 Units</div>
                             </div>
-                            <div class="inventory-item">
+                            <div class="inventory-item" data-group="O-">
                                 <div class="blood-badge">O-</div><div class="progress-track"><div class="progress-fill" style="width: 35%;"></div></div><div class="unit-count">18 Units</div>
                             </div>
-                            <div class="inventory-item">
+                            <div class="inventory-item" data-group="A+">
                                 <div class="blood-badge">A+</div><div class="progress-track"><div class="progress-fill" style="width: 65%;"></div></div><div class="unit-count">32 Units</div>
                             </div>
-                            <div class="inventory-item">
+                            <div class="inventory-item" data-group="A-">
                                 <div class="blood-badge">A-</div><div class="progress-track"><div class="progress-fill" style="width: 25%;"></div></div><div class="unit-count">14 Units</div>
                             </div>
-                            <div class="inventory-item">
+                            <div class="inventory-item" data-group="B+">
                                 <div class="blood-badge">B+</div><div class="progress-track"><div class="progress-fill" style="width: 55%;"></div></div><div class="unit-count">28 Units</div>
                             </div>
-                            <div class="inventory-item">
+                            <div class="inventory-item" data-group="B-">
                                 <div class="blood-badge">B-</div><div class="progress-track"><div class="progress-fill" style="width: 15%;"></div></div><div class="unit-count">10 Units</div>
                             </div>
-                            <div class="inventory-item">
+                            <div class="inventory-item" data-group="AB+">
                                 <div class="blood-badge" style="color: #9333EA;">AB+</div><div class="progress-track"><div class="progress-fill" style="width: 12%; background: #9333EA;"></div></div><div class="unit-count">8 Units</div>
                             </div>
-                            <div class="inventory-item">
+                            <div class="inventory-item" data-group="AB-">
                                 <div class="blood-badge" style="color: #9333EA;">AB-</div><div class="progress-track"><div class="progress-fill" style="width: 8%; background: #9333EA;"></div></div><div class="unit-count">6 Units</div>
                             </div>
                         </div>
@@ -354,53 +355,10 @@
                     <div class="card">
                         <div class="card-header">
                             <h3>Donor Matching</h3>
-                            <a href="#" class="view-all">View All →</a>
+                            <a href="find-donors.html" class="view-all">View All →</a>
                         </div>
-                        <div class="donor-match-list">
-                            <div class="donor-match-item">
-                                <div class="donor-info">
-                                    <img src="https://ui-avatars.com/api/?name=Aditya+Singh" alt="Donor">
-                                    <div>
-                                        <h5>Aditya Singh <span style="color: var(--brand-primary);">O+</span></h5>
-                                        <p>Last donated: 3 months ago</p>
-                                    </div>
-                                </div>
-                                <div class="distance">2.5 km away</div>
-                                <button class="btn-contact">Contact</button>
-                            </div>
-                            <div class="donor-match-item">
-                                <div class="donor-info">
-                                    <img src="https://ui-avatars.com/api/?name=Ravi+Kumar" alt="Donor">
-                                    <div>
-                                        <h5>Ravi Kumar <span style="color: var(--brand-primary);">O+</span></h5>
-                                        <p>Last donated: 5 months ago</p>
-                                    </div>
-                                </div>
-                                <div class="distance">4.1 km away</div>
-                                <button class="btn-contact">Contact</button>
-                            </div>
-                            <div class="donor-match-item">
-                                <div class="donor-info">
-                                    <img src="https://ui-avatars.com/api/?name=Sneha+Gupta" alt="Donor">
-                                    <div>
-                                        <h5>Sneha Gupta <span style="color: var(--brand-primary);">O+</span></h5>
-                                        <p>Last donated: 2 months ago</p>
-                                    </div>
-                                </div>
-                                <div class="distance">5.3 km away</div>
-                                <button class="btn-contact">Contact</button>
-                            </div>
-                            <div class="donor-match-item">
-                                <div class="donor-info">
-                                    <img src="https://ui-avatars.com/api/?name=Vikash+Yadav" alt="Donor">
-                                    <div>
-                                        <h5>Vikash Yadav <span style="color: var(--brand-primary);">O+</span></h5>
-                                        <p>Last donated: 4 months ago</p>
-                                    </div>
-                                </div>
-                                <div class="distance">6.8 km away</div>
-                                <button class="btn-contact">Contact</button>
-                            </div>
+                        <div id="hospital-donor-matching-list" class="donor-match-list">
+                            <!-- Populated dynamically from users (role = 'Donor') -->
                         </div>
                     </div>
 
@@ -441,10 +399,10 @@
                             <span>Week 1</span><span>Week 2</span><span>Week 3</span><span>Week 4</span>
                         </div>
                         <div class="stats-summary">
-                            <div><h4>124</h4><p>Total Requests</p></div>
-                            <div><h4 class="green">78</h4><p>Fulfilled</p></div>
-                            <div><h4 class="orange">32</h4><p>Pending</p></div>
-                            <div><h4 style="color: var(--status-critical);">14</h4><p>Cancelled</p></div>
+                            <div><h4 id="stat-summary-total">0</h4><p>Total Requests</p></div>
+                            <div><h4 id="stat-summary-fulfilled" class="green">0</h4><p>Fulfilled</p></div>
+                            <div><h4 id="stat-summary-pending" class="orange">0</h4><p>Pending</p></div>
+                            <div><h4 style="color: var(--status-critical);">0</h4><p>Critical</p></div>
                         </div>
                     </div>
                 </div>
@@ -456,7 +414,7 @@
                 <!-- Hospital Information -->
                 <div class="card hospital-info-card">
                     <div style="text-align: right; margin-bottom: -24px; position: relative; z-index: 2;">
-                        <button style="background: var(--bg-white); border: 1px solid var(--border-light); padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; cursor: pointer;">✎ Edit</button>
+                        <button type="button" onclick="window.location.href='my-profile.html'" style="background: var(--bg-white); border: 1px solid var(--border-light); padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; cursor: pointer;">✎ Edit</button>
                     </div>
                     <h3 style="font-size: 1rem; margin-bottom: 16px;">Hospital Information</h3>
                     <img src="https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&q=80&w=400" alt="Hospital Building">
@@ -483,19 +441,19 @@
                 <div class="card">
                     <h3 style="font-size: 1rem; margin-bottom: 16px;">Quick Actions</h3>
                     <div class="quick-actions-grid">
-                        <div class="action-box">
+                        <div class="action-box" onclick="window.location.href='blood-request.html'">
                             <span class="icon" style="color: var(--brand-primary);">➕</span>
                             <p>Create Blood Request</p>
                         </div>
-                        <div class="action-box">
+                        <div class="action-box" onclick="window.location.href='find-donors.html'">
                             <span class="icon" style="color: var(--status-info);">👥</span>
                             <p>View Donors</p>
                         </div>
-                        <div class="action-box">
+                        <div class="action-box" id="btn-open-inventory-modal">
                             <span class="icon" style="color: var(--status-available);">📦</span>
                             <p>Manage Inventory</p>
                         </div>
-                        <div class="action-box">
+                        <div class="action-box" onclick="window.location.href='my-profile.html'">
                             <span class="icon" style="color: #9333EA;">✎</span>
                             <p>Update Profile</p>
                         </div>
@@ -506,7 +464,7 @@
                 <div class="card">
                     <div class="card-header" style="margin-bottom: 16px;">
                         <h3 style="font-size: 1rem;">Recent Notifications</h3>
-                        <a href="#" class="view-all">View All →</a>
+                        <a href="notifications.html" class="view-all">View All →</a>
                     </div>
                     <div class="notif-list">
                         <div class="notif-item">
@@ -554,10 +512,32 @@
 
             </div>
         </div>
+
+        <!-- Manage Inventory Modal -->
+        <div class="modal-overlay" id="inventory-modal">
+            <div class="modal-card">
+                <div class="modal-header">
+                    <h3>Manage Blood Bank Stock</h3>
+                    <button type="button" class="modal-close" id="btn-close-inventory-modal">&times;</button>
+                </div>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 20px;">
+                    Update the available units for each blood group in your hospital blood bank. Changes sync immediately.
+                </p>
+                <div class="stock-edit-grid" id="stock-modal-grid">
+                    <!-- Populated dynamically via JS -->
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" id="btn-cancel-inventory-modal">Cancel</button>
+                    <button type="button" class="btn-save-stock" id="btn-save-inventory-modal">Save Stock Changes</button>
+                </div>
+            </div>
+        </div>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase.js"></script>
+    <script src="js/map-service.js"></script>
+    <script src="js/hospital-dashboard.js"></script>
     <script src="js/profile-sync.js"></script>
 </body>
 </html>

@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blood Bridge | Admin Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Leaflet CSS for Interactive OpenStreetMap -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         :root {
             /* Main Brand Colors */
@@ -158,28 +160,28 @@
 
         <div class="nav-section">MAIN</div>
         <ul class="nav-list">
-            <a href="#" class="nav-item active"><span>📊</span> Dashboard</a>
-            <a href="#" class="nav-item"><span>👥</span> Users</a>
-            <a href="#" class="nav-item"><span>🩸</span> Donors</a>
-            <a href="#" class="nav-item"><span>📄</span> Blood Requests</a>
-            <a href="#" class="nav-item"><span>🏥</span> Hospitals</a>
-            <a href="#" class="nav-item"><span>❤️</span> Donations</a>
-            <a href="#" class="nav-item"><span>🔔</span> Notifications <span class="badge">12</span></a>
+            <a href="admin-dashboard.html" class="nav-item active"><span>📊</span> Dashboard</a>
+            <a href="find-donors.html" class="nav-item"><span>👥</span> Users</a>
+            <a href="find-donors.html" class="nav-item"><span>🩸</span> Donors</a>
+            <a href="nearby-request.html" class="nav-item"><span>📄</span> Blood Requests</a>
+            <a href="hospital-dashboard.html" class="nav-item"><span>🏥</span> Hospitals</a>
+            <a href="dashboard.html" class="nav-item"><span>❤️</span> Donations</a>
+            <a href="notifications.html" class="nav-item"><span>🔔</span> Notifications <span class="badge">12</span></a>
         </ul>
 
         <div class="nav-section">MANAGEMENT</div>
         <ul class="nav-list">
-            <a href="#" class="nav-item"><span>📁</span> Reports</a>
-            <a href="#" class="nav-item"><span>⏱️</span> Audit Logs</a>
-            <a href="#" class="nav-item"><span>📝</span> Content Management</a>
-            <a href="#" class="nav-item"><span>⚙️</span> System Settings</a>
+            <a href="nearby-request.html" class="nav-item"><span>📁</span> Reports</a>
+            <a href="nearby-request.html" class="nav-item"><span>⏱️</span> Audit Logs</a>
+            <a href="settings.html" class="nav-item"><span>⚙️</span> System Settings</a>
+            <a href="auth.html" class="nav-item" id="admin-logout-btn"><span>🚪</span> Logout</a>
         </ul>
 
         <div class="sidebar-cta">
             <div style="font-size: 2rem; color: var(--brand-primary); margin-bottom: 8px;">♡</div>
             <h4>Together<br>We Can Save Lives</h4>
             <p>Manage, Monitor and Grow our Blood Donation Community</p>
-            <button>View Reports →</button>
+            <button onclick="window.location.href='nearby-request.html'">View Reports →</button>
         </div>
     </aside>
 
@@ -189,11 +191,11 @@
         <header class="topbar">
             <div class="search-bar">
                 <span>🔍</span>
-                <input type="text" placeholder="Search users, donors, requests, hospitals...">
+                <input type="text" id="admin-search-input" placeholder="Search users, donors, requests, hospitals...">
             </div>
             <div class="topbar-right">
-                <div class="notif-icon">🔔<div class="notif-dot">5</div></div>
-                <div class="user-profile-mini">
+                <div class="notif-icon" onclick="window.location.href='notifications.html'" style="cursor: pointer;">🔔<div class="notif-dot">5</div></div>
+                <div class="user-profile-mini" onclick="window.location.href='my-profile.html'" style="cursor: pointer;">
                     <img src="https://ui-avatars.com/api/?name=Admin&background=F5F7FA&color=101828" alt="Admin">
                     <div>
                         <h5>Admin</h5>
@@ -212,7 +214,7 @@
                     <h1>Welcome Back, Admin! 👋</h1>
                     <p>Here's an overview of your platform activity and impact.</p>
                 </div>
-                <button class="date-filter">📅 Last 30 Days ⌄</button>
+                <button class="date-filter" id="admin-date-filter-btn">📅 Last 30 Days ⌄</button>
             </div>
 
             <!-- KPI Cards[cite: 3] -->
@@ -221,40 +223,40 @@
                     <div class="kpi-icon" style="background: var(--bg-pink); color: var(--brand-primary);">👥</div>
                     <div class="kpi-info">
                         <p>Total Users</p>
-                        <h4>12,458</h4>
-                        <div class="trend-up">↑ 12% this month</div>
+                        <h4 id="admin-kpi-total-users">0</h4>
+                        <div class="trend-up">Live DB Synced</div>
                     </div>
                 </div>
                 <div class="kpi-card">
                     <div class="kpi-icon" style="background: #DCFCE7; color: var(--status-available);">💧</div>
                     <div class="kpi-info">
                         <p>Registered Donors</p>
-                        <h4>3,921</h4>
-                        <div class="trend-up">↑ 9% this month</div>
+                        <h4 id="admin-kpi-donors">0</h4>
+                        <div class="trend-up">100km Network</div>
                     </div>
                 </div>
                 <div class="kpi-card">
                     <div class="kpi-icon" style="background: #EFF6FF; color: var(--status-info);">📄</div>
                     <div class="kpi-info">
                         <p>Blood Requests</p>
-                        <h4>1,024</h4>
-                        <div class="trend-up">↑ 16% this month</div>
+                        <h4 id="admin-kpi-requests">0</h4>
+                        <div class="trend-up">Active Cases</div>
                     </div>
                 </div>
                 <div class="kpi-card">
                     <div class="kpi-icon" style="background: #FEF3C7; color: var(--status-pending);">🏥</div>
                     <div class="kpi-info">
                         <p>Partner Hospitals</p>
-                        <h4>200</h4>
-                        <div class="trend-up">↑ 8% this month</div>
+                        <h4 id="admin-kpi-hospitals">12</h4>
+                        <div class="trend-up">Verified Centers</div>
                     </div>
                 </div>
                 <div class="kpi-card">
                     <div class="kpi-icon" style="background: #F3E8FF; color: #9333EA;">❤️</div>
                     <div class="kpi-info">
                         <p>Successful Donations</p>
-                        <h4>876</h4>
-                        <div class="trend-up">↑ 22% this month</div>
+                        <h4 id="admin-kpi-donations">0</h4>
+                        <div class="trend-up">Fulfilled Lives</div>
                     </div>
                 </div>
             </div>
@@ -284,18 +286,14 @@
                         <h3>Blood Group Distribution (Donors)</h3>
                     </div>
                     <div class="donut-container">
-                        <div class="donut-chart">
+                        <div class="donut-chart" id="admin-donut-chart">
                             <div class="donut-inner">
-                                <h4>3,921</h4>
+                                <h4 id="admin-donut-total">0</h4>
                                 <p>Total Donors</p>
                             </div>
                         </div>
-                        <div class="donut-legend">
-                            <div class="legend-item"><div class="legend-dot" style="background: var(--brand-primary);"></div> O+ 32%</div>
-                            <div class="legend-item"><div class="legend-dot" style="background: #F59E0B;"></div> A+ 24%</div>
-                            <div class="legend-item"><div class="legend-dot" style="background: #EAB308;"></div> B+ 15%</div>
-                            <div class="legend-item"><div class="legend-dot" style="background: #3B82F6;"></div> O- 10%</div>
-                            <div class="legend-item"><div class="legend-dot" style="background: var(--status-available);"></div> A- 8%</div>
+                        <div class="donut-legend" id="admin-donut-legend">
+                            <!-- Populated dynamically from donors blood groups -->
                         </div>
                     </div>
                 </div>
@@ -303,23 +301,22 @@
                 <div class="card">
                     <div class="card-header">
                         <h3>Donor Locations</h3>
-                        <a href="#" class="view-all">View Full Map →</a>
+                        <a href="find-donors.html" class="view-all">View Full Map →</a>
                     </div>
-                    <div style="width: 100%; height: 160px; background: url('https://via.placeholder.com/400x200?text=Map+Location+View') center/cover; border-radius: 8px; margin-bottom: 12px;"></div>
-                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-secondary);">
-                        <span><div class="legend-dot" style="display: inline-block; background: var(--brand-primary);"></div> Available (2,891)</span>
-                        <span><div class="legend-dot" style="display: inline-block; background: var(--status-info);"></div> Busy (420)</span>
-                        <span><div class="legend-dot" style="display: inline-block; background: #6B7280;"></div> Unavailable (610)</span>
+                    <div id="admin-donors-map" style="width: 100%; height: 160px; border-radius: 8px; margin-bottom: 12px; border: 1px solid var(--border-light); position: relative; z-index: 1;"></div>
+                    <div id="admin-map-legend" style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-secondary);">
+                        <span><div class="legend-dot" style="display: inline-block; background: var(--brand-primary);"></div> Available Donors</span>
+                        <span><div class="legend-dot" style="display: inline-block; background: var(--status-info);"></div> Active Requests</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Tables Grid[cite: 3] -->
+            <!-- Tables Grid -->
             <div class="grid-2">
                 <div class="card">
                     <div class="card-header">
                         <h3>Recent Blood Requests</h3>
-                        <a href="#" class="view-all">View All →</a>
+                        <a href="nearby-request.html" class="view-all">View All →</a>
                     </div>
                     <table>
                         <thead>
@@ -333,22 +330,8 @@
                                 <th>Date</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr>
-                                <td>#BR-1042</td><td>Rajesh Kumar</td><td class="blood-type-text">O+</td><td>2</td><td>Lucknow</td><td><span class="status-tag tag-urgent">Urgent</span></td><td>30 Oct</td>
-                            </tr>
-                            <tr>
-                                <td>#BR-1041</td><td>Pooja Singh</td><td class="blood-type-text">A-</td><td>1</td><td>Kanpur</td><td><span class="status-tag tag-critical">Critical</span></td><td>30 Oct</td>
-                            </tr>
-                            <tr>
-                                <td>#BR-1040</td><td>Amit Verma</td><td class="blood-type-text">B+</td><td>3</td><td>Lucknow</td><td><span class="status-tag tag-pending">Pending</span></td><td>29 Oct</td>
-                            </tr>
-                            <tr>
-                                <td>#BR-1039</td><td>Neha Sharma</td><td class="blood-type-text">O-</td><td>2</td><td>Unnao</td><td><span class="status-tag tag-fulfilled">Fulfilled</span></td><td>29 Oct</td>
-                            </tr>
-                            <tr>
-                                <td>#BR-1038</td><td>Suresh Yadav</td><td class="blood-type-text">AB+</td><td>1</td><td>Lucknow</td><td><span class="status-tag tag-pending">Pending</span></td><td>28 Oct</td>
-                            </tr>
+                        <tbody id="admin-recent-requests-tbody">
+                            <!-- Populated dynamically from blood_requests table -->
                         </tbody>
                     </table>
                 </div>
@@ -356,7 +339,7 @@
                 <div class="card">
                     <div class="card-header">
                         <h3>Recent Registered Donors</h3>
-                        <a href="#" class="view-all">View All →</a>
+                        <a href="find-donors.html" class="view-all">View All →</a>
                     </div>
                     <table>
                         <thead>
@@ -364,34 +347,16 @@
                                 <th>Name</th>
                                 <th>Blood Group</th>
                                 <th>Location</th>
-                                <th>Last Donation</th>
                                 <th>Status</th>
-                                <th>Joined</th>
+                                <th>Phone</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr>
-                                <td class="donor-name-cell"><img src="https://ui-avatars.com/api/?name=Aditya+Tiwari" class="donor-avatar"> Aditya Tiwari</td>
-                                <td class="blood-type-text">O+</td><td>Lucknow</td><td>3 months ago</td><td><span style="color: var(--status-available); font-weight: 500;">Available</span></td><td>30 Oct</td>
-                            </tr>
-                            <tr>
-                                <td class="donor-name-cell"><img src="https://ui-avatars.com/api/?name=Priya+Singh" class="donor-avatar"> Priya Singh</td>
-                                <td class="blood-type-text">A+</td><td>Kanpur</td><td>6 months ago</td><td><span style="color: var(--status-available); font-weight: 500;">Available</span></td><td>30 Oct</td>
-                            </tr>
-                            <tr>
-                                <td class="donor-name-cell"><img src="https://ui-avatars.com/api/?name=Rahul+Yadav" class="donor-avatar"> Rahul Yadav</td>
-                                <td class="blood-type-text">B+</td><td>Lucknow</td><td>2 months ago</td><td><span style="color: var(--status-available); font-weight: 500;">Available</span></td><td>29 Oct</td>
-                            </tr>
-                            <tr>
-                                <td class="donor-name-cell"><img src="https://ui-avatars.com/api/?name=Sneha+Gupta" class="donor-avatar"> Sneha Gupta</td>
-                                <td class="blood-type-text">O-</td><td>Unnao</td><td>5 months ago</td><td><span style="color: var(--status-info); font-weight: 500;">Busy</span></td><td>29 Oct</td>
-                            </tr>
-                            <tr>
-                                <td class="donor-name-cell"><img src="https://ui-avatars.com/api/?name=Vikash+Kumar" class="donor-avatar"> Vikash Kumar</td>
-                                <td class="blood-type-text">AB+</td><td>Lucknow</td><td>4 months ago</td><td><span style="color: var(--status-available); font-weight: 500;">Available</span></td><td>28 Oct</td>
-                            </tr>
+                        <tbody id="admin-recent-donors-tbody">
+                            <!-- Populated dynamically from users table -->
                         </tbody>
                     </table>
+                </div>
+            </div>
                 </div>
             </div>
 
@@ -513,8 +478,11 @@
         </div>
     </main>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase.js"></script>
+    <script src="js/map-service.js"></script>
+    <script src="js/admin-dashboard.js"></script>
     <script src="js/profile-sync.js"></script>
 </body>
 </html>

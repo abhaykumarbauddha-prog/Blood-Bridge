@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blood Bridge | Create a Blood Request</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Leaflet CSS for Interactive OpenStreetMap -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         :root {
             /* Main Brand Colors */
@@ -334,17 +336,15 @@
                         </div>
                         <div class="map-search">
                             <span>🔍</span>
-                            <input type="text" placeholder="Search or drag the pin to set location">
+                            <input type="text" id="map-location-search" placeholder="Search city/locality or drag the pin">
                         </div>
-                        <div class="map-display">
-                            <div class="map-pin">📍</div>
-                        </div>
+                        <div id="request-location-map" style="width: 100%; height: 230px; border-radius: 8px; margin-bottom: 16px; border: 1px solid var(--border-light); position: relative; z-index: 1;"></div>
                         <div class="location-confirm">
                             <div>
                                 <p>Selected Location</p>
-                                <small>Lucknow, Uttar Pradesh</small>
+                                <small id="selected-location-text">Lucknow, Uttar Pradesh</small>
                             </div>
-                            <button class="btn-location">🎯 Use My Location</button>
+                            <button type="button" id="btn-use-my-location" class="btn-location">🎯 Use My Location</button>
                         </div>
                     </div>
 
@@ -387,49 +387,10 @@
                     <div class="card">
                         <div class="card-header" style="justify-content: space-between; margin-bottom: 16px;">
                             <h3 style="font-size: 1rem;">Recent Requests</h3>
-                            <a href="#" style="color: var(--brand-primary); font-size: 0.8rem; font-weight: 500; text-decoration: none;">View All →</a>
+                            <a href="nearby-request.html" style="color: var(--brand-primary); font-size: 0.8rem; font-weight: 500; text-decoration: none;">View All →</a>
                         </div>
-                        <div class="recent-req-list">
-                            <div class="recent-req-item">
-                                <div class="req-person">
-                                    <h5><span style="color: var(--brand-primary);">📍</span> Rajesh Kumar</h5>
-                                    <p>O+ • 2 Units<br>City Care Hospital, Lucknow</p>
-                                </div>
-                                <div style="text-align: right;">
-                                    <div class="status-tag tag-urgent" style="margin-bottom: 4px;">Urgent</div>
-                                    <p style="font-size: 0.7rem; color: var(--text-secondary);">30 Oct 2024</p>
-                                </div>
-                            </div>
-                            <div class="recent-req-item">
-                                <div class="req-person">
-                                    <h5><span style="color: var(--brand-primary);">📍</span> Pooja Singh</h5>
-                                    <p>A- • 1 Unit<br>Medanta Hospital, Lucknow</p>
-                                </div>
-                                <div style="text-align: right;">
-                                    <div class="status-tag tag-pending" style="margin-bottom: 4px;">Pending</div>
-                                    <p style="font-size: 0.7rem; color: var(--text-secondary);">28 Oct 2024</p>
-                                </div>
-                            </div>
-                            <div class="recent-req-item">
-                                <div class="req-person">
-                                    <h5><span style="color: var(--brand-primary);">📍</span> Amit Verma</h5>
-                                    <p>B+ • 3 Units<br>King George's Medical University</p>
-                                </div>
-                                <div style="text-align: right;">
-                                    <div class="status-tag tag-fulfilled" style="margin-bottom: 4px;">Fulfilled</div>
-                                    <p style="font-size: 0.7rem; color: var(--text-secondary);">25 Oct 2024</p>
-                                </div>
-                            </div>
-                            <div class="recent-req-item">
-                                <div class="req-person">
-                                    <h5><span style="color: var(--brand-primary);">📍</span> Neha Sharma</h5>
-                                    <p>O- • 2 Units<br>Unnao District Hospital</p>
-                                </div>
-                                <div style="text-align: right;">
-                                    <div class="status-tag tag-critical" style="margin-bottom: 4px;">Critical</div>
-                                    <p style="font-size: 0.7rem; color: var(--text-secondary);">22 Oct 2024</p>
-                                </div>
-                            </div>
+                        <div id="recent-requests-container" class="recent-req-list">
+                            <!-- Populated dynamically from Supabase database -->
                         </div>
                     </div>
 
@@ -438,8 +399,10 @@
         </div>
     </main>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase.js"></script>
+    <script src="js/map-service.js"></script>
     <script src="js/requests.js"></script>
     <script src="js/profile-sync.js"></script>
 </body>

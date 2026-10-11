@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blood Bridge | Find Donors</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Leaflet CSS for Interactive OpenStreetMap -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         :root {
             /* Main Brand Colors */
@@ -145,8 +147,8 @@
                     <p>Search and connect with life-saving donors in your area.</p>
                 </div>
                 <div class="view-toggles">
-                    <button class="view-btn active">Grid</button>
-                    <button class="view-btn">Map View</button>
+                    <button type="button" id="btn-view-grid" class="view-btn active">Grid</button>
+                    <button type="button" id="btn-view-map" class="view-btn">Map View</button>
                 </div>
             </div>
 
@@ -154,120 +156,61 @@
             <div class="filter-card">
                 <div class="filter-group">
                     <label>Blood Group</label>
-                    <select class="filter-control">
-                        <option>Any Blood Group</option>
-                        <option>O+</option><option>O-</option><option>A+</option><option>A-</option>
-                        <option>B+</option><option>B-</option><option>AB+</option><option>AB-</option>
+                    <select id="donor-blood-filter" class="filter-control">
+                        <option value="">Any Blood Group</option>
+                        <option value="A+">A+</option><option value="A-">A-</option>
+                        <option value="B+">B+</option><option value="B-">B-</option>
+                        <option value="O+">O+</option><option value="O-">O-</option>
+                        <option value="AB+">AB+</option><option value="AB-">AB-</option>
                     </select>
                 </div>
                 <div class="filter-group">
                     <label>Location / City</label>
-                    <input type="text" class="filter-control" placeholder="Enter city or zip code" value="Lucknow, UP">
+                    <input type="text" id="donor-location-filter" class="filter-control" placeholder="Enter city or district" value="Lucknow">
                 </div>
                 <div class="filter-group">
                     <label>Distance</label>
-                    <select class="filter-control">
-                        <option>Within 5 km</option>
-                        <option selected>Within 10 km</option>
-                        <option>Within 25 km</option>
-                        <option>Within 50 km</option>
+                    <select id="donor-radius-filter" class="filter-control">
+                        <option value="25">Within 25 km</option>
+                        <option value="50">Within 50 km</option>
+                        <option value="100" selected>Within 100 km (Recommended)</option>
+                        <option value="99999">Any Distance</option>
                     </select>
                 </div>
                 <div class="filter-group">
                     <label>Availability</label>
-                    <select class="filter-control">
-                        <option>Available Only</option>
-                        <option>All Donors</option>
+                    <select id="donor-status-filter" class="filter-control">
+                        <option value="">All Donors</option>
+                        <option value="Available" selected>Available Only</option>
                     </select>
                 </div>
-                <button class="btn-search">🔍 Search</button>
+                <button type="button" id="btn-donor-search" class="btn-search">🔍 Search</button>
             </div>
 
             <div class="results-info">
-                <p>Showing <strong>124</strong> verified donors near you</p>
-                <select style="padding: 6px 12px; border: 1px solid var(--border-light); border-radius: 6px; font-size: 0.85rem; outline: none; background: var(--bg-white);">
-                    <option>Sort by: Nearest</option>
-                    <option>Sort by: Most Donations</option>
-                    <option>Sort by: Recently Active</option>
+                <p id="donors-count-text">Finding verified donors within 100km...</p>
+                <select id="donor-sort-filter" style="padding: 6px 12px; border: 1px solid var(--border-light); border-radius: 6px; font-size: 0.85rem; outline: none; background: var(--bg-white);">
+                    <option value="nearest">Sort by: Nearest</option>
+                    <option value="name">Sort by: Name</option>
                 </select>
             </div>
 
-            <!-- Donor Grid -->
-            <div class="donor-grid">
-                <!-- Card 1 -->
-                <div class="donor-card">
-                    <div class="status-badge badge-available">Available</div>
-                    <div class="donor-avatar">
-                        <img src="https://ui-avatars.com/api/?name=Aditya+Singh" alt="Aditya">
-                        <div class="blood-type-icon">O+</div>
-                    </div>
-                    <h3>Aditya Singh <span class="verified-tick">✔</span></h3>
-                    <p class="location"><span>📍</span> 2.5 km away (Indira Nagar)</p>
-                    
-                    <div class="donor-stats">
-                        <div><h4>8</h4><p>Donations</p></div>
-                        <div><h4>3 mo</h4><p>Last Donated</p></div>
-                    </div>
-                    <button class="btn-contact primary">Request Blood</button>
-                </div>
+            <!-- Interactive Map View Container (Toggled via Map View button) -->
+            <div id="donors-map-container" style="display: none; width: 100%; height: 550px; border-radius: 12px; margin-bottom: 24px; border: 1px solid var(--border-light); position: relative; z-index: 1;"></div>
 
-                <!-- Card 2 -->
-                <div class="donor-card">
-                    <div class="status-badge badge-available">Available</div>
-                    <div class="donor-avatar">
-                        <img src="https://ui-avatars.com/api/?name=Priya+Sharma" alt="Priya">
-                        <div class="blood-type-icon" style="color: var(--status-info);">A+</div>
-                    </div>
-                    <h3>Priya Sharma <span class="verified-tick">✔</span></h3>
-                    <p class="location"><span>📍</span> 4.1 km away (Gomti Nagar)</p>
-                    
-                    <div class="donor-stats">
-                        <div><h4>12</h4><p>Donations</p></div>
-                        <div><h4>5 mo</h4><p>Last Donated</p></div>
-                    </div>
-                    <button class="btn-contact primary">Request Blood</button>
-                </div>
-
-                <!-- Card 3 -->
-                <div class="donor-card">
-                    <div class="status-badge badge-busy">Busy (Next: 1 mo)</div>
-                    <div class="donor-avatar">
-                        <img src="https://ui-avatars.com/api/?name=Rahul+Verma" alt="Rahul">
-                        <div class="blood-type-icon" style="color: var(--status-available);">B+</div>
-                    </div>
-                    <h3>Rahul Verma <span class="verified-tick">✔</span></h3>
-                    <p class="location"><span>📍</span> 5.8 km away (Aliganj)</p>
-                    
-                    <div class="donor-stats">
-                        <div><h4>4</h4><p>Donations</p></div>
-                        <div><h4>2 mo</h4><p>Last Donated</p></div>
-                    </div>
-                    <button class="btn-contact">View Profile</button>
-                </div>
-                
-                <!-- Card 4 -->
-                <div class="donor-card">
-                    <div class="status-badge badge-available">Available</div>
-                    <div class="donor-avatar">
-                        <img src="https://ui-avatars.com/api/?name=Neha+Gupta" alt="Neha">
-                        <div class="blood-type-icon">O-</div>
-                    </div>
-                    <h3>Neha Gupta <span class="verified-tick">✔</span></h3>
-                    <p class="location"><span>📍</span> 6.2 km away (Hazratganj)</p>
-                    
-                    <div class="donor-stats">
-                        <div><h4>15</h4><p>Donations</p></div>
-                        <div><h4>8 mo</h4><p>Last Donated</p></div>
-                    </div>
-                    <button class="btn-contact primary">Request Blood</button>
-                </div>
+            <!-- Donor Grid (Dynamic from Supabase) -->
+            <div id="donor-grid-container" class="donor-grid">
+                <!-- Populated dynamically -->
             </div>
 
         </div>
     </main>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase.js"></script>
+    <script src="js/map-service.js"></script>
+    <script src="js/find-donors.js"></script>
     <script src="js/profile-sync.js"></script>
 </body>
 </html>

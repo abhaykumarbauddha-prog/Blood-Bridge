@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood Bridge | Notifications</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Main Brand Colors */
+            --brand-primary: #E60023;
+            --bg-pink: #FFF0F2;
+            --bg-white: #FFFFFF;
+            --bg-light-gray: #F5F7FA;
+
+            /* Typography / UI Elements */
+            --text-dark: #101828;
+            --text-secondary: #475467;
+            --border-light: #E4E7EC;
+
+            /* Status Colors */
+            --status-available: #16A34A; /* available, verified, completed */
+            --status-pending: #D97706;   /* pending, approaching, deadlines */
+            --status-critical: #DC2626;  /* critical request, failed actions */
+            --status-info: #2563EB;      /* information, updates, scheduled tasks */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-light-gray); color: var(--text-dark); display: flex; height: 100vh; overflow: hidden; }
+
+        /* Sidebar */
+        .sidebar { width: 260px; background-color: var(--bg-white); border-right: 1px solid var(--border-light); display: flex; flex-direction: column; padding: 24px 0; flex-shrink: 0; overflow-y: auto; }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar-logo { padding: 0 24px; display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 1.5rem; margin-bottom: 24px; }
+        .sidebar-logo span { color: var(--brand-primary); }
+        .nav-list { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+        .nav-item { padding: 12px 24px; display: flex; align-items: center; gap: 12px; color: var(--text-secondary); font-weight: 500; cursor: pointer; text-decoration: none; font-size: 0.95rem; }
+        .nav-item:hover { background-color: var(--bg-light-gray); }
+        .nav-item.active { background-color: var(--bg-pink); color: var(--brand-primary); border-left: 4px solid var(--brand-primary); padding-left: 20px; }
+        .badge { background-color: var(--brand-primary); color: var(--bg-white); font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; margin-left: auto; }
+
+        /* Main Content */
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+
+        /* Topbar */
+        .topbar { background-color: var(--bg-white); height: 72px; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-light); position: sticky; top: 0; z-index: 10; }
+        .search-bar { display: flex; align-items: center; background-color: var(--bg-light-gray); padding: 10px 16px; border-radius: 8px; width: 400px; gap: 10px; }
+        .search-bar input { border: none; background: transparent; width: 100%; outline: none; color: var(--text-dark); }
+        .topbar-right { display: flex; align-items: center; gap: 24px; }
+        .user-profile-mini { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+        .user-profile-mini img { width: 40px; height: 40px; border-radius: 50%; }
+
+        .page-container { padding: 32px; max-width: 900px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 24px; }
+
+        /* Page Header */
+        .page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 8px; }
+        .page-header h1 { font-size: 1.75rem; color: var(--text-dark); margin-bottom: 4px; }
+        .page-header p { color: var(--text-secondary); font-size: 0.95rem; }
+        .mark-read-btn { background: transparent; border: none; color: var(--brand-primary); font-weight: 600; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+        .mark-read-btn:hover { text-decoration: underline; }
+
+        /* Tabs */
+        .tabs-container { border-bottom: 1px solid var(--border-light); display: flex; gap: 32px; }
+        .tab { padding: 12px 0; font-weight: 500; font-size: 0.95rem; color: var(--text-secondary); cursor: pointer; position: relative; border: none; background: transparent; }
+        .tab.active { color: var(--brand-primary); }
+        .tab.active::after { content: ''; position: absolute; bottom: -1px; left: 0; width: 100%; height: 3px; background-color: var(--brand-primary); border-radius: 3px 3px 0 0; }
+        .tab-count { background: var(--bg-light-gray); color: var(--text-dark); font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; margin-left: 6px; }
+        .tab.active .tab-count { background: var(--brand-primary); color: white; }
+
+        /* Notification List */
+        .notifications-wrapper { background: var(--bg-white); border-radius: 12px; border: 1px solid var(--border-light); overflow: hidden; }
+        .notification-item { display: flex; align-items: flex-start; padding: 24px; border-bottom: 1px solid var(--border-light); transition: background 0.2s; position: relative; gap: 16px; }
+        .notification-item:hover { background: var(--bg-light-gray); }
+        .notification-item:last-child { border-bottom: none; }
+        
+        /* Unread State */
+        .notification-item.unread { background: var(--bg-pink); }
+        .notification-item.unread:hover { background: #FFE0E5; }
+        .unread-dot { width: 10px; height: 10px; background: var(--brand-primary); border-radius: 50%; position: absolute; top: 32px; right: 24px; }
+
+        /* Notification Icons */
+        .notif-icon-container { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0; }
+        .icon-urgent { background: #FEE2E2; color: var(--status-critical); }
+        .icon-success { background: #DCFCE7; color: var(--status-available); }
+        .icon-info { background: #EFF6FF; color: var(--status-info); }
+        .icon-system { background: #F3E8FF; color: #9333EA; }
+
+        /* Notification Content */
+        .notif-content { flex: 1; padding-right: 24px; }
+        .notif-content h4 { font-size: 1rem; color: var(--text-dark); margin-bottom: 4px; }
+        .notif-content p { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 12px; }
+        .notif-time { font-size: 0.8rem; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; }
+        
+        /* Actions */
+        .notif-actions { display: flex; gap: 12px; }
+        .btn-action { padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; border: none; transition: 0.2s; }
+        .btn-primary { background: var(--brand-primary); color: white; }
+        .btn-primary:hover { background: var(--status-critical); }
+        .btn-outline { background: transparent; border: 1px solid var(--border-light); color: var(--text-dark); }
+        .btn-outline:hover { background: var(--border-light); }
+
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="#E60023"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+            Blood<span>Match</span>
+        </div>
+        <ul class="nav-list">
+            <a href="user-dashboard.html" class="nav-item"><span>🏠</span> Dashboard</a>
+            <a href="my-profile.html" class="nav-item"><span>👤</span> My Profile</a>
+            <a href="find-donors.html" class="nav-item"><span>🔍</span> Find Donors</a>
+            <a href="blood-request.html" class="nav-item"><span>🩸</span> Blood Requests</a>
+            <a href="nearby-request.html" class="nav-item"><span>📍</span> Nearby Requests</a>
+            <a href="notifications.html" class="nav-item active"><span>🔔</span> Notifications <span class="badge">3</span></a>
+            <a href="donation-history.html" class="nav-item"><span>🕒</span> Donation History</a>
+            <a href="settings.html" class="nav-item"><span>⚙️</span> Settings</a>
+            <a href="help-support.html" class="nav-item"><span>❓</span> Help & Support</a>
+        </ul>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <div class="search-bar">
+                <span>🔍</span>
+                <input type="text" placeholder="Search notifications...">
+            </div>
+            <div class="topbar-right">
+                <div class="user-profile-mini">
+                    <img src="https://ui-avatars.com/api/?name=Aman+Singh&background=F5F7FA&color=101828" alt="Profile">
+                    <div>
+                        <h5 style="font-size: 0.9rem;">Aman Singh</h5>
+                    </div>
+                    <span>⌄</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="page-container">
+            
+            <div class="page-header">
+                <div>
+                    <h1>Notifications</h1>
+                    <p>Stay updated with requests, matches, and system alerts.</p>
+                </div>
+                <button class="mark-read-btn"><span>✔✔</span> Mark all as read</button>
+            </div>
+
+            <div class="tabs-container">
+                <button class="tab active">All <span class="tab-count">3</span></button>
+                <button class="tab">Unread <span class="tab-count">3</span></button>
+                <button class="tab">Requests</button>
+                <button class="tab">System</button>
+            </div>
+
+            <div class="notifications-wrapper">
+                
+                <!-- Notification Item 1 (Unread, Request) -->
+                <div class="notification-item unread">
+                    <div class="notif-icon-container icon-urgent">🩸</div>
+                    <div class="notif-content">
+                        <h4>Urgent: O+ Blood Required Near You</h4>
+                        <p>City Care Hospital is requesting 2 units of O+ blood for an emergency patient. The hospital is 2.5 km away from your location.</p>
+                        <div class="notif-actions">
+                            <button class="btn-action btn-primary">View Request</button>
+                        </div>
+                        <div class="notif-time" style="margin-top: 12px;"><span>⏱️</span> 10 minutes ago</div>
+                    </div>
+                    <div class="unread-dot"></div>
+                </div>
+
+                <!-- Notification Item 2 (Unread, Match) -->
+                <div class="notification-item unread">
+                    <div class="notif-icon-container icon-info">👤</div>
+                    <div class="notif-content">
+                        <h4>New Donor Match</h4>
+                        <p>A new O+ donor (Ravi Kumar) just registered in your area and is available to donate.</p>
+                        <div class="notif-actions">
+                            <button class="btn-action btn-outline">View Profile</button>
+                        </div>
+                        <div class="notif-time" style="margin-top: 12px;"><span>⏱️</span> 2 hours ago</div>
+                    </div>
+                    <div class="unread-dot"></div>
+                </div>
+
+                <!-- Notification Item 3 (Unread, System) -->
+                <div class="notification-item unread">
+                    <div class="notif-icon-container icon-system">🏆</div>
+                    <div class="notif-content">
+                        <h4>Badge Earned: Silver Donor!</h4>
+                        <p>Congratulations! You have been upgraded to the Silver Donor tier for completing 10 successful donations.</p>
+                        <div class="notif-time" style="margin-top: 12px;"><span>⏱️</span> 5 hours ago</div>
+                    </div>
+                    <div class="unread-dot"></div>
+                </div>
+
+                <!-- Notification Item 4 (Read, Success) -->
+                <div class="notification-item">
+                    <div class="notif-icon-container icon-success">✔</div>
+                    <div class="notif-content">
+                        <h4>Donation Verified</h4>
+                        <p>Your recent blood donation at King George's Medical University has been successfully verified by the hospital admin. Thank you for saving a life!</p>
+                        <div class="notif-time" style="margin-top: 12px;"><span>⏱️</span> 2 days ago</div>
+                    </div>
+                </div>
+
+                <!-- Notification Item 5 (Read, Info) -->
+                <div class="notification-item">
+                    <div class="notif-icon-container icon-info">📅</div>
+                    <div class="notif-content">
+                        <h4>Eligibility Reminder</h4>
+                        <p>Your cooling period is almost over. You will be eligible to donate blood again starting next week.</p>
+                        <div class="notif-time" style="margin-top: 12px;"><span>⏱️</span> 1 week ago</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/profile-sync.js"></script>
+</body>
+</html>

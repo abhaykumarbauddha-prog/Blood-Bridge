@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood Bridge | Create a Blood Request</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Main Brand Colors */
+            --brand-primary: #E60023;
+            --bg-pink: #FFF0F2;
+            --bg-white: #FFFFFF;
+            --bg-light-gray: #F5F7FA;
+
+            /* Typography / UI Elements */
+            --text-dark: #101828;
+            --text-secondary: #475467;
+            --border-light: #E4E7EC;
+
+            /* Status Colors */
+            --status-available: #16A34A; /* available, verified, completed */
+            --status-pending: #D97706;   /* pending, approaching, deadlines */
+            --status-critical: #DC2626;  /* critical request, failed actions */
+            --status-info: #2563EB;      /* information, updates, scheduled tasks */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-light-gray); color: var(--text-dark); display: flex; height: 100vh; overflow: hidden; }
+
+        /* Sidebar Reusable[cite: 5] */
+        .sidebar { width: 260px; background-color: var(--bg-white); border-right: 1px solid var(--border-light); display: flex; flex-direction: column; padding: 24px 0; flex-shrink: 0; overflow-y: auto; }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar-logo { padding: 0 24px; display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 1.5rem; margin-bottom: 8px; }
+        .sidebar-logo span { color: var(--brand-primary); }
+        .nav-list { list-style: none; display: flex; flex-direction: column; gap: 4px; margin-top: 16px; }
+        .nav-item { padding: 12px 24px; display: flex; align-items: center; gap: 12px; color: var(--text-secondary); font-weight: 500; cursor: pointer; text-decoration: none; font-size: 0.95rem; }
+        .nav-item:hover { background-color: var(--bg-light-gray); }
+        .nav-item.active { background-color: var(--bg-pink); color: var(--brand-primary); border-left: 4px solid var(--brand-primary); padding-left: 20px; }
+        .badge { background-color: var(--brand-primary); color: var(--bg-white); font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; margin-left: auto; }
+
+        .sidebar-cta { margin: auto 24px 24px; background-color: var(--bg-pink); padding: 20px; border-radius: 12px; text-align: center; }
+        .sidebar-cta h4 { color: var(--text-dark); margin-bottom: 8px; font-size: 0.95rem; }
+        .sidebar-cta p { font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 12px; }
+        .sidebar-cta button { width: 100%; background-color: var(--brand-primary); color: var(--bg-white); border: none; padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+
+        /* Main Content Area */
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+
+        /* Topbar[cite: 5] */
+        .topbar { background-color: var(--bg-white); height: 72px; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-light); position: sticky; top: 0; z-index: 10; }
+        .search-bar { display: flex; align-items: center; background-color: var(--bg-light-gray); padding: 10px 16px; border-radius: 8px; width: 400px; gap: 10px; }
+        .search-bar input { border: none; background: transparent; width: 100%; outline: none; color: var(--text-dark); }
+        .topbar-right { display: flex; align-items: center; gap: 24px; }
+        .user-profile-mini { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+        .user-profile-mini img { width: 40px; height: 40px; border-radius: 50%; }
+
+        /* Page Content Layout[cite: 5] */
+        .page-container { padding: 0; }
+        
+        /* Hero Banner[cite: 5] */
+        .hero-banner { background: linear-gradient(90deg, var(--bg-white) 40%, var(--bg-pink) 100%); padding: 40px 32px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); }
+        .hero-text h1 { font-size: 2.2rem; color: var(--text-dark); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+        .hero-text h1 span { color: var(--brand-primary); }
+        .hero-text p { color: var(--text-secondary); font-size: 0.95rem; max-width: 500px; line-height: 1.5; }
+        .hero-label { color: var(--brand-primary); font-weight: 600; font-size: 0.85rem; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+        .hero-label::before { content: "—"; }
+
+        /* Grid Layout */
+        .content-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 24px; padding: 32px; align-items: start; }
+        .right-column-grid { display: grid; grid-template-columns: 1fr; gap: 24px; }
+        
+        /* Cards Common */
+        .card { background: var(--bg-white); border-radius: 12px; padding: 24px; border: 1px solid var(--border-light); }
+        .card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+        .card-header .icon-box { width: 40px; height: 40px; background: var(--brand-primary); color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+        .card-header h3 { font-size: 1.1rem; color: var(--text-dark); }
+        .card-header p { font-size: 0.85rem; color: var(--text-secondary); }
+
+        /* Form Elements[cite: 5] */
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+        .form-group { display: flex; flex-direction: column; gap: 8px; }
+        .form-group label { font-size: 0.85rem; font-weight: 600; color: var(--text-dark); }
+        
+        .input-wrapper { position: relative; display: flex; align-items: center; }
+        .input-wrapper span { position: absolute; left: 14px; color: var(--text-secondary); }
+        .form-control { width: 100%; padding: 12px 16px 12px 40px; border: 1px solid var(--border-light); border-radius: 8px; font-size: 0.9rem; outline: none; background: var(--bg-white); transition: 0.2s; }
+        .form-control:focus { border-color: var(--brand-primary); }
+        
+        textarea.form-control { padding-left: 16px; min-height: 100px; resize: vertical; }
+
+        /* Urgency Selectors[cite: 5] */
+        .urgency-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+        .urgency-card { border: 1px solid var(--border-light); border-radius: 8px; padding: 16px; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: 0.2s; }
+        .urgency-card:hover { background: var(--bg-light-gray); }
+        .urgency-card input { margin: 0; width: 16px; height: 16px; accent-color: var(--brand-primary); }
+        .urgency-card.active { border-color: var(--brand-primary); background: var(--bg-pink); }
+        .urgency-card.active h5 { color: var(--brand-primary); }
+        .urgency-card h5 { font-size: 0.95rem; margin-bottom: 2px; color: var(--text-dark); }
+        .urgency-card p { font-size: 0.75rem; color: var(--text-secondary); }
+
+        .btn-submit { width: 100%; background: var(--brand-primary); color: white; border: none; padding: 16px; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; margin-top: 16px; transition: 0.3s; }
+        .btn-submit:hover { background: var(--status-critical); }
+
+        /* Map Card[cite: 5] */
+        .map-search { display: flex; align-items: center; background: var(--bg-light-gray); padding: 10px 16px; border-radius: 8px; margin-bottom: 16px; }
+        .map-search input { border: none; background: transparent; width: 100%; outline: none; font-size: 0.85rem; margin-left: 8px; }
+        .map-display { width: 100%; height: 220px; background: url('https://via.placeholder.com/600x300?text=Map+Location+View') center/cover; border-radius: 8px; position: relative; margin-bottom: 16px; }
+        .map-pin { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 2rem; color: var(--brand-primary); text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .location-confirm { display: flex; justify-content: space-between; align-items: center; background: var(--bg-pink); padding: 12px 16px; border-radius: 8px; }
+        .location-confirm p { font-size: 0.85rem; color: var(--brand-primary); font-weight: 600; margin-bottom: 2px; }
+        .location-confirm small { font-size: 0.75rem; color: var(--text-secondary); }
+        .btn-location { background: var(--brand-primary); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 0.8rem; font-weight: 500; cursor: pointer; }
+
+        /* Guidelines & Tips[cite: 5] */
+        .guideline-list { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+        .guideline-item { display: flex; gap: 10px; align-items: flex-start; font-size: 0.85rem; color: var(--text-dark); }
+        .guideline-item span { color: var(--status-info); }
+        
+        .contact-box { border: 1px solid var(--border-light); border-radius: 8px; padding: 16px; display: flex; align-items: center; justify-content: space-between; margin-top: 24px; }
+        .contact-box div h4 { font-size: 0.95rem; color: var(--brand-primary); margin-bottom: 4px; }
+        .contact-box div p { font-size: 0.75rem; color: var(--text-secondary); }
+        .btn-outline { border: 1px solid var(--brand-primary); color: var(--brand-primary); background: transparent; padding: 8px 16px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
+
+        /* Tips Sidebar */
+        .tips-list { display: flex; flex-direction: column; gap: 16px; }
+        .tip-item { display: flex; align-items: center; gap: 12px; }
+        .tip-icon { width: 24px; height: 24px; background: var(--bg-pink); color: var(--brand-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; flex-shrink: 0; }
+        .tip-item p { font-size: 0.85rem; color: var(--text-dark); }
+
+        /* Recent Requests Mini List[cite: 5] */
+        .recent-req-list { display: flex; flex-direction: column; gap: 16px; }
+        .recent-req-item { display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid var(--border-light); }
+        .recent-req-item:last-child { border-bottom: none; padding-bottom: 0; }
+        .req-person h5 { font-size: 0.9rem; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+        .req-person p { font-size: 0.75rem; color: var(--text-secondary); }
+        .status-tag { padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; text-align: center; }
+        .tag-urgent { background-color: #FEF3C7; color: var(--status-pending); }
+        .tag-critical { background-color: #FEE2E2; color: var(--status-critical); }
+        .tag-pending { background-color: #FFEDD5; color: #EA580C; }
+        .tag-fulfilled { background-color: #DCFCE7; color: var(--status-available); }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar[cite: 5] -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="#E60023"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+            Blood<span>Match</span>
+        </div>
+        <ul class="nav-list">
+            <a href="user-dashboard.html" class="nav-item"><span>🏠</span> Dashboard</a>
+            <a href="#" class="nav-item"><span>👤</span> My Profile</a>
+            <a href="#" class="nav-item"><span>🔍</span> Find Donors</a>
+            <a href="blood-request.html" class="nav-item active"><span>🩸</span> Blood Requests</a>
+            <a href="#" class="nav-item"><span>📍</span> Nearby Requests</a>
+            <a href="#" class="nav-item"><span>🔔</span> Notifications <span class="badge">3</span></a>
+            <a href="#" class="nav-item"><span>🕒</span> Donation History</a>
+            <a href="#" class="nav-item"><span>⚙️</span> Settings</a>
+            <a href="#" class="nav-item"><span>❓</span> Help & Support</a>
+        </ul>
+        <div class="sidebar-cta">
+            <h4>Together<br>We Can Save Lives</h4>
+            <p>Request help, find donors, and spread hope.</p>
+            <button>Create Request →</button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <!-- Topbar[cite: 5] -->
+        <header class="topbar">
+            <div class="search-bar">
+                <span>🔍</span>
+                <input type="text" placeholder="Search donors, requests, hospitals...">
+            </div>
+            <div class="topbar-right">
+                <div class="user-profile-mini">
+                    <img src="https://ui-avatars.com/api/?name=Aman+Singh&background=F5F7FA&color=101828" alt="Profile">
+                    <div>
+                        <h5 style="font-size: 0.9rem;">Aman Singh</h5>
+                        <p style="font-size: 0.8rem; color: var(--text-secondary);">Requester</p>
+                    </div>
+                    <span>⌄</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="page-container">
+            <!-- Hero Banner[cite: 5] -->
+            <div class="hero-banner">
+                <div class="hero-text">
+                    <div class="hero-label">Request Blood</div>
+                    <h1>Create a <span>Blood Request</span></h1>
+                    <p>Provide accurate details to find nearby donors quickly. Your request can help save a life.</p>
+                </div>
+                <div class="hero-image">
+                    <!-- Placeholder matching hands holding a heart -->
+                    <h1 style="font-size: 4rem;">❤️</h1>
+                </div>
+            </div>
+
+            <!-- Main Grid[cite: 5] -->
+            <div class="content-grid">
+                
+                <!-- Left Column: Form -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="icon-box">📋</div>
+                        <div>
+                            <h3>Request Details</h3>
+                            <p>Please fill in the accurate information to get the best matches.</p>
+                        </div>
+                    </div>
+
+                    <form id="blood-request-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Patient Name</label>
+                                <div class="input-wrapper">
+                                    <span>👤</span>
+                                    <input type="text" name="patient_name" class="form-control" placeholder="Enter patient name" required>
+                                </div>
+                            </div>
+                            <div class="form-row" style="margin: 0; gap: 16px;">
+                                <div class="form-group">
+                                    <label>Blood Group Needed</label>
+                                    <div class="input-wrapper">
+                                        <span>🩸</span>
+                                        <select name="blood_group" class="form-control" style="padding-left: 36px; appearance: none;" required>
+                                            <option value="">Select blood group</option>
+                                            <option>A+</option><option>A-</option><option>O+</option><option>O-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Units Required</label>
+                                    <div class="input-wrapper">
+                                        <span>🔢</span>
+                                        <select name="units" class="form-control" style="padding-left: 36px; appearance: none;" required>
+                                            <option>1</option><option>2</option><option>3</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 16px;">
+                            <label>Urgency Level</label>
+                        </div>
+                        <div class="urgency-options">
+                            <label class="urgency-card">
+                                <input type="radio" name="urgency" value="Pending">
+                                <div>
+                                    <h5>Normal</h5>
+                                    <p>Within a few days</p>
+                                </div>
+                            </label>
+                            <label class="urgency-card active">
+                                <input type="radio" name="urgency" value="Urgent" checked>
+                                <div>
+                                    <h5>Urgent</h5>
+                                    <p style="color: var(--brand-primary);">Within 24-48 hours</p>
+                                </div>
+                            </label>
+                            <label class="urgency-card">
+                                <input type="radio" name="urgency" value="Critical">
+                                <div>
+                                    <h5>Critical</h5>
+                                    <p>Immediate need</p>
+                                </div>
+                            </label>
+                        </div>
+
+                        <h4 style="margin: 24px 0 16px; font-size: 0.95rem;">Hospital Details</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Hospital Name</label>
+                                <div class="input-wrapper">
+                                    <span>🏥</span>
+                                    <input type="text" name="hospital_name" class="form-control" placeholder="Enter hospital name" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Hospital Address</label>
+                                <div class="input-wrapper">
+                                    <span>📍</span>
+                                    <input type="text" name="hospital_address" class="form-control" placeholder="Enter full address" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>City</label>
+                                <div class="input-wrapper">
+                                    <span>🏙️</span>
+                                    <input type="text" name="city" class="form-control" placeholder="Enter city" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Required By</label>
+                                <div class="input-wrapper">
+                                    <span>📅</span>
+                                    <input type="date" name="required_date" class="form-control" style="width: 60%; padding-left: 36px;" required>
+                                    <input type="time" name="required_time" class="form-control" style="width: 40%; margin-left: 8px;" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-top: 16px;">
+                            <label>Additional Information (Optional)</label>
+                            <div class="input-wrapper">
+                                <span style="top: 14px;">📝</span>
+                                <textarea name="additional_info" class="form-control" maxlength="500" placeholder="Add any additional information (e.g. patient condition, special requirements)..."></textarea>
+                            </div>
+                            <small style="text-align: right; color: var(--text-secondary); margin-top: 4px;">0/500</small>
+                        </div>
+
+                        <button type="submit" class="btn-submit">Submit Request →</button>
+                    </form>
+                </div>
+
+                <!-- Right Column Widgets[cite: 5] -->
+                <div class="right-column-grid">
+                    
+                    <!-- Map / Location Card -->
+                    <div class="card">
+                        <div class="card-header" style="margin-bottom: 16px;">
+                            <div class="icon-box" style="background: var(--bg-pink); color: var(--brand-primary);">📍</div>
+                            <div>
+                                <h3 style="font-size: 1rem;">Select Location</h3>
+                                <p style="font-size: 0.75rem;">Confirm the hospital location on the map.</p>
+                            </div>
+                        </div>
+                        <div class="map-search">
+                            <span>🔍</span>
+                            <input type="text" placeholder="Search or drag the pin to set location">
+                        </div>
+                        <div class="map-display">
+                            <div class="map-pin">📍</div>
+                        </div>
+                        <div class="location-confirm">
+                            <div>
+                                <p>Selected Location</p>
+                                <small>Lucknow, Uttar Pradesh</small>
+                            </div>
+                            <button class="btn-location">🎯 Use My Location</button>
+                        </div>
+                    </div>
+
+                    <!-- Guidelines -->
+                    <div class="card">
+                        <h3 style="font-size: 1rem; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; color: var(--status-info);">
+                            <span style="background: #EFF6FF; padding: 4px; border-radius: 50%;">ℹ️</span> Important Guidelines
+                        </h3>
+                        <ul class="guideline-list">
+                            <li class="guideline-item"><span>✔</span> Provide accurate and genuine information.</li>
+                            <li class="guideline-item"><span>✔</span> False requests may lead to account restriction.</li>
+                            <li class="guideline-item"><span>✔</span> You will be notified when donors respond.</li>
+                            <li class="guideline-item"><span>✔</span> In case of emergency, also contact your nearest blood bank.</li>
+                        </ul>
+                        
+                        <div class="contact-box">
+                            <div>
+                                <h4>Need Urgent Help?</h4>
+                                <p>Contact nearby blood banks directly for immediate assistance.</p>
+                            </div>
+                            <button class="btn-outline">Find Blood Banks →</button>
+                        </div>
+                    </div>
+
+                    <!-- Tips -->
+                    <div class="card">
+                        <h3 style="font-size: 1rem; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; color: var(--status-pending);">
+                            <span style="background: #FEF3C7; padding: 4px; border-radius: 50%;">💡</span> Tips for a Successful Request
+                        </h3>
+                        <div class="tips-list">
+                            <div class="tip-item"><div class="tip-icon">🩸</div><p>Provide correct blood group and units required</p></div>
+                            <div class="tip-item"><div class="tip-icon">🏥</div><p>Share exact hospital location</p></div>
+                            <div class="tip-item"><div class="tip-icon">⏱️</div><p>Choose the right urgency level</p></div>
+                            <div class="tip-item"><div class="tip-icon">📝</div><p>Add patient condition if needed</p></div>
+                            <div class="tip-item"><div class="tip-icon">📱</div><p>Keep your contact information updated</p></div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Requests -->
+                    <div class="card">
+                        <div class="card-header" style="justify-content: space-between; margin-bottom: 16px;">
+                            <h3 style="font-size: 1rem;">Recent Requests</h3>
+                            <a href="#" style="color: var(--brand-primary); font-size: 0.8rem; font-weight: 500; text-decoration: none;">View All →</a>
+                        </div>
+                        <div class="recent-req-list">
+                            <div class="recent-req-item">
+                                <div class="req-person">
+                                    <h5><span style="color: var(--brand-primary);">📍</span> Rajesh Kumar</h5>
+                                    <p>O+ • 2 Units<br>City Care Hospital, Lucknow</p>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div class="status-tag tag-urgent" style="margin-bottom: 4px;">Urgent</div>
+                                    <p style="font-size: 0.7rem; color: var(--text-secondary);">30 Oct 2024</p>
+                                </div>
+                            </div>
+                            <div class="recent-req-item">
+                                <div class="req-person">
+                                    <h5><span style="color: var(--brand-primary);">📍</span> Pooja Singh</h5>
+                                    <p>A- • 1 Unit<br>Medanta Hospital, Lucknow</p>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div class="status-tag tag-pending" style="margin-bottom: 4px;">Pending</div>
+                                    <p style="font-size: 0.7rem; color: var(--text-secondary);">28 Oct 2024</p>
+                                </div>
+                            </div>
+                            <div class="recent-req-item">
+                                <div class="req-person">
+                                    <h5><span style="color: var(--brand-primary);">📍</span> Amit Verma</h5>
+                                    <p>B+ • 3 Units<br>King George's Medical University</p>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div class="status-tag tag-fulfilled" style="margin-bottom: 4px;">Fulfilled</div>
+                                    <p style="font-size: 0.7rem; color: var(--text-secondary);">25 Oct 2024</p>
+                                </div>
+                            </div>
+                            <div class="recent-req-item">
+                                <div class="req-person">
+                                    <h5><span style="color: var(--brand-primary);">📍</span> Neha Sharma</h5>
+                                    <p>O- • 2 Units<br>Unnao District Hospital</p>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div class="status-tag tag-critical" style="margin-bottom: 4px;">Critical</div>
+                                    <p style="font-size: 0.7rem; color: var(--text-secondary);">22 Oct 2024</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/requests.js"></script>
+    <script src="js/profile-sync.js"></script>
+</body>
+</html>

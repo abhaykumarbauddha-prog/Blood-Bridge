@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood Bridge | Nearby Requests</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Main Brand Colors */
+            --brand-primary: #E60023;
+            --bg-pink: #FFF0F2;
+            --bg-white: #FFFFFF;
+            --bg-light-gray: #F5F7FA;
+
+            /* Typography / UI Elements */
+            --text-dark: #101828;
+            --text-secondary: #475467;
+            --border-light: #E4E7EC;
+
+            /* Status Colors */
+            --status-available: #16A34A; /* available, verified, completed */
+            --status-pending: #D97706;   /* pending, approaching, deadlines */
+            --status-critical: #DC2626;  /* critical request, failed actions */
+            --status-info: #2563EB;      /* information, updates, scheduled tasks */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-light-gray); color: var(--text-dark); display: flex; height: 100vh; overflow: hidden; }
+
+        /* Sidebar */
+        .sidebar { width: 260px; background-color: var(--bg-white); border-right: 1px solid var(--border-light); display: flex; flex-direction: column; padding: 24px 0; flex-shrink: 0; overflow-y: auto; }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar-logo { padding: 0 24px; display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 1.5rem; margin-bottom: 24px; }
+        .sidebar-logo span { color: var(--brand-primary); }
+        .nav-list { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+        .nav-item { padding: 12px 24px; display: flex; align-items: center; gap: 12px; color: var(--text-secondary); font-weight: 500; cursor: pointer; text-decoration: none; font-size: 0.95rem; }
+        .nav-item:hover { background-color: var(--bg-light-gray); }
+        .nav-item.active { background-color: var(--bg-pink); color: var(--brand-primary); border-left: 4px solid var(--brand-primary); padding-left: 20px; }
+        .badge { background-color: var(--brand-primary); color: var(--bg-white); font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; margin-left: auto; }
+
+        /* Main Content */
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: hidden; } /* Hidden to allow inner scrolling */
+
+        /* Topbar */
+        .topbar { background-color: var(--bg-white); height: 72px; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-light); position: sticky; top: 0; z-index: 10; }
+        .search-bar { display: flex; align-items: center; background-color: var(--bg-light-gray); padding: 10px 16px; border-radius: 8px; width: 400px; gap: 10px; }
+        .search-bar input { border: none; background: transparent; width: 100%; outline: none; color: var(--text-dark); }
+        .topbar-right { display: flex; align-items: center; gap: 24px; }
+        .user-profile-mini { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+        .user-profile-mini img { width: 40px; height: 40px; border-radius: 50%; }
+
+        /* Split Layout Container */
+        .split-layout { display: flex; flex: 1; overflow: hidden; }
+        
+        /* Left Column - List */
+        .request-list-col { width: 50%; padding: 24px 32px; overflow-y: auto; display: flex; flex-direction: column; gap: 24px; background: var(--bg-light-gray); }
+        .request-list-col::-webkit-scrollbar { width: 6px; }
+        .request-list-col::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+        
+        /* Right Column - Map */
+        .map-col { width: 50%; background: url('https://via.placeholder.com/800x1000?text=Interactive+Map+View') center/cover; position: relative; border-left: 1px solid var(--border-light); }
+        .map-overlay { position: absolute; top: 24px; left: 24px; right: 24px; display: flex; justify-content: space-between; pointer-events: none; }
+        .map-controls { pointer-events: auto; display: flex; gap: 12px; }
+        .map-btn { background: var(--bg-white); border: 1px solid var(--border-light); padding: 10px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        
+        .map-pin { position: absolute; transform: translate(-50%, -100%); display: flex; flex-direction: column; align-items: center; cursor: pointer; pointer-events: auto; }
+        .map-pin-icon { width: 32px; height: 32px; background: var(--bg-white); border: 2px solid var(--brand-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--brand-primary); font-size: 0.8rem; box-shadow: 0 4px 10px rgba(230,0,35,0.3); }
+        .map-pin-icon.critical { background: var(--brand-primary); color: var(--bg-white); border-color: var(--bg-white); }
+        .map-pin::after { content: ''; width: 2px; height: 12px; background: var(--brand-primary); }
+
+        /* Page Header */
+        .page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 8px; }
+        .page-header h1 { font-size: 1.5rem; color: var(--text-dark); margin-bottom: 4px; }
+        .page-header p { color: var(--text-secondary); font-size: 0.9rem; }
+        
+        .filters { display: flex; gap: 12px; }
+        .filter-select { padding: 8px 12px; border: 1px solid var(--border-light); border-radius: 8px; font-size: 0.85rem; outline: none; background: var(--bg-white); }
+
+        /* Request Cards */
+        .req-card { background: var(--bg-white); border-radius: 12px; padding: 20px; border: 1px solid var(--border-light); transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .req-card:hover { border-color: var(--brand-primary); box-shadow: 0 10px 20px rgba(0,0,0,0.05); transform: translateY(-2px); }
+        
+        .req-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+        .blood-group-badge { width: 48px; height: 48px; background: var(--bg-pink); color: var(--brand-primary); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: 700; flex-shrink: 0; }
+        
+        .req-info { flex: 1; margin: 0 16px; }
+        .req-info h3 { font-size: 1.1rem; color: var(--text-dark); margin-bottom: 4px; }
+        .req-info p { font-size: 0.85rem; color: var(--text-secondary); display: flex; align-items: center; gap: 4px; }
+        
+        .status-tag { padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; }
+        .tag-urgent { background-color: #FEF3C7; color: var(--status-pending); }
+        .tag-critical { background-color: #FEE2E2; color: var(--status-critical); }
+        .tag-normal { background-color: #EFF6FF; color: var(--status-info); }
+
+        .req-details { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: var(--bg-light-gray); padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 0.85rem; }
+        .req-details div { display: flex; flex-direction: column; gap: 4px; }
+        .req-details span.label { color: var(--text-secondary); font-size: 0.75rem; }
+        .req-details span.value { color: var(--text-dark); font-weight: 600; }
+
+        .req-actions { display: flex; gap: 12px; }
+        .btn { flex: 1; padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer; text-align: center; font-size: 0.9rem; transition: 0.2s; border: none; }
+        .btn-primary { background: var(--brand-primary); color: white; }
+        .btn-primary:hover { background: var(--status-critical); }
+        .btn-outline { background: transparent; border: 1px solid var(--border-light); color: var(--text-dark); }
+        .btn-outline:hover { background: var(--bg-light-gray); }
+
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="#E60023"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+            Blood<span>Match</span>
+        </div>
+        <ul class="nav-list">
+            <a href="user-dashboard.html" class="nav-item"><span>🏠</span> Dashboard</a>
+            <a href="my-profile.html" class="nav-item"><span>👤</span> My Profile</a>
+            <a href="find-donors.html" class="nav-item"><span>🔍</span> Find Donors</a>
+            <a href="blood-request.html" class="nav-item"><span>🩸</span> Blood Requests</a>
+            <a href="nearby-request.html" class="nav-item active"><span>📍</span> Nearby Requests</a>
+            <a href="notifications.html" class="nav-item"><span>🔔</span> Notifications <span class="badge">3</span></a>
+            <a href="donation-history.html" class="nav-item"><span>🕒</span> Donation History</a>
+            <a href="settings.html" class="nav-item"><span>⚙️</span> Settings</a>
+            <a href="help-support.html" class="nav-item"><span>❓</span> Help & Support</a>
+        </ul>
+    </aside>
+
+    <main class="main-content">
+        <!-- Topbar -->
+        <header class="topbar">
+            <div class="search-bar">
+                <span>🔍</span>
+                <input type="text" placeholder="Search hospitals or areas...">
+            </div>
+            <div class="topbar-right">
+                <div class="user-profile-mini">
+                    <img src="https://ui-avatars.com/api/?name=Aman+Singh&background=F5F7FA&color=101828" alt="Profile">
+                    <div><h5 style="font-size: 0.9rem;">Aman Singh</h5></div>
+                    <span>⌄</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Split Layout -->
+        <div class="split-layout">
+            
+            <!-- Left Side: Requests List -->
+            <div class="request-list-col">
+                <div class="page-header">
+                    <div>
+                        <h1>Nearby Requests</h1>
+                        <p>12 active blood requests within 10km</p>
+                    </div>
+                </div>
+
+                <div class="filters">
+                    <select class="filter-select">
+                        <option>All Blood Groups</option>
+                        <option>Compatible (O+, O-)</option>
+                        <option>My Group (O+)</option>
+                    </select>
+                    <select class="filter-select">
+                        <option>Sort by: Urgency</option>
+                        <option>Sort by: Distance</option>
+                        <option>Sort by: Newest</option>
+                    </select>
+                </div>
+
+                <!-- Request Card 1 (Critical) -->
+                <div class="req-card" style="border-left: 4px solid var(--status-critical);">
+                    <div class="req-card-header">
+                        <div class="blood-group-badge" style="background: var(--brand-primary); color: white;">O+</div>
+                        <div class="req-info">
+                            <h3>Ramesh Kumar</h3>
+                            <p><span>📍</span> City Care Hospital • 2.5 km away</p>
+                        </div>
+                        <div class="status-tag tag-critical">Critical</div>
+                    </div>
+                    <div class="req-details">
+                        <div><span class="label">Units Required</span><span class="value">2 Units</span></div>
+                        <div><span class="label">Time Remaining</span><span class="value" style="color: var(--status-critical);">2 Hours</span></div>
+                        <div style="grid-column: span 2;"><span class="label">Patient Condition</span><span class="value">Accident emergency, immediate surgery required.</span></div>
+                    </div>
+                    <div class="req-actions">
+                        <button class="btn btn-outline">Share</button>
+                        <button class="btn btn-primary">Accept & Donate</button>
+                    </div>
+                </div>
+
+                <!-- Request Card 2 (Urgent) -->
+                <div class="req-card" style="border-left: 4px solid var(--status-pending);">
+                    <div class="req-card-header">
+                        <div class="blood-group-badge">O-</div>
+                        <div class="req-info">
+                            <h3>Neha Sharma</h3>
+                            <p><span>📍</span> Medanta Hospital • 4.1 km away</p>
+                        </div>
+                        <div class="status-tag tag-urgent">Urgent</div>
+                    </div>
+                    <div class="req-details">
+                        <div><span class="label">Units Required</span><span class="value">1 Unit</span></div>
+                        <div><span class="label">Required By</span><span class="value" style="color: var(--status-pending);">Today, 6:00 PM</span></div>
+                    </div>
+                    <div class="req-actions">
+                        <button class="btn btn-outline">Share</button>
+                        <button class="btn btn-primary">Accept & Donate</button>
+                    </div>
+                </div>
+
+                <!-- Request Card 3 (Normal) -->
+                <div class="req-card" style="border-left: 4px solid var(--status-info);">
+                    <div class="req-card-header">
+                        <div class="blood-group-badge">A+</div>
+                        <div class="req-info">
+                            <h3>Amit Verma</h3>
+                            <p><span>📍</span> King George's Medical • 5.8 km away</p>
+                        </div>
+                        <div class="status-tag tag-normal">Normal</div>
+                    </div>
+                    <div class="req-details">
+                        <div><span class="label">Units Required</span><span class="value">3 Units</span></div>
+                        <div><span class="label">Required By</span><span class="value">Tomorrow, 10:00 AM</span></div>
+                    </div>
+                    <div class="req-actions">
+                        <button class="btn btn-outline">Share</button>
+                        <button class="btn btn-primary">Accept & Donate</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side: Map -->
+            <div class="map-col">
+                <div class="map-overlay">
+                    <div class="map-controls">
+                        <button class="map-btn">🎯 My Location</button>
+                        <button class="map-btn">🔍 Search this area</button>
+                    </div>
+                </div>
+
+                <!-- Custom Map Pins (Positioned by top/left percentages as mockups) -->
+                <div class="map-pin" style="top: 40%; left: 30%;">
+                    <div class="map-pin-icon critical">O+</div>
+                </div>
+                <div class="map-pin" style="top: 60%; left: 55%;">
+                    <div class="map-pin-icon">O-</div>
+                </div>
+                <div class="map-pin" style="top: 25%; left: 70%;">
+                    <div class="map-pin-icon">A+</div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/profile-sync.js"></script>
+</body>
+</html>

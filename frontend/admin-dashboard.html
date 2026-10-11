@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood Bridge | Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Main Brand Colors */
+            --brand-primary: #E60023;
+            --bg-pink: #FFF0F2;
+            --bg-white: #FFFFFF;
+            --bg-light-gray: #F5F7FA;
+
+            /* Typography / UI Elements */
+            --text-dark: #101828;
+            --text-secondary: #475467;
+            --border-light: #E4E7EC;
+
+            /* Status Colors */
+            --status-available: #16A34A; /* available, verified, completed, fulfilled, operational */
+            --status-pending: #D97706;   /* pending, urgent, approaching, deadlines */
+            --status-critical: #DC2626;  /* critical request, rejected, failed actions */
+            --status-info: #2563EB;      /* information, updates, scheduled tasks */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-light-gray); color: var(--text-dark); display: flex; height: 100vh; overflow: hidden; }
+
+        /* Sidebar[cite: 3] */
+        .sidebar { width: 260px; background-color: var(--bg-white); border-right: 1px solid var(--border-light); display: flex; flex-direction: column; padding: 24px 0; flex-shrink: 0; overflow-y: auto; }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar-logo { padding: 0 24px; display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 1.5rem; margin-bottom: 8px; }
+        .sidebar-logo span { color: var(--brand-primary); }
+        .sidebar-tagline { padding: 0 24px; font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 24px; }
+        
+        .nav-section { padding: 0 24px; font-size: 0.75rem; color: var(--text-secondary); font-weight: 600; margin: 16px 0 8px; letter-spacing: 0.5px; }
+        .nav-list { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+        .nav-item { padding: 10px 24px; display: flex; align-items: center; gap: 12px; color: var(--text-secondary); font-weight: 500; cursor: pointer; text-decoration: none; font-size: 0.9rem; }
+        .nav-item:hover { background-color: var(--bg-light-gray); }
+        .nav-item.active { background-color: var(--bg-pink); color: var(--brand-primary); border-left: 4px solid var(--brand-primary); padding-left: 20px; }
+        .badge { background-color: var(--brand-primary); color: var(--bg-white); font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; margin-left: auto; }
+
+        .sidebar-cta { margin: 24px 24px 0; background-color: var(--bg-pink); padding: 20px; border-radius: 12px; text-align: center; }
+        .sidebar-cta h4 { color: var(--text-dark); margin-bottom: 8px; font-size: 0.95rem; }
+        .sidebar-cta p { font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.4; }
+        .sidebar-cta button { width: 100%; background-color: var(--brand-primary); color: var(--bg-white); border: none; padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.85rem; }
+
+        /* Main Content */
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+
+        /* Topbar[cite: 3] */
+        .topbar { background-color: var(--bg-white); height: 72px; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-light); position: sticky; top: 0; z-index: 10; }
+        .search-bar { display: flex; align-items: center; background-color: var(--bg-light-gray); padding: 10px 16px; border-radius: 8px; width: 450px; gap: 10px; border: 1px solid var(--border-light); }
+        .search-bar input { border: none; background: transparent; width: 100%; outline: none; color: var(--text-dark); font-size: 0.9rem; }
+        .topbar-right { display: flex; align-items: center; gap: 24px; }
+        .notif-icon { position: relative; cursor: pointer; font-size: 1.2rem; }
+        .notif-dot { position: absolute; top: -4px; right: -4px; background-color: var(--brand-primary); color: white; font-size: 0.6rem; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .user-profile-mini { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+        .user-profile-mini img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+        .user-profile-mini div h5 { font-size: 0.9rem; }
+        .user-profile-mini div p { font-size: 0.8rem; color: var(--text-secondary); }
+
+        /* Dashboard Container */
+        .dashboard-container { padding: 24px 32px; display: flex; flex-direction: column; gap: 24px; }
+
+        /* Header[cite: 3] */
+        .dash-header { display: flex; justify-content: space-between; align-items: flex-end; }
+        .dash-header h1 { font-size: 1.75rem; margin-bottom: 4px; }
+        .dash-header p { color: var(--text-secondary); font-size: 0.95rem; }
+        .date-filter { padding: 8px 16px; border: 1px solid var(--border-light); border-radius: 8px; background: var(--bg-white); color: var(--text-dark); font-size: 0.9rem; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+
+        /* KPI Grid[cite: 3] */
+        .kpi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
+        .kpi-card { background: var(--bg-white); padding: 20px; border-radius: 12px; border: 1px solid var(--border-light); display: flex; align-items: center; gap: 16px; }
+        .kpi-icon { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+        .kpi-info h4 { font-size: 1.4rem; color: var(--text-dark); margin-bottom: 2px; }
+        .kpi-info p { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px; font-weight: 500; }
+        .trend-up { font-size: 0.75rem; color: var(--status-available); font-weight: 600; display: flex; align-items: center; gap: 4px; }
+        
+        /* Grid Layouts for Sections */
+        .grid-3 { display: grid; grid-template-columns: 1.5fr 1fr 1.2fr; gap: 24px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        .grid-3-bottom { display: grid; grid-template-columns: 1fr 1.2fr 1fr; gap: 24px; }
+
+        /* Card Common[cite: 3] */
+        .card { background: var(--bg-white); border-radius: 12px; padding: 24px; border: 1px solid var(--border-light); }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .card-header h3 { font-size: 1.1rem; color: var(--text-dark); }
+        .view-all { color: var(--brand-primary); font-size: 0.85rem; font-weight: 500; text-decoration: none; }
+
+        /* Charts & Visuals Mocks */
+        .chart-placeholder { width: 100%; height: 200px; border-radius: 8px; background: var(--bg-light-gray); position: relative; overflow: hidden; display: flex; align-items: flex-end; padding: 10px; gap: 4px; }
+        .bar { flex: 1; background: var(--brand-primary); border-radius: 4px 4px 0 0; opacity: 0.7; }
+        
+        .donut-container { display: flex; align-items: center; gap: 24px; }
+        .donut-chart { width: 150px; height: 150px; border-radius: 50%; background: conic-gradient(var(--brand-primary) 0% 32%, #F59E0B 32% 56%, #EAB308 56% 71%, #3B82F6 71% 81%, var(--status-available) 81% 89%, #8B5CF6 89% 96%, #EC4899 96% 100%); position: relative; display: flex; align-items: center; justify-content: center; }
+        .donut-inner { width: 100px; height: 100px; background: var(--bg-white); border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .donut-inner h4 { font-size: 1.2rem; }
+        .donut-inner p { font-size: 0.7rem; color: var(--text-secondary); }
+        .donut-legend { font-size: 0.8rem; display: flex; flex-direction: column; gap: 8px; }
+        .legend-item { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); }
+        .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+        /* Tables[cite: 3] */
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 12px 8px; font-size: 0.8rem; color: var(--text-secondary); font-weight: 500; border-bottom: 1px solid var(--border-light); }
+        td { padding: 12px 8px; font-size: 0.85rem; color: var(--text-dark); border-bottom: 1px solid var(--border-light); vertical-align: middle; }
+        tr:last-child td { border-bottom: none; }
+        
+        .status-tag { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+        .tag-urgent { background-color: #FEF3C7; color: var(--status-pending); }
+        .tag-critical { background-color: #FEE2E2; color: var(--status-critical); }
+        .tag-pending { background-color: #FFEDD5; color: #EA580C; }
+        .tag-fulfilled { background-color: #DCFCE7; color: var(--status-available); }
+
+        .donor-name-cell { display: flex; align-items: center; gap: 10px; }
+        .donor-avatar { width: 32px; height: 32px; border-radius: 50%; }
+        .blood-type-text { color: var(--brand-primary); font-weight: 700; }
+
+        /* Bottom Row Panels[cite: 3] */
+        .activity-list { display: flex; flex-direction: column; gap: 16px; }
+        .activity-item { display: flex; align-items: flex-start; gap: 12px; }
+        .activity-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; flex-shrink: 0; }
+        .activity-content h5 { font-size: 0.85rem; font-weight: 600; margin-bottom: 2px; }
+        .activity-content p { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.4; }
+        .activity-time { font-size: 0.75rem; color: var(--text-secondary); margin-left: auto; white-space: nowrap; }
+
+        .tabs { display: flex; gap: 16px; border-bottom: 1px solid var(--border-light); margin-bottom: 16px; }
+        .tab { padding: 8px 4px; font-size: 0.85rem; font-weight: 500; color: var(--text-secondary); cursor: pointer; border-bottom: 2px solid transparent; }
+        .tab.active { color: var(--brand-primary); border-bottom-color: var(--brand-primary); }
+        
+        .report-item { display: flex; align-items: center; justify-content: space-between; padding-bottom: 12px; margin-bottom: 12px; border-bottom: 1px solid var(--border-light); }
+        .report-item:last-child { border: none; margin: 0; padding: 0; }
+        .report-info h5 { font-size: 0.85rem; margin-bottom: 2px; }
+        .report-info p { font-size: 0.75rem; color: var(--text-secondary); }
+        .btn-review { border: 1px solid var(--brand-primary); color: var(--brand-primary); background: transparent; padding: 4px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+        .btn-review:hover { background: var(--bg-pink); }
+
+        .system-list { display: flex; flex-direction: column; gap: 12px; }
+        .system-item { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; }
+        .system-name { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); }
+        .system-status { display: flex; align-items: center; gap: 6px; font-weight: 500; color: var(--status-available); }
+        .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--status-available); }
+
+    </style>
+</head>
+<body>
+
+    <!-- Admin Sidebar[cite: 3] -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="#E60023"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+            Blood<span>Match</span>
+        </div>
+        <div class="sidebar-tagline">Donate Today Save Tomorrow</div>
+
+        <div class="nav-section">MAIN</div>
+        <ul class="nav-list">
+            <a href="#" class="nav-item active"><span>📊</span> Dashboard</a>
+            <a href="#" class="nav-item"><span>👥</span> Users</a>
+            <a href="#" class="nav-item"><span>🩸</span> Donors</a>
+            <a href="#" class="nav-item"><span>📄</span> Blood Requests</a>
+            <a href="#" class="nav-item"><span>🏥</span> Hospitals</a>
+            <a href="#" class="nav-item"><span>❤️</span> Donations</a>
+            <a href="#" class="nav-item"><span>🔔</span> Notifications <span class="badge">12</span></a>
+        </ul>
+
+        <div class="nav-section">MANAGEMENT</div>
+        <ul class="nav-list">
+            <a href="#" class="nav-item"><span>📁</span> Reports</a>
+            <a href="#" class="nav-item"><span>⏱️</span> Audit Logs</a>
+            <a href="#" class="nav-item"><span>📝</span> Content Management</a>
+            <a href="#" class="nav-item"><span>⚙️</span> System Settings</a>
+        </ul>
+
+        <div class="sidebar-cta">
+            <div style="font-size: 2rem; color: var(--brand-primary); margin-bottom: 8px;">♡</div>
+            <h4>Together<br>We Can Save Lives</h4>
+            <p>Manage, Monitor and Grow our Blood Donation Community</p>
+            <button>View Reports →</button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Topbar[cite: 3] -->
+        <header class="topbar">
+            <div class="search-bar">
+                <span>🔍</span>
+                <input type="text" placeholder="Search users, donors, requests, hospitals...">
+            </div>
+            <div class="topbar-right">
+                <div class="notif-icon">🔔<div class="notif-dot">5</div></div>
+                <div class="user-profile-mini">
+                    <img src="https://ui-avatars.com/api/?name=Admin&background=F5F7FA&color=101828" alt="Admin">
+                    <div>
+                        <h5>Admin</h5>
+                        <p>Super Admin</p>
+                    </div>
+                    <span>⌄</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="dashboard-container">
+            
+            <!-- Dashboard Header[cite: 3] -->
+            <div class="dash-header">
+                <div>
+                    <h1>Welcome Back, Admin! 👋</h1>
+                    <p>Here's an overview of your platform activity and impact.</p>
+                </div>
+                <button class="date-filter">📅 Last 30 Days ⌄</button>
+            </div>
+
+            <!-- KPI Cards[cite: 3] -->
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-icon" style="background: var(--bg-pink); color: var(--brand-primary);">👥</div>
+                    <div class="kpi-info">
+                        <p>Total Users</p>
+                        <h4>12,458</h4>
+                        <div class="trend-up">↑ 12% this month</div>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon" style="background: #DCFCE7; color: var(--status-available);">💧</div>
+                    <div class="kpi-info">
+                        <p>Registered Donors</p>
+                        <h4>3,921</h4>
+                        <div class="trend-up">↑ 9% this month</div>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon" style="background: #EFF6FF; color: var(--status-info);">📄</div>
+                    <div class="kpi-info">
+                        <p>Blood Requests</p>
+                        <h4>1,024</h4>
+                        <div class="trend-up">↑ 16% this month</div>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon" style="background: #FEF3C7; color: var(--status-pending);">🏥</div>
+                    <div class="kpi-info">
+                        <p>Partner Hospitals</p>
+                        <h4>200</h4>
+                        <div class="trend-up">↑ 8% this month</div>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon" style="background: #F3E8FF; color: #9333EA;">❤️</div>
+                    <div class="kpi-info">
+                        <p>Successful Donations</p>
+                        <h4>876</h4>
+                        <div class="trend-up">↑ 22% this month</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Middle Charts Grid[cite: 3] -->
+            <div class="grid-3">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Blood Requests vs Donations</h3>
+                        <div style="display: flex; gap: 12px; font-size: 0.8rem; color: var(--text-secondary);">
+                            <span style="display: flex; align-items: center; gap: 4px;"><div style="width: 8px; height: 8px; border-radius: 50%; background: var(--brand-primary);"></div> Blood Requests</span>
+                            <span style="display: flex; align-items: center; gap: 4px;"><div style="width: 8px; height: 8px; border-radius: 50%; background: var(--status-available);"></div> Successful Donations</span>
+                        </div>
+                    </div>
+                    <div class="chart-placeholder">
+                        <div class="bar" style="height: 30%;"></div><div class="bar" style="height: 45%; background: var(--status-available);"></div>
+                        <div class="bar" style="height: 50%;"></div><div class="bar" style="height: 60%; background: var(--status-available);"></div>
+                        <div class="bar" style="height: 40%;"></div><div class="bar" style="height: 55%; background: var(--status-available);"></div>
+                        <div class="bar" style="height: 70%;"></div><div class="bar" style="height: 65%; background: var(--status-available);"></div>
+                        <div class="bar" style="height: 90%;"></div><div class="bar" style="height: 80%; background: var(--status-available);"></div>
+                        <div class="bar" style="height: 85%;"></div><div class="bar" style="height: 95%; background: var(--status-available);"></div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Blood Group Distribution (Donors)</h3>
+                    </div>
+                    <div class="donut-container">
+                        <div class="donut-chart">
+                            <div class="donut-inner">
+                                <h4>3,921</h4>
+                                <p>Total Donors</p>
+                            </div>
+                        </div>
+                        <div class="donut-legend">
+                            <div class="legend-item"><div class="legend-dot" style="background: var(--brand-primary);"></div> O+ 32%</div>
+                            <div class="legend-item"><div class="legend-dot" style="background: #F59E0B;"></div> A+ 24%</div>
+                            <div class="legend-item"><div class="legend-dot" style="background: #EAB308;"></div> B+ 15%</div>
+                            <div class="legend-item"><div class="legend-dot" style="background: #3B82F6;"></div> O- 10%</div>
+                            <div class="legend-item"><div class="legend-dot" style="background: var(--status-available);"></div> A- 8%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Donor Locations</h3>
+                        <a href="#" class="view-all">View Full Map →</a>
+                    </div>
+                    <div style="width: 100%; height: 160px; background: url('https://via.placeholder.com/400x200?text=Map+Location+View') center/cover; border-radius: 8px; margin-bottom: 12px;"></div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-secondary);">
+                        <span><div class="legend-dot" style="display: inline-block; background: var(--brand-primary);"></div> Available (2,891)</span>
+                        <span><div class="legend-dot" style="display: inline-block; background: var(--status-info);"></div> Busy (420)</span>
+                        <span><div class="legend-dot" style="display: inline-block; background: #6B7280;"></div> Unavailable (610)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tables Grid[cite: 3] -->
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Recent Blood Requests</h3>
+                        <a href="#" class="view-all">View All →</a>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#ID</th>
+                                <th>Patient Name</th>
+                                <th>Blood Group</th>
+                                <th>Units</th>
+                                <th>Location</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>#BR-1042</td><td>Rajesh Kumar</td><td class="blood-type-text">O+</td><td>2</td><td>Lucknow</td><td><span class="status-tag tag-urgent">Urgent</span></td><td>30 Oct</td>
+                            </tr>
+                            <tr>
+                                <td>#BR-1041</td><td>Pooja Singh</td><td class="blood-type-text">A-</td><td>1</td><td>Kanpur</td><td><span class="status-tag tag-critical">Critical</span></td><td>30 Oct</td>
+                            </tr>
+                            <tr>
+                                <td>#BR-1040</td><td>Amit Verma</td><td class="blood-type-text">B+</td><td>3</td><td>Lucknow</td><td><span class="status-tag tag-pending">Pending</span></td><td>29 Oct</td>
+                            </tr>
+                            <tr>
+                                <td>#BR-1039</td><td>Neha Sharma</td><td class="blood-type-text">O-</td><td>2</td><td>Unnao</td><td><span class="status-tag tag-fulfilled">Fulfilled</span></td><td>29 Oct</td>
+                            </tr>
+                            <tr>
+                                <td>#BR-1038</td><td>Suresh Yadav</td><td class="blood-type-text">AB+</td><td>1</td><td>Lucknow</td><td><span class="status-tag tag-pending">Pending</span></td><td>28 Oct</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Recent Registered Donors</h3>
+                        <a href="#" class="view-all">View All →</a>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Blood Group</th>
+                                <th>Location</th>
+                                <th>Last Donation</th>
+                                <th>Status</th>
+                                <th>Joined</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="donor-name-cell"><img src="https://ui-avatars.com/api/?name=Aditya+Tiwari" class="donor-avatar"> Aditya Tiwari</td>
+                                <td class="blood-type-text">O+</td><td>Lucknow</td><td>3 months ago</td><td><span style="color: var(--status-available); font-weight: 500;">Available</span></td><td>30 Oct</td>
+                            </tr>
+                            <tr>
+                                <td class="donor-name-cell"><img src="https://ui-avatars.com/api/?name=Priya+Singh" class="donor-avatar"> Priya Singh</td>
+                                <td class="blood-type-text">A+</td><td>Kanpur</td><td>6 months ago</td><td><span style="color: var(--status-available); font-weight: 500;">Available</span></td><td>30 Oct</td>
+                            </tr>
+                            <tr>
+                                <td class="donor-name-cell"><img src="https://ui-avatars.com/api/?name=Rahul+Yadav" class="donor-avatar"> Rahul Yadav</td>
+                                <td class="blood-type-text">B+</td><td>Lucknow</td><td>2 months ago</td><td><span style="color: var(--status-available); font-weight: 500;">Available</span></td><td>29 Oct</td>
+                            </tr>
+                            <tr>
+                                <td class="donor-name-cell"><img src="https://ui-avatars.com/api/?name=Sneha+Gupta" class="donor-avatar"> Sneha Gupta</td>
+                                <td class="blood-type-text">O-</td><td>Unnao</td><td>5 months ago</td><td><span style="color: var(--status-info); font-weight: 500;">Busy</span></td><td>29 Oct</td>
+                            </tr>
+                            <tr>
+                                <td class="donor-name-cell"><img src="https://ui-avatars.com/api/?name=Vikash+Kumar" class="donor-avatar"> Vikash Kumar</td>
+                                <td class="blood-type-text">AB+</td><td>Lucknow</td><td>4 months ago</td><td><span style="color: var(--status-available); font-weight: 500;">Available</span></td><td>28 Oct</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Bottom Data Grid[cite: 3] -->
+            <div class="grid-3-bottom">
+                
+                <!-- Recent Activities[cite: 3] -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Recent Activities</h3>
+                        <a href="#" class="view-all">View All →</a>
+                    </div>
+                    <div class="activity-list">
+                        <div class="activity-item">
+                            <div class="activity-icon" style="background: var(--bg-pink); color: var(--brand-primary);">📄</div>
+                            <div class="activity-content">
+                                <h5>New blood request #BR-1042 created</h5>
+                                <p>Rahul Kumar requested 2 units of O+ blood</p>
+                            </div>
+                            <span class="activity-time">5 min ago</span>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon" style="background: #DCFCE7; color: var(--status-available);">✔</div>
+                            <div class="activity-content">
+                                <h5>Donation completed</h5>
+                                <p>Priya Singh successfully donated 1 unit at City Care Hospital</p>
+                            </div>
+                            <span class="activity-time">1 hour ago</span>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon" style="background: #EFF6FF; color: var(--status-info);">👥</div>
+                            <div class="activity-content">
+                                <h5>New donor registered</h5>
+                                <p>Amit Verma joined as a donor (B+)</p>
+                            </div>
+                            <span class="activity-time">2 hours ago</span>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon" style="background: #FEF3C7; color: var(--status-pending);">🏥</div>
+                            <div class="activity-content">
+                                <h5>New hospital added</h5>
+                                <p>Medanta Hospital, Lucknow verified and added</p>
+                            </div>
+                            <span class="activity-time">4 hours ago</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reports & Moderation[cite: 3] -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Reports & Moderation</h3>
+                        <a href="#" class="view-all">View All →</a>
+                    </div>
+                    <div class="tabs">
+                        <div class="tab active">Pending (8)</div>
+                        <div class="tab">Resolved (24)</div>
+                        <div class="tab">Rejected (5)</div>
+                    </div>
+                    <div>
+                        <div class="report-item">
+                            <div class="activity-icon" style="background: var(--bg-pink); color: var(--brand-primary); margin-right: 12px;">🚩</div>
+                            <div class="report-info">
+                                <h5 style="color: var(--status-critical);">Inappropriate donor information</h5>
+                                <p>Reported by User #2456 • 2 hours ago</p>
+                            </div>
+                            <button class="btn-review">Review</button>
+                        </div>
+                        <div class="report-item">
+                            <div class="activity-icon" style="background: var(--bg-pink); color: var(--brand-primary); margin-right: 12px;">⚠️</div>
+                            <div class="report-info">
+                                <h5 style="color: var(--status-critical);">Fake blood request</h5>
+                                <p>Reported by User #1890 • 5 hours ago</p>
+                            </div>
+                            <button class="btn-review">Review</button>
+                        </div>
+                        <div class="report-item">
+                            <div class="activity-icon" style="background: var(--bg-pink); color: var(--brand-primary); margin-right: 12px;">👤</div>
+                            <div class="report-info">
+                                <h5 style="color: var(--status-critical);">Spam user account</h5>
+                                <p>Reported by User #2103 • 1 day ago</p>
+                            </div>
+                            <button class="btn-review">Review</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- System Overview[cite: 3] -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>System Overview</h3>
+                        <span style="font-size: 0.8rem; color: var(--status-available); display: flex; align-items: center; gap: 4px;"><div class="dot"></div> All Systems Operational</span>
+                    </div>
+                    <div class="system-list">
+                        <div class="system-item">
+                            <div class="system-name"><span>🗄️</span> Database</div>
+                            <div class="system-status"><div class="dot"></div> Operational</div>
+                        </div>
+                        <div class="system-item">
+                            <div class="system-name"><span>🔒</span> Authentication</div>
+                            <div class="system-status"><div class="dot"></div> Operational</div>
+                        </div>
+                        <div class="system-item">
+                            <div class="system-name"><span>✉️</span> Email Service</div>
+                            <div class="system-status"><div class="dot"></div> Operational</div>
+                        </div>
+                        <div class="system-item">
+                            <div class="system-name"><span>🗺️</span> Map Service</div>
+                            <div class="system-status"><div class="dot"></div> Operational</div>
+                        </div>
+                        <div class="system-item">
+                            <div class="system-name"><span>🔔</span> Realtime Notifications</div>
+                            <div class="system-status"><div class="dot"></div> Operational</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/profile-sync.js"></script>
+</body>
+</html>

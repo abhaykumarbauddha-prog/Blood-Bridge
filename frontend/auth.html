@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood Bridge | Authentication</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --brand-primary: #E60023;
+            --bg-pink: #FFF0F2;
+            --bg-white: #FFFFFF;
+            --bg-light-gray: #F5F7FA;
+            --text-dark: #101828;
+            --text-secondary: #475467;
+            --border-color: #E4E7EC;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-light-gray);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+        }
+
+        /* Navbar (Simplified for Auth Page) */
+        .auth-nav {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 24px 5%;
+            display: flex;
+            justify-content: space-between;
+            z-index: 10;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+        .logo span { color: var(--brand-primary); }
+
+        /* Main Container */
+        .auth-container {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+        }
+
+        /* Left Side (Info/Marketing) */
+        .auth-left {
+            flex: 1;
+            padding: 100px 5% 40px 10%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background: linear-gradient(180deg, var(--bg-white) 0%, var(--bg-pink) 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .auth-left-content {
+            max-width: 480px;
+            z-index: 2;
+        }
+
+        .auth-label {
+            color: var(--brand-primary);
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .auth-label::before {
+            content: "—";
+        }
+
+        .auth-title {
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 16px;
+        }
+        .auth-title span { color: var(--brand-primary); }
+        
+        .auth-desc {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 40px;
+            line-height: 1.5;
+        }
+
+        .feature-list {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+        }
+        .feature-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--bg-pink);
+            color: var(--brand-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        .feature-text h4 { font-size: 1rem; margin-bottom: 4px; }
+        .feature-text p { font-size: 0.9rem; color: var(--text-secondary); }
+
+        /* Right Side (Form) */
+        .auth-right {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: url('https://via.placeholder.com/800x1000?text=Background+Image') center/cover;
+            position: relative;
+        }
+        .auth-right::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.2);
+        }
+
+        .auth-card {
+            background: var(--bg-white);
+            width: 100%;
+            max-width: 480px;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 2;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .auth-card::-webkit-scrollbar { width: 6px; }
+        .auth-card::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+
+        .auth-card-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .auth-card-header h2 { font-size: 1.5rem; margin-bottom: 8px; }
+        .auth-card-header p { color: var(--text-secondary); font-size: 0.9rem; }
+
+        /* Role Selector */
+        .role-selector {
+            display: flex;
+            background: var(--bg-light-gray);
+            border-radius: 8px;
+            padding: 4px;
+            margin-bottom: 24px;
+        }
+        .role-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            background: transparent;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: 0.3s;
+        }
+        .role-btn.active {
+            background: var(--brand-primary);
+            color: var(--bg-white);
+            box-shadow: 0 2px 4px rgba(230,0,35,0.2);
+        }
+
+        /* Form Inputs */
+        .form-group {
+            margin-bottom: 16px;
+            position: relative;
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: var(--text-dark);
+        }
+        .form-control {
+            width: 100%;
+            padding: 12px 16px 12px 40px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            outline: none;
+            transition: 0.2s;
+        }
+        .form-control:focus {
+            border-color: var(--brand-primary);
+            box-shadow: 0 0 0 3px var(--bg-pink);
+        }
+        .input-icon {
+            position: absolute;
+            left: 14px;
+            top: 36px;
+            color: var(--text-secondary);
+        }
+        
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            font-size: 0.9rem;
+        }
+        .form-options label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+        .forgot-link {
+            color: var(--brand-primary);
+            font-weight: 500;
+            text-decoration: none;
+        }
+
+        .btn-submit {
+            width: 100%;
+            background: var(--brand-primary);
+            color: var(--bg-white);
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 24px;
+            transition: 0.3s;
+        }
+        .btn-submit:hover {
+            background: var(--status-critical);
+        }
+
+        .social-login {
+            text-align: center;
+        }
+        .social-login p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+            position: relative;
+        }
+        .social-login p::before, .social-login p::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 30%;
+            height: 1px;
+            background: var(--border-color);
+        }
+        .social-login p::before { left: 0; }
+        .social-login p::after { right: 0; }
+
+        .social-buttons {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .btn-social {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-white);
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: 0.2s;
+        }
+        .btn-social:hover { background: var(--bg-light-gray); }
+
+        .auth-switch {
+            text-align: center;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+        .auth-switch a {
+            color: var(--brand-primary);
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        /* Toggle Views */
+        #signup-view { display: none; }
+        
+    </style>
+</head>
+<body>
+
+    <nav class="auth-nav">
+        <div class="logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="#E60023"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+            Blood<span>Match</span>
+        </div>
+        <a href="index.html" style="color: var(--text-secondary); text-decoration: none; font-weight: 500;">Back to Home</a>
+    </nav>
+
+    <div class="auth-container">
+        <!-- Left Side: Dynamic Info -->
+        <div class="auth-left" id="auth-info-container">
+            <!-- Populated by JavaScript below based on Login/Signup state -->
+        </div>
+
+        <!-- Right Side: Forms -->
+        <div class="auth-right">
+            <div class="auth-card">
+                
+                <!-- LOGIN FORM -->
+                <div id="login-view">
+                    <div class="auth-card-header">
+                        <h2>Welcome Back</h2>
+                        <p>Log in to continue your journey of saving lives.</p>
+                    </div>
+                    <form>
+                        <div class="form-group">
+                            <label>Email Address</label>
+                            <span class="input-icon">✉️</span>
+                            <input type="email" class="form-control" placeholder="Enter your email address" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <span class="input-icon">🔒</span>
+                            <input type="password" class="form-control" placeholder="Enter your password" required>
+                        </div>
+                        <div class="form-options">
+                            <label><input type="checkbox"> Remember me</label>
+                            <a href="#" class="forgot-link">Forgot password?</a>
+                        </div>
+                        <button type="submit" class="btn-submit">Login →</button>
+                    </form>
+                    
+                    <div class="social-login">
+                        <p>or continue with</p>
+                        <div class="social-buttons">
+                            <button class="btn-social">🌐 Google</button>
+                            <button class="btn-social">🐙 GitHub</button>
+                            <button class="btn-social">✉️ Email</button>
+                        </div>
+                    </div>
+                    <div class="auth-switch">
+                        Don't have an account? <a onclick="toggleAuth('signup')">Sign Up</a>
+                    </div>
+                </div>
+
+                <!-- SIGN UP FORM -->
+                <div id="signup-view">
+                    <div class="auth-card-header">
+                        <h2>Create Your Account</h2>
+                        <p>Join our community and start saving lives.</p>
+                    </div>
+                    
+                    <div class="role-selector">
+                        <button class="role-btn active" type="button">👤 Donor</button>
+                        <button class="role-btn" type="button">👥 Requester</button>
+                        <button class="role-btn" type="button">🏥 Hospital</button>
+                    </div>
+
+                    <form>
+                        <div class="form-group">
+                            <label>Full Name</label>
+                            <span class="input-icon">👤</span>
+                            <input type="text" class="form-control" placeholder="Enter your full name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Email Address</label>
+                            <span class="input-icon">✉️</span>
+                            <input type="email" class="form-control" placeholder="Enter your email address" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Phone Number</label>
+                            <span class="input-icon">📞</span>
+                            <input type="tel" class="form-control" placeholder="+91 98765 43210" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <span class="input-icon">🔒</span>
+                            <input type="password" class="form-control" placeholder="Create a strong password" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Confirm Password</label>
+                            <span class="input-icon">🔒</span>
+                            <input type="password" class="form-control" placeholder="Confirm your password" required>
+                        </div>
+                        
+                        <div class="form-options">
+                            <label><input type="checkbox" required> I agree to the <a href="#" style="color: var(--brand-primary);">Terms of Service</a> and <a href="#" style="color: var(--brand-primary);">Privacy Policy</a></label>
+                        </div>
+                        <button type="submit" class="btn-submit">Sign Up →</button>
+                    </form>
+
+                    <div class="social-login">
+                        <p>or continue with</p>
+                        <div class="social-buttons">
+                            <button class="btn-social">🌐 Google</button>
+                            <button class="btn-social">🐙 GitHub</button>
+                            <button class="btn-social">✉️ Email</button>
+                        </div>
+                    </div>
+                    <div class="auth-switch">
+                        Already have an account? <a onclick="toggleAuth('login')">Login</a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript for Toggling Views -->
+    <script>
+        const loginData = `
+            <div class="auth-left-content">
+                <div class="auth-label">Welcome Back</div>
+                <h1 class="auth-title">Together<br>We Save<br><span>Lives</span></h1>
+                <p class="auth-desc">Log in to your BloodMatch account and continue making a difference in someone's life.</p>
+                
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <div class="feature-icon">👤</div>
+                        <div class="feature-text">
+                            <h4>Access your profile</h4>
+                            <p>Manage your donor information</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">📊</div>
+                        <div class="feature-text">
+                            <h4>Track your contributions</h4>
+                            <p>See your donation history</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">🔔</div>
+                        <div class="feature-text">
+                            <h4>Get real-time updates</h4>
+                            <p>Receive blood requests and notifications</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">💖</div>
+                        <div class="feature-text">
+                            <h4>Be the reason</h4>
+                            <p>Someone's tomorrow is brighter</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        const signupData = `
+            <div class="auth-left-content">
+                <div class="auth-label">Create Account</div>
+                <h1 class="auth-title">Join a<br>Life-Saving<br><span>Community</span></h1>
+                <p class="auth-desc">Sign up today and become a donor, requester, or hospital. Together we can save more lives.</p>
+                
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <div class="feature-icon">🩸</div>
+                        <div class="feature-text">
+                            <h4>Be a Donor</h4>
+                            <p>Help save lives by donating blood</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">🔍</div>
+                        <div class="feature-text">
+                            <h4>Request Help</h4>
+                            <p>Find nearby donors in emergencies</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">🏥</div>
+                        <div class="feature-text">
+                            <h4>Hospital Registration</h4>
+                            <p>Connect with verified donors</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">🛡️</div>
+                        <div class="feature-text">
+                            <h4>Secure & Verified</h4>
+                            <p>Your data is safe with Supabase & Row Level Security</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        const infoContainer = document.getElementById('auth-info-container');
+        const loginView = document.getElementById('login-view');
+        const signupView = document.getElementById('signup-view');
+
+        function toggleAuth(type) {
+            if (type === 'login') {
+                infoContainer.innerHTML = loginData;
+                loginView.style.display = 'block';
+                signupView.style.display = 'none';
+                document.querySelector('.auth-right').style.background = "url('https://images.unsplash.com/photo-1615461066841-6116e61058f4?auto=format&fit=crop&q=80') center/cover";
+            } else {
+                infoContainer.innerHTML = signupData;
+                loginView.style.display = 'none';
+                signupView.style.display = 'block';
+                document.querySelector('.auth-right').style.background = "var(--bg-pink)";
+            }
+        }
+
+        // Initialize with Login view
+        toggleAuth('login');
+
+        // Role Selector Logic
+        const roleBtns = document.querySelectorAll('.role-btn');
+        roleBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                roleBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/profile-sync.js"></script>
+</body>
+</html>

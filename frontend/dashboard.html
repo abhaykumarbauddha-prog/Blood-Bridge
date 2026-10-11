@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood Bridge | User Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Main Brand Colors */
+            --brand-primary: #E60023;
+            --bg-pink: #FFF0F2;
+            --bg-white: #FFFFFF;
+            --bg-light-gray: #F5F7FA;
+
+            /* Typography / UI Elements */
+            --text-dark: #101828;
+            --text-secondary: #475467;
+            --border-light: #E4E7EC;
+
+            /* Status Colors */
+            --status-available: #16A34A; /* available, verified, completed */
+            --status-pending: #D97706;   /* pending, approaching, deadlines */
+            --status-critical: #DC2626;  /* critical request, failed actions */
+            --status-info: #2563EB;      /* information, updates, scheduled tasks */
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-light-gray);
+            color: var(--text-dark);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background-color: var(--bg-white);
+            border-right: 1px solid var(--border-light);
+            display: flex;
+            flex-direction: column;
+            padding: 24px 0;
+            flex-shrink: 0;
+        }
+        .sidebar-logo {
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+        }
+        .sidebar-logo span { color: var(--brand-primary); }
+        .sidebar-tagline {
+            padding: 0 24px;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 32px;
+        }
+        .nav-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .nav-item {
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text-secondary);
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 0.95rem;
+        }
+        .nav-item:hover { background-color: var(--bg-light-gray); }
+        .nav-item.active {
+            background-color: var(--bg-pink);
+            color: var(--brand-primary);
+            border-left: 4px solid var(--brand-primary);
+            padding-left: 20px;
+        }
+        .badge {
+            background-color: var(--brand-primary);
+            color: var(--bg-white);
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin-left: auto;
+        }
+        .sidebar-cta {
+            margin: auto 24px 0;
+            background-color: var(--bg-pink);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        .sidebar-cta h4 { color: var(--brand-primary); margin-bottom: 8px; }
+        .sidebar-cta p { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px; }
+        .sidebar-cta button {
+            width: 100%;
+            background-color: var(--brand-primary);
+            color: var(--bg-white);
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        /* Topbar */
+        .topbar {
+            background-color: var(--bg-white);
+            height: 72px;
+            padding: 0 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-light);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .search-bar {
+            display: flex;
+            align-items: center;
+            background-color: var(--bg-light-gray);
+            padding: 10px 16px;
+            border-radius: 8px;
+            width: 400px;
+            gap: 10px;
+        }
+        .search-bar input {
+            border: none;
+            background: transparent;
+            width: 100%;
+            outline: none;
+            color: var(--text-dark);
+        }
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+        .notif-icon { position: relative; cursor: pointer; font-size: 1.2rem; }
+        .notif-dot {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background-color: var(--brand-primary);
+            color: white;
+            font-size: 0.6rem;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .user-profile-mini {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+        }
+        .user-profile-mini img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .user-profile-mini div h5 { font-size: 0.9rem; }
+        .user-profile-mini div p { font-size: 0.8rem; color: var(--text-secondary); }
+
+        /* Dashboard Grid */
+        .dashboard-container {
+            width: 100%;
+            padding: 24px clamp(16px, 2.5vw, 36px) 36px;
+            display: grid;
+            grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr);
+            gap: 24px;
+        }
+
+        /* Card Styles */
+        .card {
+            background-color: var(--bg-white);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            border: 1px solid var(--border-light);
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .card-header h3 { font-size: 1.1rem; }
+        .view-all { color: var(--brand-primary); font-size: 0.85rem; font-weight: 500; cursor: pointer; text-decoration: none; }
+
+        /* Welcome Banner (Spans 2 columns) */
+        .welcome-banner {
+            grid-column: 1;
+            background: linear-gradient(135deg, var(--bg-pink) 0%, var(--bg-white) 100%);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .welcome-content h2 { font-size: 2rem; margin-bottom: 8px; }
+        .welcome-content p { color: var(--text-secondary); margin-bottom: 24px; max-width: 400px; line-height: 1.5; }
+        .welcome-actions { display: flex; gap: 12px; }
+        .btn { padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; }
+        .btn-primary { background-color: var(--brand-primary); color: var(--bg-white); }
+        .btn-outline { background-color: transparent; border: 1px solid var(--brand-primary); color: var(--brand-primary); }
+        
+        /* Profile Card (Spans 1 col, 2 rows logically but we'll fit in grid) */
+        .profile-card {
+            text-align: center;
+            position: relative;
+        }
+        .edit-profile { position: absolute; top: 24px; right: 24px; font-size: 0.85rem; color: var(--text-secondary); cursor: pointer; border: 1px solid var(--border-light); padding: 4px 12px; border-radius: 20px; }
+        .profile-card img { width: 80px; height: 80px; border-radius: 50%; margin-bottom: 12px; }
+        .profile-card h3 { font-size: 1.25rem; display: flex; align-items: center; justify-content: center; gap: 4px; }
+        .verified-badge { color: var(--brand-primary); font-size: 1rem; }
+        .profile-role { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 20px; }
+        .profile-details { text-align: left; margin-bottom: 24px; font-size: 0.9rem; color: var(--text-secondary); }
+        .profile-details div { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background-color: var(--status-available); display: inline-block; }
+        .profile-stats-mini { display: flex; justify-content: space-between; border-top: 1px solid var(--border-light); padding-top: 20px; }
+        .profile-stats-mini div { text-align: center; }
+        .profile-stats-mini h4 { font-size: 1.1rem; color: var(--text-dark); }
+        .profile-stats-mini p { font-size: 0.75rem; color: var(--text-secondary); }
+
+        /* Stats Row (Spans 2 columns) */
+        .stats-row {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            padding: 16px;
+        }
+        .stat-box { display: flex; align-items: center; gap: 16px; border-right: 1px solid var(--border-light); }
+        .stat-box:last-child { border-right: none; }
+        .stat-icon { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; background: var(--bg-pink); color: var(--brand-primary); }
+        .stat-info h4 { font-size: 1.25rem; }
+        .stat-info p { font-size: 0.8rem; color: var(--text-secondary); }
+        .stat-trend { color: var(--status-available); font-size: 0.75rem; font-weight: 500; }
+
+        /* Lists */
+        .request-list, .notif-list { display: flex; flex-direction: column; gap: 16px; }
+        .request-item { display: flex; align-items: center; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid var(--border-light); }
+        .request-item:last-child { border-bottom: none; padding-bottom: 0; }
+        .req-blood-type { width: 40px; height: 40px; background-color: var(--bg-pink); color: var(--brand-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+        .req-info { flex: 1; margin-left: 12px; }
+        .req-info h5 { font-size: 0.95rem; }
+        .req-info p { font-size: 0.8rem; color: var(--text-secondary); }
+        .req-status-tag { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; margin-right: 16px; }
+        .tag-urgent { background-color: #FEF3C7; color: var(--status-pending); }
+        .tag-critical { background-color: #FEE2E2; color: var(--status-critical); }
+        
+        .notif-item { display: flex; align-items: flex-start; gap: 12px; }
+        .notif-icon-circle { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
+        .icon-red { background-color: var(--bg-pink); color: var(--brand-primary); }
+        .icon-green { background-color: #DCFCE7; color: var(--status-available); }
+        .icon-purple { background-color: #F3E8FF; color: #9333EA; }
+        .notif-content h5 { font-size: 0.9rem; margin-bottom: 2px; }
+        .notif-content p { font-size: 0.8rem; color: var(--text-secondary); }
+        .notif-time { font-size: 0.75rem; color: var(--text-secondary); white-space: nowrap; }
+
+        /* Map Mockup */
+        .map-container {
+            width: 100%;
+            height: 200px;
+            background: url('https://via.placeholder.com/400x200?text=Map+View') center/cover;
+            border-radius: 12px;
+            position: relative;
+            margin-bottom: 16px;
+        }
+        .map-legend { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-secondary); }
+        .legend-item { display: flex; align-items: center; gap: 6px; }
+        .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+        /* Quick Actions Grid */
+        .quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .action-btn { padding: 16px; border-radius: 12px; text-align: left; cursor: pointer; border: none; display: flex; flex-direction: column; gap: 8px; transition: 0.2s; }
+        .action-btn h4 { font-size: 0.9rem; color: var(--text-dark); }
+        .action-btn p { font-size: 0.75rem; color: var(--text-secondary); }
+        .action-btn:hover { opacity: 0.9; }
+        .bg-red { background-color: var(--bg-pink); }
+        .bg-blue { background-color: #EFF6FF; }
+        .bg-green { background-color: #F0FDF4; }
+        .bg-purple { background-color: #FAF5FF; }
+
+        /* Eligibility Circle */
+        .eligibility-container { display: flex; align-items: center; gap: 24px; }
+        .progress-circle { width: 100px; height: 100px; border-radius: 50%; border: 8px solid var(--bg-pink); border-top-color: var(--brand-primary); display: flex; align-items: center; justify-content: center; flex-direction: column; text-align: center; }
+        .progress-circle span { font-size: 1.25rem; font-weight: 700; color: var(--text-dark); }
+        .progress-circle small { font-size: 0.7rem; color: var(--text-secondary); }
+        .eligibility-checklist { flex: 1; }
+        .checklist-item { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; margin-bottom: 8px; color: var(--text-secondary); }
+        .checklist-item i { color: var(--brand-primary); }
+
+        /* Tips */
+        .tip-card { text-align: center; }
+        .tip-card img { width: 100%; height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 16px; }
+        .tip-card h4 { font-size: 1rem; margin-bottom: 8px; }
+        .tip-card p { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 16px; }
+        .carousel-dots { display: flex; justify-content: center; gap: 6px; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; background-color: var(--border-light); }
+        .dot.active { background-color: var(--brand-primary); }
+
+        @media (max-width: 900px) {
+            .sidebar { width: 220px; }
+            .topbar { padding: 0 20px; }
+            .search-bar { width: min(360px, 45vw); }
+            .dashboard-container { grid-template-columns: minmax(0, 1fr); }
+            .welcome-banner, .stats-row { grid-column: 1; }
+        }
+
+        @media (max-width: 640px) {
+            body { display: block; overflow: auto; }
+            .sidebar { width: 100%; height: auto; padding: 16px 0; }
+            .sidebar-tagline, .sidebar-cta { display: none; }
+            .nav-list { flex-direction: row; overflow-x: auto; padding-bottom: 4px; }
+            .nav-item { white-space: nowrap; padding: 10px 16px; }
+            .main-content { overflow: visible; }
+            .topbar { height: auto; min-height: 72px; gap: 12px; flex-wrap: wrap; padding: 12px 16px; }
+            .search-bar { width: 100%; order: 2; }
+            .dashboard-container { padding: 16px; gap: 16px; }
+            .welcome-banner { align-items: flex-start; }
+            .welcome-img { display: none; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); padding: 16px; }
+            .stat-box { border-right: none; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar[cite: 4] -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="#E60023"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+            Blood<span>Match</span>
+        </div>
+        <div class="sidebar-tagline">Donate Today Save Tomorrow[cite: 4]</div>
+
+        <ul class="nav-list">
+            <a href="#" class="nav-item active">
+                <span>🏠</span> Dashboard
+            </a>
+            <a href="my-profile.html" class="nav-item">
+                <span>👤</span> My Profile
+            </a>
+            <a href="find-donors.html" class="nav-item">
+                <span>🔍</span> Find Donors
+            </a>
+            <a href="blood-request.html" class="nav-item">
+                <span>🩸</span> Blood Requests
+            </a>
+            <a href="nearby-request.html" class="nav-item">
+                <span>📍</span> Nearby Requests
+            </a>
+            <a href="notifications.html" class="nav-item">
+                <span>🔔</span> Notifications <span class="badge">3</span>
+            </a>
+            <a href="donation-history.html" class="nav-item">
+                <span>🕒</span> Donation History
+            </a>
+            <a href="settings.html" class="nav-item">
+                <span>⚙️</span> Settings
+            </a>
+            <a href="help-support.html" class="nav-item">
+                <span>❓</span> Help & Support
+            </a>
+        </ul>
+
+        <div class="sidebar-cta">
+            <h4>A Small Act Can Save A Life[cite: 4]</h4>
+            <button>Donate Now →</button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Topbar[cite: 4] -->
+        <header class="topbar">
+            <div class="search-bar">
+                <span>🔍</span>
+                <input type="text" placeholder="Search donors, requests, hospitals...">
+            </div>
+            <div class="topbar-right">
+                <div class="notif-icon">
+                    🔔
+                    <div class="notif-dot">3</div>
+                </div>
+                <div class="user-profile-mini">
+                    <img data-profile-avatar src="https://ui-avatars.com/api/?name=User&background=F5F7FA&color=101828" alt="Profile">
+                    <div>
+                        <h5 data-profile-name>Loading...</h5>
+                        <p data-profile-role>Loading...</p>
+                    </div>
+                    <span>⌄</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard Grid -->
+        <div class="dashboard-container">
+            
+            <!-- Welcome Banner (Col Span 2)[cite: 4] -->
+            <div class="card welcome-banner">
+                <div class="welcome-content">
+                    <p style="color: var(--text-dark); font-weight: 500; margin-bottom: 4px;">Good Morning,</p>
+                    <h2 data-profile-welcome>Loading... 👋</h2>
+                    <p>Thank you for being a part of BloodMatch. Your willingness to donate can save lives.</p>
+                    <div class="welcome-actions">
+                        <button class="btn btn-primary">🩸 Donate Blood →</button>
+                        <button class="btn btn-outline">👥 Update Profile</button>
+                    </div>
+                </div>
+                <div class="welcome-img">
+                    <h3 style="font-family: 'Brush Script MT', cursive; color: var(--brand-primary); transform: rotate(-5deg); font-size: 2rem;">Be the Reason<br>Someone Lives ❤️</h3>
+                </div>
+            </div>
+
+            <!-- Profile Card (Col Span 1)[cite: 4] -->
+            <div class="card profile-card">
+                <div class="edit-profile">✎ Edit Profile</div>
+                <img data-profile-avatar src="https://ui-avatars.com/api/?name=User&background=F5F7FA&color=101828" alt="Profile">
+                <h3 data-profile-card-name>Loading... <span class="verified-badge">✔</span></h3>
+                <p data-profile-card-role class="profile-role">Loading...</p>
+                
+                <div class="profile-details">
+                    <div data-profile-blood>🩸 Loading...</div>
+                    <div data-profile-phone>📞 Loading...</div>
+                    <div data-profile-location>📍 Loading...</div>
+                    <div><span class="status-dot"></span> <span data-profile-availability>Loading...</span></div>
+                </div>
+
+                <div class="profile-stats-mini">
+                    <div><h4>12</h4><p>Total Donations</p></div>
+                    <div><h4>3</h4><p>Lives Helped</p></div>
+                    <div><h4>Silver</h4><p>Donor Level</p></div>
+                </div>
+            </div>
+
+            <!-- Stats Row (Col Span 2)[cite: 4] -->
+            <div class="card stats-row">
+                <div class="stat-box">
+                    <div class="stat-icon">🩸</div>
+                    <div class="stat-info">
+                        <h4 data-profile-blood-stat style="color: var(--brand-primary);">—</h4>
+                        <p>Your Blood Group</p>
+                    </div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-icon" style="color: var(--status-available); background: #DCFCE7;">👥</div>
+                    <div class="stat-info">
+                        <h4>12</h4>
+                        <p>People Helped <br><span class="stat-trend">↑ +3 this year</span></p>
+                    </div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-icon" style="color: var(--status-info); background: #EFF6FF;">📅</div>
+                    <div class="stat-info">
+                        <h4>3 Months Ago</h4>
+                        <p>Last Donation <br><span style="font-size: 0.75rem; color: var(--text-secondary);">Next eligible in 3 months</span></p>
+                    </div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-icon" style="color: var(--status-pending); background: #FEF3C7;">🏆</div>
+                    <div class="stat-info">
+                        <h4>Silver Donor</h4>
+                        <p>Donor Badge <br><span style="font-size: 0.75rem; color: var(--text-secondary);">Keep donating!</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Blood Requests Near You[cite: 4] -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>Blood Requests Near You</h3>
+                    <a href="#" class="view-all">View All →</a>
+                </div>
+                <div class="request-list">
+                    <div class="request-item">
+                        <div class="req-blood-type">A+</div>
+                        <div class="req-info">
+                            <h5>Neha Verma</h5>
+                            <p>City Care Hospital, Lucknow<br>📍 2.5 km away</p>
+                        </div>
+                        <div style="text-align: right;">
+                            <span class="req-status-tag tag-urgent">Urgent</span><br>
+                            <span style="font-size: 0.8rem; font-weight: 500;">2 Units</span>
+                        </div>
+                        <button class="btn btn-primary" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 6px;">View Details</button>
+                    </div>
+                    <div class="request-item">
+                        <div class="req-blood-type" style="color: var(--status-critical);">B-</div>
+                        <div class="req-info">
+                            <h5>Ravi Kumar</h5>
+                            <p>Medanta Hospital, Lucknow<br>📍 4.1 km away</p>
+                        </div>
+                        <div style="text-align: right;">
+                            <span class="req-status-tag tag-critical">Critical</span><br>
+                            <span style="font-size: 0.8rem; font-weight: 500;">1 Unit</span>
+                        </div>
+                        <button class="btn btn-primary" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 6px;">View Details</button>
+                    </div>
+                    <div class="request-item">
+                        <div class="req-blood-type">O-</div>
+                        <div class="req-info">
+                            <h5>Priya Sharma</h5>
+                            <p>King George's Medical University<br>📍 5.8 km away</p>
+                        </div>
+                        <div style="text-align: right;">
+                            <span class="req-status-tag tag-urgent">Urgent</span><br>
+                            <span style="font-size: 0.8rem; font-weight: 500;">3 Units</span>
+                        </div>
+                        <button class="btn btn-primary" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 6px;">View Details</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nearby Donors Map[cite: 4] -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>Nearby Donors</h3>
+                    <a href="#" class="view-all">View Map →</a>
+                </div>
+                <div class="map-container">
+                    <!-- Map background logic placeholder -->
+                </div>
+                <div class="map-legend">
+                    <div class="legend-item"><div class="legend-dot" style="background: var(--brand-primary);"></div> O+ (8)</div>
+                    <div class="legend-item"><div class="legend-dot" style="background: var(--status-info);"></div> A+ (6)</div>
+                    <div class="legend-item"><div class="legend-dot" style="background: var(--status-available);"></div> B+ (4)</div>
+                    <div class="legend-item"><div class="legend-dot" style="background: #9333EA;"></div> AB+ (2)</div>
+                </div>
+            </div>
+
+            <!-- Quick Actions[cite: 4] -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>Quick Actions</h3>
+                </div>
+                <div class="quick-actions">
+                    <button class="action-btn bg-red">
+                        <span style="font-size: 1.5rem; color: var(--brand-primary);">🩸</span>
+                        <h4>Find Donors</h4>
+                        <p>Search nearby donors</p>
+                    </button>
+                    <button class="action-btn bg-blue">
+                        <span style="font-size: 1.5rem; color: var(--status-info);">📄</span>
+                        <h4>Create Request</h4>
+                        <p>Request blood help</p>
+                    </button>
+                    <button class="action-btn bg-green">
+                        <span style="font-size: 1.5rem; color: var(--status-available);">🕒</span>
+                        <h4>Donation History</h4>
+                        <p>View your contributions</p>
+                    </button>
+                    <button class="action-btn bg-purple">
+                        <span style="font-size: 1.5rem; color: #9333EA;">👥</span>
+                        <h4>Refer a Friend</h4>
+                        <p>Spread awareness</p>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Recent Notifications[cite: 4] -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>Recent Notifications</h3>
+                    <a href="#" class="view-all">View All →</a>
+                </div>
+                <div class="notif-list">
+                    <div class="notif-item">
+                        <div class="notif-icon-circle icon-red">🔔</div>
+                        <div class="notif-content">
+                            <h5>New blood request near you</h5>
+                            <p>A+ blood required at City Care Hospital (2.5 km away)</p>
+                        </div>
+                        <div class="notif-time">5 min ago <span class="status-dot" style="background: var(--brand-primary); margin-left: 4px;"></span></div>
+                    </div>
+                    <div class="notif-item">
+                        <div class="notif-icon-circle icon-green">✔</div>
+                        <div class="notif-content">
+                            <h5>Your request has been accepted</h5>
+                            <p>Ravi Kumar has accepted your blood request</p>
+                        </div>
+                        <div class="notif-time">2 hours ago</div>
+                    </div>
+                    <div class="notif-item">
+                        <div class="notif-icon-circle icon-red">❤️</div>
+                        <div class="notif-content">
+                            <h5>Donation completed</h5>
+                            <p>Thank you for saving a life!</p>
+                        </div>
+                        <div class="notif-time">1 day ago</div>
+                    </div>
+                    <div class="notif-item">
+                        <div class="notif-icon-circle icon-purple">👥</div>
+                        <div class="notif-content">
+                            <h5>New donor joined nearby</h5>
+                            <p>A new O+ donor is available in your area</p>
+                        </div>
+                        <div class="notif-time">2 days ago</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upcoming Eligibility[cite: 4] -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>Upcoming Eligibility</h3>
+                </div>
+                <div class="eligibility-container">
+                    <div class="progress-circle">
+                        <small>Next Eligible In</small>
+                        <span>3 Months</span>
+                    </div>
+                    <div class="eligibility-checklist">
+                        <h5 style="color: var(--brand-primary); margin-bottom: 8px;">Before Your Next Donation</h5>
+                        <div class="checklist-item">✔ Maintain good health</div>
+                        <div class="checklist-item">✔ Stay hydrated</div>
+                        <div class="checklist-item">✔ Have a balanced diet</div>
+                        <div class="checklist-item">✔ Avoid medications (as advised)</div>
+                        <a href="#" class="view-all" style="display: inline-block; margin-top: 8px; background: var(--bg-pink); padding: 6px 12px; border-radius: 6px;">Learn About Donation Guidelines →</a>
+                    </div>
+                </div>
+                <p style="text-align: center; margin-top: 16px; font-size: 0.8rem; color: var(--text-secondary);">Last donation: 12 June 2024</p>
+            </div>
+
+            <!-- Blood Donation Tips[cite: 4] -->
+            <div class="card tip-card">
+                <div class="card-header">
+                    <h3>Blood Donation Tips</h3>
+                    <span style="font-size: 0.8rem; color: var(--text-secondary);">1/4 ← →</span>
+                </div>
+                <img src="https://via.placeholder.com/300x120/FFF0F2/E60023?text=Drink+Water+Illustration" alt="Stay Hydrated">
+                <h4>Stay Hydrated</h4>
+                <p>Drink plenty of water before and after donation to maintain your health.</p>
+                <div class="carousel-dots">
+                    <div class="dot active"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/profile-sync.js"></script>
+</body>
+</html>

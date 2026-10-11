@@ -1,0 +1,63 @@
+/* frontend/css/global.css */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --brand-primary: #E60023;
+  --bg-pink: #FFF0F2;
+  --bg-white: #FFFFFF;
+  --bg-light-gray: #F5F7FA;
+  --text-dark: #101828;
+  --text-secondary: #475467;
+  
+  --status-available: #16A34A; 
+  --status-pending: #D97706;   
+  --status-critical: #DC2626;  
+  --status-info: #2563EB;      
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Inter', sans-serif;
+}
+
+body {
+  background-color: var(--bg-white);
+  color: var(--text-dark);
+}
+
+a { text-decoration: none; color: inherit; }
+ul { list-style: none; }
+
+/* Buttons */
+.btn {
+  padding: 10px 24px;
+  border-radius: 50px; /* Pill shape from your design */
+  font-weight: 600;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-primary {
+  background-color: var(--brand-primary);
+  color: var(--bg-white);
+}
+
+.btn-primary:hover {
+  background-color: var(--status-critical);
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: var(--brand-primary);
+  border-color: var(--brand-primary);
+}
+
+.btn-outline:hover {
+  background-color: var(--bg-pink);
+}

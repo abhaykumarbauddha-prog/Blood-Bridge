@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood Bridge | Donation History</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Main Brand Colors */
+            --brand-primary: #E60023;
+            --bg-pink: #FFF0F2;
+            --bg-white: #FFFFFF;
+            --bg-light-gray: #F5F7FA;
+
+            /* Typography / UI Elements */
+            --text-dark: #101828;
+            --text-secondary: #475467;
+            --border-light: #E4E7EC;
+
+            /* Status Colors */
+            --status-available: #16A34A; /* available, verified, completed */
+            --status-pending: #D97706;   /* pending, approaching, deadlines */
+            --status-critical: #DC2626;  /* critical request, failed actions */
+            --status-info: #2563EB;      /* information, updates, scheduled tasks */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-light-gray); color: var(--text-dark); display: flex; height: 100vh; overflow: hidden; }
+
+        /* Sidebar */
+        .sidebar { width: 260px; background-color: var(--bg-white); border-right: 1px solid var(--border-light); display: flex; flex-direction: column; padding: 24px 0; flex-shrink: 0; overflow-y: auto; }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar-logo { padding: 0 24px; display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 1.5rem; margin-bottom: 24px; }
+        .sidebar-logo span { color: var(--brand-primary); }
+        .nav-list { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+        .nav-item { padding: 12px 24px; display: flex; align-items: center; gap: 12px; color: var(--text-secondary); font-weight: 500; cursor: pointer; text-decoration: none; font-size: 0.95rem; }
+        .nav-item:hover { background-color: var(--bg-light-gray); }
+        .nav-item.active { background-color: var(--bg-pink); color: var(--brand-primary); border-left: 4px solid var(--brand-primary); padding-left: 20px; }
+        .badge { background-color: var(--brand-primary); color: var(--bg-white); font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; margin-left: auto; }
+
+        /* Main Content */
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+
+        /* Topbar */
+        .topbar { background-color: var(--bg-white); height: 72px; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-light); position: sticky; top: 0; z-index: 10; }
+        .search-bar { display: flex; align-items: center; background-color: var(--bg-light-gray); padding: 10px 16px; border-radius: 8px; width: 400px; gap: 10px; }
+        .search-bar input { border: none; background: transparent; width: 100%; outline: none; color: var(--text-dark); }
+        .topbar-right { display: flex; align-items: center; gap: 24px; }
+        .user-profile-mini { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+        .user-profile-mini img { width: 40px; height: 40px; border-radius: 50%; }
+
+        .page-container { padding: 32px; max-width: 1100px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 24px; }
+
+        /* Page Header */
+        .page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 8px; }
+        .page-header h1 { font-size: 1.75rem; color: var(--text-dark); margin-bottom: 4px; }
+        .page-header p { color: var(--text-secondary); font-size: 0.95rem; }
+        .btn-download { background: var(--brand-primary); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 0.9rem; transition: 0.2s; }
+        .btn-download:hover { background: var(--status-critical); }
+
+        /* Summary Stats Grid */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 8px; }
+        .stat-card { background: var(--bg-white); padding: 24px; border-radius: 12px; border: 1px solid var(--border-light); display: flex; flex-direction: column; gap: 12px; }
+        .stat-card-header { display: flex; align-items: center; justify-content: space-between; }
+        .stat-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; }
+        .stat-card h3 { font-size: 1.75rem; color: var(--text-dark); }
+        .stat-card p { font-size: 0.85rem; color: var(--text-secondary); font-weight: 500; }
+
+        /* History Table Card */
+        .history-card { background: var(--bg-white); border-radius: 12px; border: 1px solid var(--border-light); overflow: hidden; }
+        .history-card-header { padding: 20px 24px; border-bottom: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; }
+        .history-card-header h3 { font-size: 1.1rem; color: var(--text-dark); }
+        
+        .filter-select { padding: 8px 12px; border: 1px solid var(--border-light); border-radius: 6px; font-size: 0.85rem; outline: none; background: var(--bg-white); color: var(--text-dark); }
+
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 16px 24px; font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; border-bottom: 1px solid var(--border-light); text-transform: uppercase; letter-spacing: 0.5px; background: #FAFAFA; }
+        td { padding: 16px 24px; font-size: 0.9rem; color: var(--text-dark); border-bottom: 1px solid var(--border-light); vertical-align: middle; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background-color: var(--bg-light-gray); }
+
+        .blood-type-col { color: var(--brand-primary); font-weight: 700; }
+        .hospital-col { display: flex; align-items: center; gap: 12px; }
+        .hospital-icon { width: 32px; height: 32px; background: var(--bg-pink); color: var(--brand-primary); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
+        
+        .status-tag { padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; text-align: center; display: inline-block; }
+        .tag-completed { background-color: #DCFCE7; color: var(--status-available); }
+        .tag-pending { background-color: #FEF3C7; color: var(--status-pending); }
+        .tag-cancelled { background-color: #FEE2E2; color: var(--status-critical); }
+
+        .cert-btn { color: var(--status-info); font-weight: 600; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 4px; text-decoration: none; border: 1px solid transparent; padding: 6px 10px; border-radius: 6px; transition: 0.2s; }
+        .cert-btn:hover { background: #EFF6FF; border-color: #93C5FD; }
+        .cert-btn.disabled { color: var(--text-secondary); cursor: not-allowed; }
+        .cert-btn.disabled:hover { background: transparent; border-color: transparent; }
+
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="#E60023"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+            Blood<span>Match</span>
+        </div>
+        <ul class="nav-list">
+            <a href="user-dashboard.html" class="nav-item"><span>🏠</span> Dashboard</a>
+            <a href="my-profile.html" class="nav-item"><span>👤</span> My Profile</a>
+            <a href="find-donors.html" class="nav-item"><span>🔍</span> Find Donors</a>
+            <a href="blood-request.html" class="nav-item"><span>🩸</span> Blood Requests</a>
+            <a href="nearby-request.html" class="nav-item"><span>📍</span> Nearby Requests</a>
+            <a href="notifications.html" class="nav-item"><span>🔔</span> Notifications <span class="badge">3</span></a>
+            <a href="donation-history.html" class="nav-item active"><span>🕒</span> Donation History</a>
+            <a href="settings.html" class="nav-item"><span>⚙️</span> Settings</a>
+            <a href="help-support.html" class="nav-item"><span>❓</span> Help & Support</a>
+        </ul>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <div class="search-bar">
+                <span>🔍</span>
+                <input type="text" placeholder="Search by hospital or date...">
+            </div>
+            <div class="topbar-right">
+                <div class="user-profile-mini">
+                    <img src="https://ui-avatars.com/api/?name=Aman+Singh&background=F5F7FA&color=101828" alt="Profile">
+                    <div>
+                        <h5 style="font-size: 0.9rem;">Aman Singh</h5>
+                    </div>
+                    <span>⌄</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="page-container">
+            
+            <div class="page-header">
+                <div>
+                    <h1>Donation History</h1>
+                    <p>Track your past donations and download your certificates.</p>
+                </div>
+                <button class="btn-download"><span>📥</span> Download Full Report</button>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <p>Total Donations</p>
+                        <div class="stat-icon" style="background: var(--bg-pink); color: var(--brand-primary);">💧</div>
+                    </div>
+                    <h3>12</h3>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <p>Total Units</p>
+                        <div class="stat-icon" style="background: #EFF6FF; color: var(--status-info);">📦</div>
+                    </div>
+                    <h3>14</h3>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <p>Lives Impacted</p>
+                        <div class="stat-icon" style="background: #DCFCE7; color: var(--status-available);">👥</div>
+                    </div>
+                    <h3>36</h3>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <p>Next Eligible Date</p>
+                        <div class="stat-icon" style="background: #FEF3C7; color: var(--status-pending);">📅</div>
+                    </div>
+                    <h3 style="font-size: 1.25rem; line-height: 1.4; margin-top: 8px;">12 Sept 2024</h3>
+                </div>
+            </div>
+
+            <!-- History Table -->
+            <div class="history-card">
+                <div class="history-card-header">
+                    <h3>Recent Activity</h3>
+                    <select class="filter-select">
+                        <option>All Time</option>
+                        <option>This Year</option>
+                        <option>Last Year</option>
+                    </select>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Donation ID</th>
+                            <th>Date</th>
+                            <th>Location / Hospital</th>
+                            <th>Blood Group</th>
+                            <th>Units</th>
+                            <th>Status</th>
+                            <th>Certificate</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="font-weight: 500; color: var(--text-secondary);">#DN-8092</td>
+                            <td>12 Jun 2024</td>
+                            <td>
+                                <div class="hospital-col">
+                                    <div class="hospital-icon">🏥</div>
+                                    <div>
+                                        <div style="font-weight: 500;">King George's Medical University</div>
+                                        <div style="font-size: 0.75rem; color: var(--text-secondary);">Lucknow, UP</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="blood-type-col">O+</td>
+                            <td>1</td>
+                            <td><span class="status-tag tag-completed">Completed</span></td>
+                            <td><a href="#" class="cert-btn">📄 Download</a></td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight: 500; color: var(--text-secondary);">#DN-7541</td>
+                            <td>05 Feb 2024</td>
+                            <td>
+                                <div class="hospital-col">
+                                    <div class="hospital-icon">🏥</div>
+                                    <div>
+                                        <div style="font-weight: 500;">City Care Hospital</div>
+                                        <div style="font-size: 0.75rem; color: var(--text-secondary);">Lucknow, UP</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="blood-type-col">O+</td>
+                            <td>2</td>
+                            <td><span class="status-tag tag-completed">Completed</span></td>
+                            <td><a href="#" class="cert-btn">📄 Download</a></td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight: 500; color: var(--text-secondary);">#DN-6210</td>
+                            <td>18 Nov 2023</td>
+                            <td>
+                                <div class="hospital-col">
+                                    <div class="hospital-icon">🏥</div>
+                                    <div>
+                                        <div style="font-weight: 500;">Medanta Hospital</div>
+                                        <div style="font-size: 0.75rem; color: var(--text-secondary);">Lucknow, UP</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="blood-type-col">O+</td>
+                            <td>1</td>
+                            <td><span class="status-tag tag-pending">Verification Pending</span></td>
+                            <td><span class="cert-btn disabled">⏳ Processing</span></td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight: 500; color: var(--text-secondary);">#DN-5199</td>
+                            <td>10 Jul 2023</td>
+                            <td>
+                                <div class="hospital-col">
+                                    <div class="hospital-icon">🏥</div>
+                                    <div>
+                                        <div style="font-weight: 500;">Blood Bank, Civil Hospital</div>
+                                        <div style="font-size: 0.75rem; color: var(--text-secondary);">Kanpur, UP</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="blood-type-col">O+</td>
+                            <td>1</td>
+                            <td><span class="status-tag tag-cancelled">Cancelled</span></td>
+                            <td><span class="cert-btn disabled">—</span></td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight: 500; color: var(--text-secondary);">#DN-4421</td>
+                            <td>22 Mar 2023</td>
+                            <td>
+                                <div class="hospital-col">
+                                    <div class="hospital-icon">🏥</div>
+                                    <div>
+                                        <div style="font-weight: 500;">King George's Medical University</div>
+                                        <div style="font-size: 0.75rem; color: var(--text-secondary);">Lucknow, UP</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="blood-type-col">O+</td>
+                            <td>1</td>
+                            <td><span class="status-tag tag-completed">Completed</span></td>
+                            <td><a href="#" class="cert-btn">📄 Download</a></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/profile-sync.js"></script>
+</body>
+</html>

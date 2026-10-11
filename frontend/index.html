@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood Bridge | Find Donors Save Lives</title>
+    <link rel="stylesheet" href="css/global.css">
+    <style>
+        /* Landing Page Specific Styles */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 5%;
+            background-color: var(--bg-white);
+            border-bottom: 1px solid #eaeaea;
+        }
+        .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.5rem; color: var(--text-dark); }
+        .logo span { color: var(--brand-primary); }
+        .nav-links { display: flex; gap: 24px; font-weight: 500; font-size: 0.95rem; }
+        .nav-links li:hover { color: var(--brand-primary); cursor: pointer; }
+        .nav-actions { display: flex; gap: 12px; align-items: center; }
+
+        .hero {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 60px 5%;
+            background: linear-gradient(135deg, var(--bg-pink) 0%, var(--bg-white) 100%);
+        }
+        .hero-content { max-width: 50%; }
+        .hero-label { color: var(--brand-primary); font-weight: 600; display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+        .hero-title { font-size: 4rem; font-weight: 800; line-height: 1.1; margin-bottom: 24px; color: var(--text-dark); }
+        .hero-title span { color: var(--brand-primary); }
+        .hero-text { font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 32px; line-height: 1.6; }
+        .hero-buttons { display: flex; gap: 16px; }
+        
+        /* Stats Strip */
+        .stats-container {
+            display: flex;
+            justify-content: space-between;
+            background: var(--bg-white);
+            margin: -40px 5% 40px;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            position: relative;
+            z-index: 10;
+        }
+        .stat-item { display: flex; align-items: center; gap: 16px; }
+        .stat-icon { font-size: 2rem; color: var(--brand-primary); }
+        .stat-info h3 { font-size: 1.5rem; color: var(--text-dark); }
+        .stat-info p { font-size: 0.9rem; color: var(--text-secondary); }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="#E60023"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+            Blood<span>Match</span>
+        </div>
+        <ul class="nav-links">
+            <li style="color: var(--brand-primary); border-bottom: 2px solid var(--brand-primary);">Home</li>
+            <li>About</li>
+            <li>How It Works</li>
+            <li>Find Donors</li>
+            <li>For Hospitals</li>
+            <li>Impact</li>
+            <li>Contact</li>
+        </ul>
+        <div class="nav-actions">
+            <a href="auth.html" class="btn btn-outline">Login</a>
+            <a href="auth.html" class="btn btn-primary">Sign Up</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-label">❤️ Every Drop Counts</div>
+            <h1 class="hero-title">Find Donors<br><span>Save Lives</span></h1>
+            <p class="hero-text">Join BloodMatch to donate blood, request help, and make a real difference in someone's life. Together we can build a healthier and stronger community.</p>
+            <div class="hero-buttons">
+                <a href="find-donors.html" class="btn btn-primary">🚀 Find a Donor</a>
+                <a href="auth.html" class="btn btn-outline">👥 Become a Donor</a>
+            </div>
+        </div>
+        <div class="hero-image">
+            <!-- Placeholder for the exact hands/heart image -->
+            <img src="https://via.placeholder.com/600x400?text=Hands+Holding+Heart+Image" alt="Hands holding heart" style="border-radius: 20px; max-width: 100%;">
+        </div>
+    </section>
+
+    <!-- Stats Strip -->
+    <div class="stats-container">
+        <div class="stat-item">
+            <div class="stat-icon">👥</div>
+            <div class="stat-info"><h3>50K+</h3><p>Lives Impacted</p></div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-icon">💧</div>
+            <div class="stat-info"><h3>10K+</h3><p>Active Donors</p></div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-icon">🏥</div>
+            <div class="stat-info"><h3>200+</h3><p>Partner Hospitals</p></div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-icon">⭐</div>
+            <div class="stat-info"><h3>4.8/5</h3><p>User Rating</p></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/profile-sync.js"></script>
+</body>
+</html>

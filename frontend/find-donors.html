@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood Bridge | Find Donors</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Main Brand Colors */
+            --brand-primary: #E60023;
+            --bg-pink: #FFF0F2;
+            --bg-white: #FFFFFF;
+            --bg-light-gray: #F5F7FA;
+
+            /* Typography / UI Elements */
+            --text-dark: #101828;
+            --text-secondary: #475467;
+            --border-light: #E4E7EC;
+
+            /* Status Colors */
+            --status-available: #16A34A; 
+            --status-pending: #D97706;   
+            --status-critical: #DC2626;  
+            --status-info: #2563EB;      
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-light-gray); color: var(--text-dark); display: flex; height: 100vh; overflow: hidden; }
+
+        /* Sidebar */
+        .sidebar { width: 260px; background-color: var(--bg-white); border-right: 1px solid var(--border-light); display: flex; flex-direction: column; padding: 24px 0; flex-shrink: 0; overflow-y: auto; }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar-logo { padding: 0 24px; display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 1.5rem; margin-bottom: 24px; }
+        .sidebar-logo span { color: var(--brand-primary); }
+        .nav-list { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+        .nav-item { padding: 12px 24px; display: flex; align-items: center; gap: 12px; color: var(--text-secondary); font-weight: 500; cursor: pointer; text-decoration: none; font-size: 0.95rem; }
+        .nav-item:hover { background-color: var(--bg-light-gray); }
+        .nav-item.active { background-color: var(--bg-pink); color: var(--brand-primary); border-left: 4px solid var(--brand-primary); padding-left: 20px; }
+        .badge { background-color: var(--brand-primary); color: var(--bg-white); font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; margin-left: auto; }
+
+        /* Main Content */
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+
+        /* Topbar */
+        .topbar { background-color: var(--bg-white); height: 72px; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-light); position: sticky; top: 0; z-index: 10; }
+        .search-bar { display: flex; align-items: center; background-color: var(--bg-light-gray); padding: 10px 16px; border-radius: 8px; width: 400px; gap: 10px; }
+        .search-bar input { border: none; background: transparent; width: 100%; outline: none; color: var(--text-dark); }
+        .topbar-right { display: flex; align-items: center; gap: 24px; }
+        .user-profile-mini { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+        .user-profile-mini img { width: 40px; height: 40px; border-radius: 50%; }
+
+        .page-container { padding: 32px; display: flex; flex-direction: column; gap: 24px; }
+
+        /* Page Header */
+        .page-header { display: flex; justify-content: space-between; align-items: center; }
+        .page-header h1 { font-size: 1.5rem; color: var(--text-dark); margin-bottom: 4px; }
+        .page-header p { color: var(--text-secondary); font-size: 0.9rem; }
+        .view-toggles { display: flex; background: var(--bg-white); border: 1px solid var(--border-light); border-radius: 8px; overflow: hidden; }
+        .view-btn { padding: 8px 16px; border: none; background: transparent; cursor: pointer; font-weight: 500; font-size: 0.85rem; color: var(--text-secondary); }
+        .view-btn.active { background: var(--bg-pink); color: var(--brand-primary); }
+
+        /* Filters Section */
+        .filter-card { background: var(--bg-white); padding: 20px 24px; border-radius: 12px; border: 1px solid var(--border-light); display: flex; gap: 16px; align-items: flex-end; }
+        .filter-group { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+        .filter-group label { font-size: 0.8rem; font-weight: 600; color: var(--text-dark); text-transform: uppercase; letter-spacing: 0.5px; }
+        .filter-control { padding: 10px 12px; border: 1px solid var(--border-light); border-radius: 8px; font-size: 0.9rem; color: var(--text-dark); outline: none; background: var(--bg-light-gray); }
+        .filter-control:focus { border-color: var(--brand-primary); }
+        .btn-search { background: var(--brand-primary); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
+        .btn-search:hover { background: var(--status-critical); }
+
+        /* Results Info */
+        .results-info { font-size: 0.9rem; color: var(--text-secondary); display: flex; align-items: center; justify-content: space-between; }
+        
+        /* Donor Grid */
+        .donor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; }
+        .donor-card { background: var(--bg-white); border-radius: 12px; border: 1px solid var(--border-light); padding: 24px; text-align: center; position: relative; transition: transform 0.2s, box-shadow 0.2s; }
+        .donor-card:hover { transform: translateY(-4px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+        
+        .status-badge { position: absolute; top: 16px; right: 16px; padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
+        .badge-available { background-color: #DCFCE7; color: var(--status-available); }
+        .badge-busy { background-color: #EFF6FF; color: var(--status-info); }
+
+        .donor-avatar { width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 16px; position: relative; }
+        .donor-avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+        .blood-type-icon { position: absolute; bottom: -4px; right: -4px; background: var(--bg-pink); color: var(--brand-primary); width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; border: 2px solid var(--bg-white); }
+
+        .donor-card h3 { font-size: 1.1rem; color: var(--text-dark); margin-bottom: 4px; display: flex; align-items: center; justify-content: center; gap: 4px; }
+        .verified-tick { color: var(--brand-primary); font-size: 0.9rem; }
+        .donor-card p.location { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 4px; }
+        
+        .donor-stats { display: flex; justify-content: space-around; border-top: 1px solid var(--border-light); border-bottom: 1px solid var(--border-light); padding: 12px 0; margin-bottom: 16px; }
+        .donor-stats div h4 { font-size: 0.95rem; color: var(--text-dark); }
+        .donor-stats div p { font-size: 0.75rem; color: var(--text-secondary); }
+
+        .btn-contact { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--brand-primary); background: transparent; color: var(--brand-primary); font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .btn-contact:hover { background: var(--bg-pink); }
+        .btn-contact.primary { background: var(--brand-primary); color: var(--bg-white); }
+        .btn-contact.primary:hover { background: var(--status-critical); }
+
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="#E60023"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+            Blood<span>Match</span>
+        </div>
+        <ul class="nav-list">
+            <a href="user-dashboard.html" class="nav-item"><span>🏠</span> Dashboard</a>
+            <a href="my-profile.html" class="nav-item"><span>👤</span> My Profile</a>
+            <a href="find-donors.html" class="nav-item active"><span>🔍</span> Find Donors</a>
+            <a href="blood-request.html" class="nav-item"><span>🩸</span> Blood Requests</a>
+            <a href="nearby-request.html" class="nav-item"><span>📍</span> Nearby Requests</a>
+            <a href="notifications.html" class="nav-item"><span>🔔</span> Notifications <span class="badge">3</span></a>
+            <a href="donation-history.html" class="nav-item"><span>🕒</span> Donation History</a>
+            <a href="settings.html" class="nav-item"><span>⚙️</span> Settings</a>
+            <a href="help-support.html" class="nav-item"><span>❓</span> Help & Support</a>
+        </ul>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <div class="search-bar">
+                <span>🔍</span>
+                <input type="text" placeholder="Search donors by name or ID...">
+            </div>
+            <div class="topbar-right">
+                <div class="user-profile-mini">
+                    <img src="https://ui-avatars.com/api/?name=Aman+Singh&background=F5F7FA&color=101828" alt="Profile">
+                    <div>
+                        <h5 style="font-size: 0.9rem;">Aman Singh</h5>
+                    </div>
+                    <span>⌄</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="page-container">
+            <!-- Header -->
+            <div class="page-header">
+                <div>
+                    <h1>Find Blood Donors</h1>
+                    <p>Search and connect with life-saving donors in your area.</p>
+                </div>
+                <div class="view-toggles">
+                    <button class="view-btn active">Grid</button>
+                    <button class="view-btn">Map View</button>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="filter-card">
+                <div class="filter-group">
+                    <label>Blood Group</label>
+                    <select class="filter-control">
+                        <option>Any Blood Group</option>
+                        <option>O+</option><option>O-</option><option>A+</option><option>A-</option>
+                        <option>B+</option><option>B-</option><option>AB+</option><option>AB-</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Location / City</label>
+                    <input type="text" class="filter-control" placeholder="Enter city or zip code" value="Lucknow, UP">
+                </div>
+                <div class="filter-group">
+                    <label>Distance</label>
+                    <select class="filter-control">
+                        <option>Within 5 km</option>
+                        <option selected>Within 10 km</option>
+                        <option>Within 25 km</option>
+                        <option>Within 50 km</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Availability</label>
+                    <select class="filter-control">
+                        <option>Available Only</option>
+                        <option>All Donors</option>
+                    </select>
+                </div>
+                <button class="btn-search">🔍 Search</button>
+            </div>
+
+            <div class="results-info">
+                <p>Showing <strong>124</strong> verified donors near you</p>
+                <select style="padding: 6px 12px; border: 1px solid var(--border-light); border-radius: 6px; font-size: 0.85rem; outline: none; background: var(--bg-white);">
+                    <option>Sort by: Nearest</option>
+                    <option>Sort by: Most Donations</option>
+                    <option>Sort by: Recently Active</option>
+                </select>
+            </div>
+
+            <!-- Donor Grid -->
+            <div class="donor-grid">
+                <!-- Card 1 -->
+                <div class="donor-card">
+                    <div class="status-badge badge-available">Available</div>
+                    <div class="donor-avatar">
+                        <img src="https://ui-avatars.com/api/?name=Aditya+Singh" alt="Aditya">
+                        <div class="blood-type-icon">O+</div>
+                    </div>
+                    <h3>Aditya Singh <span class="verified-tick">✔</span></h3>
+                    <p class="location"><span>📍</span> 2.5 km away (Indira Nagar)</p>
+                    
+                    <div class="donor-stats">
+                        <div><h4>8</h4><p>Donations</p></div>
+                        <div><h4>3 mo</h4><p>Last Donated</p></div>
+                    </div>
+                    <button class="btn-contact primary">Request Blood</button>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="donor-card">
+                    <div class="status-badge badge-available">Available</div>
+                    <div class="donor-avatar">
+                        <img src="https://ui-avatars.com/api/?name=Priya+Sharma" alt="Priya">
+                        <div class="blood-type-icon" style="color: var(--status-info);">A+</div>
+                    </div>
+                    <h3>Priya Sharma <span class="verified-tick">✔</span></h3>
+                    <p class="location"><span>📍</span> 4.1 km away (Gomti Nagar)</p>
+                    
+                    <div class="donor-stats">
+                        <div><h4>12</h4><p>Donations</p></div>
+                        <div><h4>5 mo</h4><p>Last Donated</p></div>
+                    </div>
+                    <button class="btn-contact primary">Request Blood</button>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="donor-card">
+                    <div class="status-badge badge-busy">Busy (Next: 1 mo)</div>
+                    <div class="donor-avatar">
+                        <img src="https://ui-avatars.com/api/?name=Rahul+Verma" alt="Rahul">
+                        <div class="blood-type-icon" style="color: var(--status-available);">B+</div>
+                    </div>
+                    <h3>Rahul Verma <span class="verified-tick">✔</span></h3>
+                    <p class="location"><span>📍</span> 5.8 km away (Aliganj)</p>
+                    
+                    <div class="donor-stats">
+                        <div><h4>4</h4><p>Donations</p></div>
+                        <div><h4>2 mo</h4><p>Last Donated</p></div>
+                    </div>
+                    <button class="btn-contact">View Profile</button>
+                </div>
+                
+                <!-- Card 4 -->
+                <div class="donor-card">
+                    <div class="status-badge badge-available">Available</div>
+                    <div class="donor-avatar">
+                        <img src="https://ui-avatars.com/api/?name=Neha+Gupta" alt="Neha">
+                        <div class="blood-type-icon">O-</div>
+                    </div>
+                    <h3>Neha Gupta <span class="verified-tick">✔</span></h3>
+                    <p class="location"><span>📍</span> 6.2 km away (Hazratganj)</p>
+                    
+                    <div class="donor-stats">
+                        <div><h4>15</h4><p>Donations</p></div>
+                        <div><h4>8 mo</h4><p>Last Donated</p></div>
+                    </div>
+                    <button class="btn-contact primary">Request Blood</button>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/profile-sync.js"></script>
+</body>
+</html>

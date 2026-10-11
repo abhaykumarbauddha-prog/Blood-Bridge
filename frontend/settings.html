@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood Bridge | Settings</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Main Brand Colors */
+            --brand-primary: #E60023;
+            --bg-pink: #FFF0F2;
+            --bg-white: #FFFFFF;
+            --bg-light-gray: #F5F7FA;
+
+            /* Typography / UI Elements */
+            --text-dark: #101828;
+            --text-secondary: #475467;
+            --border-light: #E4E7EC;
+
+            /* Status Colors */
+            --status-available: #16A34A; /* available, verified, completed */
+            --status-pending: #D97706;   /* pending, approaching, deadlines */
+            --status-critical: #DC2626;  /* critical request, failed actions */
+            --status-info: #2563EB;      /* information, updates, scheduled tasks */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-light-gray); color: var(--text-dark); display: flex; height: 100vh; overflow: hidden; }
+
+        /* Sidebar */
+        .sidebar { width: 260px; background-color: var(--bg-white); border-right: 1px solid var(--border-light); display: flex; flex-direction: column; padding: 24px 0; flex-shrink: 0; overflow-y: auto; }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar-logo { padding: 0 24px; display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 1.5rem; margin-bottom: 24px; }
+        .sidebar-logo span { color: var(--brand-primary); }
+        .nav-list { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+        .nav-item { padding: 12px 24px; display: flex; align-items: center; gap: 12px; color: var(--text-secondary); font-weight: 500; cursor: pointer; text-decoration: none; font-size: 0.95rem; }
+        .nav-item:hover { background-color: var(--bg-light-gray); }
+        .nav-item.active { background-color: var(--bg-pink); color: var(--brand-primary); border-left: 4px solid var(--brand-primary); padding-left: 20px; }
+        .badge { background-color: var(--brand-primary); color: var(--bg-white); font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; margin-left: auto; }
+
+        /* Main Content */
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+
+        /* Topbar */
+        .topbar { background-color: var(--bg-white); height: 72px; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-light); position: sticky; top: 0; z-index: 10; }
+        .search-bar { display: flex; align-items: center; background-color: var(--bg-light-gray); padding: 10px 16px; border-radius: 8px; width: 400px; gap: 10px; }
+        .search-bar input { border: none; background: transparent; width: 100%; outline: none; color: var(--text-dark); }
+        .topbar-right { display: flex; align-items: center; gap: 24px; }
+        .user-profile-mini { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+        .user-profile-mini img { width: 40px; height: 40px; border-radius: 50%; }
+
+        .page-container { padding: 32px; max-width: 1000px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 24px; }
+
+        /* Page Header */
+        .page-header { margin-bottom: 8px; }
+        .page-header h1 { font-size: 1.75rem; color: var(--text-dark); margin-bottom: 4px; }
+        .page-header p { color: var(--text-secondary); font-size: 0.95rem; }
+
+        /* Settings Layout */
+        .settings-layout { display: grid; grid-template-columns: 240px 1fr; gap: 32px; align-items: start; }
+        
+        /* Settings Sidebar */
+        .settings-nav { display: flex; flex-direction: column; gap: 4px; }
+        .settings-tab { padding: 12px 16px; border-radius: 8px; font-weight: 500; font-size: 0.9rem; color: var(--text-secondary); cursor: pointer; transition: 0.2s; border: 1px solid transparent; text-align: left; background: transparent; }
+        .settings-tab:hover { background: var(--bg-white); border-color: var(--border-light); }
+        .settings-tab.active { background: var(--bg-white); color: var(--brand-primary); border-color: var(--border-light); box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+
+        /* Settings Content Area */
+        .settings-content { background: var(--bg-white); border-radius: 12px; border: 1px solid var(--border-light); padding: 32px; display: flex; flex-direction: column; gap: 32px; }
+        
+        .settings-section-header { border-bottom: 1px solid var(--border-light); padding-bottom: 16px; margin-bottom: 24px; }
+        .settings-section-header h3 { font-size: 1.25rem; color: var(--text-dark); margin-bottom: 4px; }
+        .settings-section-header p { font-size: 0.85rem; color: var(--text-secondary); }
+
+        /* Forms */
+        .form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+        .form-group label { font-size: 0.85rem; font-weight: 600; color: var(--text-dark); }
+        .form-control { width: 100%; padding: 12px 16px; border: 1px solid var(--border-light); border-radius: 8px; font-size: 0.9rem; outline: none; background: var(--bg-white); color: var(--text-dark); transition: 0.2s; }
+        .form-control:focus { border-color: var(--brand-primary); }
+
+        /* Toggle Switches */
+        .toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--border-light); }
+        .toggle-row:last-child { border-bottom: none; }
+        .toggle-info h4 { font-size: 0.95rem; color: var(--text-dark); margin-bottom: 4px; }
+        .toggle-info p { font-size: 0.8rem; color: var(--text-secondary); }
+        
+        /* CSS Toggle Switch */
+        .switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--border-light); transition: .3s; border-radius: 24px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        input:checked + .slider { background-color: var(--status-available); }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        /* Danger Zone */
+        .danger-zone { border: 1px solid var(--status-critical); border-radius: 8px; padding: 20px; background: var(--bg-pink); }
+        .danger-zone h4 { color: var(--status-critical); font-size: 1rem; margin-bottom: 8px; }
+        .danger-zone p { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 16px; }
+
+        /* Buttons */
+        .btn-group { display: flex; justify-content: flex-end; gap: 12px; margin-top: 16px; }
+        .btn { padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.9rem; border: none; transition: 0.2s; }
+        .btn-primary { background: var(--brand-primary); color: white; }
+        .btn-primary:hover { background: var(--status-critical); }
+        .btn-outline { background: transparent; border: 1px solid var(--border-light); color: var(--text-dark); }
+        .btn-outline:hover { background: var(--bg-light-gray); }
+        .btn-danger { background: var(--status-critical); color: white; }
+
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="#E60023"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+            Blood<span>Match</span>
+        </div>
+        <ul class="nav-list">
+            <a href="user-dashboard.html" class="nav-item"><span>🏠</span> Dashboard</a>
+            <a href="my-profile.html" class="nav-item"><span>👤</span> My Profile</a>
+            <a href="find-donors.html" class="nav-item"><span>🔍</span> Find Donors</a>
+            <a href="blood-request.html" class="nav-item"><span>🩸</span> Blood Requests</a>
+            <a href="nearby-request.html" class="nav-item"><span>📍</span> Nearby Requests</a>
+            <a href="notifications.html" class="nav-item"><span>🔔</span> Notifications <span class="badge">3</span></a>
+            <a href="donation-history.html" class="nav-item"><span>🕒</span> Donation History</a>
+            <a href="settings.html" class="nav-item active"><span>⚙️</span> Settings</a>
+            <a href="help-support.html" class="nav-item"><span>❓</span> Help & Support</a>
+        </ul>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <div class="search-bar">
+                <span>🔍</span>
+                <input type="text" placeholder="Search settings...">
+            </div>
+            <div class="topbar-right">
+                <div class="user-profile-mini">
+                    <img src="https://ui-avatars.com/api/?name=Aman+Singh&background=F5F7FA&color=101828" alt="Profile">
+                    <div>
+                        <h5 style="font-size: 0.9rem;">Aman Singh</h5>
+                    </div>
+                    <span>⌄</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="page-container">
+            
+            <div class="page-header">
+                <h1>Settings</h1>
+                <p>Manage your account settings and preferences.</p>
+            </div>
+
+            <div class="settings-layout">
+                
+                <!-- Left Nav -->
+                <div class="settings-nav">
+                    <button class="settings-tab active">🔒 Security & Password</button>
+                    <button class="settings-tab">🔔 Notifications</button>
+                    <button class="settings-tab">🛡️ Privacy</button>
+                    <button class="settings-tab">💳 Donation Preferences</button>
+                </div>
+
+                <!-- Right Content -->
+                <div class="settings-content">
+                    
+                    <!-- Section: Change Password -->
+                    <div>
+                        <div class="settings-section-header">
+                            <h3>Security & Password</h3>
+                            <p>Update your password and secure your account.</p>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Current Password</label>
+                            <input type="password" class="form-control" placeholder="Enter current password">
+                        </div>
+                        <div class="form-group">
+                            <label>New Password</label>
+                            <input type="password" class="form-control" placeholder="Create a new password">
+                        </div>
+                        <div class="form-group">
+                            <label>Confirm New Password</label>
+                            <input type="password" class="form-control" placeholder="Confirm your new password">
+                        </div>
+                        
+                        <div class="btn-group">
+                            <button class="btn btn-outline">Cancel</button>
+                            <button class="btn btn-primary">Update Password</button>
+                        </div>
+                    </div>
+
+                    <!-- Section: Two-Factor Auth -->
+                    <div>
+                        <div class="settings-section-header">
+                            <h3>Two-Factor Authentication (2FA)</h3>
+                            <p>Add an extra layer of security to your account.</p>
+                        </div>
+                        <div class="toggle-row">
+                            <div class="toggle-info">
+                                <h4>Enable SMS Authentication</h4>
+                                <p>Receive a verification code via SMS when logging in.</p>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="toggle-row">
+                            <div class="toggle-info">
+                                <h4>Enable Email Authentication</h4>
+                                <p>Receive a verification link to your registered email address.</p>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Section: Notifications (Example integration of other tab logic) -->
+                    <div>
+                        <div class="settings-section-header">
+                            <h3>Notification Preferences</h3>
+                            <p>Choose what alerts you want to receive.</p>
+                        </div>
+                        <div class="toggle-row">
+                            <div class="toggle-info">
+                                <h4>Urgent Blood Requests</h4>
+                                <p>Get instantly notified for critical matches in your area.</p>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="toggle-row">
+                            <div class="toggle-info">
+                                <h4>Donation Reminders</h4>
+                                <p>Receive a reminder when your cooling period ends.</p>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="toggle-row">
+                            <div class="toggle-info">
+                                <h4>Marketing & Updates</h4>
+                                <p>Receive newsletters, feature updates, and community news.</p>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Section: Danger Zone -->
+                    <div class="danger-zone">
+                        <h4>Delete Account</h4>
+                        <p>Once you delete your account, there is no going back. Please be certain.</p>
+                        <button class="btn btn-danger">Deactivate Account</button>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/profile-sync.js"></script>
+</body>
+</html>

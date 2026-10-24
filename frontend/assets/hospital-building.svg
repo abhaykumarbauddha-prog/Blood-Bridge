@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 240" role="img" aria-labelledby="title">
+  <title id="title">Hospital building illustration</title>
+  <rect width="400" height="240" rx="18" fill="#EFF6FF"/>
+  <rect x="70" y="65" width="260" height="125" rx="8" fill="#fff" stroke="#CBD5E1" stroke-width="5"/>
+  <path d="M200 42v54M173 69h54" stroke="#E60023" stroke-linecap="round" stroke-width="14"/>
+  <path d="M103 190v-62h48v62M249 190v-62h48v62M166 190v-40h68v40" fill="#DBEAFE" stroke="#94A3B8" stroke-width="4"/>
+</svg>

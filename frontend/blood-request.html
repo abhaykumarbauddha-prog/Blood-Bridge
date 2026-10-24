@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blood Bridge | Create a Blood Request</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
     <!-- Leaflet CSS for Interactive OpenStreetMap -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
@@ -30,7 +32,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
         body { background-color: var(--bg-light-gray); color: var(--text-dark); display: flex; height: 100vh; overflow: hidden; }
 
-        /* Sidebar Reusable[cite: 5] */
+        /* Sidebar Reusable */
         .sidebar { width: 260px; background-color: var(--bg-white); border-right: 1px solid var(--border-light); display: flex; flex-direction: column; padding: 24px 0; flex-shrink: 0; overflow-y: auto; }
         .sidebar::-webkit-scrollbar { width: 4px; }
         .sidebar-logo { padding: 0 24px; display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 1.5rem; margin-bottom: 8px; }
@@ -49,18 +51,18 @@
         /* Main Content Area */
         .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
 
-        /* Topbar[cite: 5] */
-        .topbar { background-color: var(--bg-white); height: 72px; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-light); position: sticky; top: 0; z-index: 10; }
+        /* Topbar */
+        .topbar { background-color: var(--bg-white); height: 72px; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-light); position: sticky; top: 0; z-index: 10000; }
         .search-bar { display: flex; align-items: center; background-color: var(--bg-light-gray); padding: 10px 16px; border-radius: 8px; width: 400px; gap: 10px; }
         .search-bar input { border: none; background: transparent; width: 100%; outline: none; color: var(--text-dark); }
         .topbar-right { display: flex; align-items: center; gap: 24px; }
         .user-profile-mini { display: flex; align-items: center; gap: 12px; cursor: pointer; }
         .user-profile-mini img { width: 40px; height: 40px; border-radius: 50%; }
 
-        /* Page Content Layout[cite: 5] */
+        /* Page Content Layout */
         .page-container { padding: 0; }
         
-        /* Hero Banner[cite: 5] */
+        /* Hero Banner */
         .hero-banner { background: linear-gradient(90deg, var(--bg-white) 40%, var(--bg-pink) 100%); padding: 40px 32px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); }
         .hero-text h1 { font-size: 2.2rem; color: var(--text-dark); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
         .hero-text h1 span { color: var(--brand-primary); }
@@ -79,7 +81,7 @@
         .card-header h3 { font-size: 1.1rem; color: var(--text-dark); }
         .card-header p { font-size: 0.85rem; color: var(--text-secondary); }
 
-        /* Form Elements[cite: 5] */
+        /* Form Elements */
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
         .form-group { display: flex; flex-direction: column; gap: 8px; }
         .form-group label { font-size: 0.85rem; font-weight: 600; color: var(--text-dark); }
@@ -91,7 +93,7 @@
         
         textarea.form-control { padding-left: 16px; min-height: 100px; resize: vertical; }
 
-        /* Urgency Selectors[cite: 5] */
+        /* Urgency Selectors */
         .urgency-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
         .urgency-card { border: 1px solid var(--border-light); border-radius: 8px; padding: 16px; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: 0.2s; }
         .urgency-card:hover { background: var(--bg-light-gray); }
@@ -104,17 +106,17 @@
         .btn-submit { width: 100%; background: var(--brand-primary); color: white; border: none; padding: 16px; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; margin-top: 16px; transition: 0.3s; }
         .btn-submit:hover { background: var(--status-critical); }
 
-        /* Map Card[cite: 5] */
+        /* Map Card */
         .map-search { display: flex; align-items: center; background: var(--bg-light-gray); padding: 10px 16px; border-radius: 8px; margin-bottom: 16px; }
         .map-search input { border: none; background: transparent; width: 100%; outline: none; font-size: 0.85rem; margin-left: 8px; }
-        .map-display { width: 100%; height: 220px; background: url('https://via.placeholder.com/600x300?text=Map+Location+View') center/cover; border-radius: 8px; position: relative; margin-bottom: 16px; }
+        .map-display { width: 100%; height: 220px; background: var(--bg-light-gray); border-radius: 8px; position: relative; margin-bottom: 16px; }
         .map-pin { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 2rem; color: var(--brand-primary); text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
         .location-confirm { display: flex; justify-content: space-between; align-items: center; background: var(--bg-pink); padding: 12px 16px; border-radius: 8px; }
         .location-confirm p { font-size: 0.85rem; color: var(--brand-primary); font-weight: 600; margin-bottom: 2px; }
         .location-confirm small { font-size: 0.75rem; color: var(--text-secondary); }
         .btn-location { background: var(--brand-primary); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 0.8rem; font-weight: 500; cursor: pointer; }
 
-        /* Guidelines & Tips[cite: 5] */
+        /* Guidelines & Tips */
         .guideline-list { list-style: none; display: flex; flex-direction: column; gap: 12px; }
         .guideline-item { display: flex; gap: 10px; align-items: flex-start; font-size: 0.85rem; color: var(--text-dark); }
         .guideline-item span { color: var(--status-info); }
@@ -130,7 +132,7 @@
         .tip-icon { width: 24px; height: 24px; background: var(--bg-pink); color: var(--brand-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; flex-shrink: 0; }
         .tip-item p { font-size: 0.85rem; color: var(--text-dark); }
 
-        /* Recent Requests Mini List[cite: 5] */
+        /* Recent Requests Mini List */
         .recent-req-list { display: flex; flex-direction: column; gap: 16px; }
         .recent-req-item { display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid var(--border-light); }
         .recent-req-item:last-child { border-bottom: none; padding-bottom: 0; }
@@ -145,22 +147,22 @@
 </head>
 <body>
 
-    <!-- Sidebar[cite: 5] -->
+    <!-- Sidebar -->
     <aside class="sidebar">
         <div class="sidebar-logo">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="#E60023"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
             Blood<span>Match</span>
         </div>
         <ul class="nav-list">
-            <a href="user-dashboard.html" class="nav-item"><span>🏠</span> Dashboard</a>
-            <a href="#" class="nav-item"><span>👤</span> My Profile</a>
-            <a href="#" class="nav-item"><span>🔍</span> Find Donors</a>
+            <a href="dashboard.html" class="nav-item"><span>🏠</span> Dashboard</a>
+            <a href="my-profile.html" class="nav-item"><span>👤</span> My Profile</a>
+            <a href="find-donors.html" class="nav-item"><span>🔍</span> Find Donors</a>
             <a href="blood-request.html" class="nav-item active"><span>🩸</span> Blood Requests</a>
-            <a href="#" class="nav-item"><span>📍</span> Nearby Requests</a>
-            <a href="#" class="nav-item"><span>🔔</span> Notifications <span class="badge">3</span></a>
-            <a href="#" class="nav-item"><span>🕒</span> Donation History</a>
-            <a href="#" class="nav-item"><span>⚙️</span> Settings</a>
-            <a href="#" class="nav-item"><span>❓</span> Help & Support</a>
+            <a href="nearby-request.html" class="nav-item"><span>📍</span> Nearby Requests</a>
+            <a href="notifications.html" class="nav-item"><span>🔔</span> Notifications <span class="badge notification-badge" data-unread-badge hidden></span></a>
+            <a href="donation-history.html" class="nav-item"><span>🕒</span> Donation History</a>
+            <a href="settings.html" class="nav-item"><span>⚙️</span> Settings</a>
+            <a href="help-support.html" class="nav-item"><span>❓</span> Help & Support</a>
         </ul>
         <div class="sidebar-cta">
             <h4>Together<br>We Can Save Lives</h4>
@@ -170,7 +172,7 @@
     </aside>
 
     <main class="main-content">
-        <!-- Topbar[cite: 5] -->
+        <!-- Topbar -->
         <header class="topbar">
             <div class="search-bar">
                 <span>🔍</span>
@@ -178,9 +180,9 @@
             </div>
             <div class="topbar-right">
                 <div class="user-profile-mini">
-                    <img src="https://ui-avatars.com/api/?name=Aman+Singh&background=F5F7FA&color=101828" alt="Profile">
+                    <img src="assets/profile-placeholder.svg" alt="Profile" data-profile-avatar>
                     <div>
-                        <h5 style="font-size: 0.9rem;">Aman Singh</h5>
+                        <h5 style="font-size: 0.9rem;">Loading profile...</h5>
                         <p style="font-size: 0.8rem; color: var(--text-secondary);">Requester</p>
                     </div>
                     <span>⌄</span>
@@ -189,7 +191,7 @@
         </header>
 
         <div class="page-container">
-            <!-- Hero Banner[cite: 5] -->
+            <!-- Hero Banner -->
             <div class="hero-banner">
                 <div class="hero-text">
                     <div class="hero-label">Request Blood</div>
@@ -202,7 +204,7 @@
                 </div>
             </div>
 
-            <!-- Main Grid[cite: 5] -->
+            <!-- Main Grid -->
             <div class="content-grid">
                 
                 <!-- Left Column: Form -->
@@ -322,7 +324,7 @@
                     </form>
                 </div>
 
-                <!-- Right Column Widgets[cite: 5] -->
+                <!-- Right Column Widgets -->
                 <div class="right-column-grid">
                     
                     <!-- Map / Location Card -->
@@ -342,7 +344,7 @@
                         <div class="location-confirm">
                             <div>
                                 <p>Selected Location</p>
-                                <small id="selected-location-text">Lucknow, Uttar Pradesh</small>
+                        <small id="selected-location-text">Location not set</small>
                             </div>
                             <button type="button" id="btn-use-my-location" class="btn-location">🎯 Use My Location</button>
                         </div>
@@ -400,8 +402,10 @@
     </main>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase.js"></script>
+    <script src="js/data-helpers.js"></script>
     <script src="js/map-service.js"></script>
     <script src="js/requests.js"></script>
     <script src="js/profile-sync.js"></script>

@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blood Bridge | Find Donors</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
     <!-- Leaflet CSS for Interactive OpenStreetMap -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
@@ -45,7 +47,7 @@
         .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
 
         /* Topbar */
-        .topbar { background-color: var(--bg-white); height: 72px; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-light); position: sticky; top: 0; z-index: 10; }
+        .topbar { background-color: var(--bg-white); height: 72px; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-light); position: sticky; top: 0; z-index: 10000; }
         .search-bar { display: flex; align-items: center; background-color: var(--bg-light-gray); padding: 10px 16px; border-radius: 8px; width: 400px; gap: 10px; }
         .search-bar input { border: none; background: transparent; width: 100%; outline: none; color: var(--text-dark); }
         .topbar-right { display: flex; align-items: center; gap: 24px; }
@@ -110,12 +112,12 @@
             Blood<span>Match</span>
         </div>
         <ul class="nav-list">
-            <a href="user-dashboard.html" class="nav-item"><span>🏠</span> Dashboard</a>
+            <a href="dashboard.html" class="nav-item"><span>🏠</span> Dashboard</a>
             <a href="my-profile.html" class="nav-item"><span>👤</span> My Profile</a>
             <a href="find-donors.html" class="nav-item active"><span>🔍</span> Find Donors</a>
             <a href="blood-request.html" class="nav-item"><span>🩸</span> Blood Requests</a>
             <a href="nearby-request.html" class="nav-item"><span>📍</span> Nearby Requests</a>
-            <a href="notifications.html" class="nav-item"><span>🔔</span> Notifications <span class="badge">3</span></a>
+            <a href="notifications.html" class="nav-item"><span>🔔</span> Notifications <span class="badge notification-badge" data-unread-badge hidden></span></a>
             <a href="donation-history.html" class="nav-item"><span>🕒</span> Donation History</a>
             <a href="settings.html" class="nav-item"><span>⚙️</span> Settings</a>
             <a href="help-support.html" class="nav-item"><span>❓</span> Help & Support</a>
@@ -130,9 +132,9 @@
             </div>
             <div class="topbar-right">
                 <div class="user-profile-mini">
-                    <img src="https://ui-avatars.com/api/?name=Aman+Singh&background=F5F7FA&color=101828" alt="Profile">
+                    <img src="assets/profile-placeholder.svg" alt="Profile" data-profile-avatar>
                     <div>
-                        <h5 style="font-size: 0.9rem;">Aman Singh</h5>
+                        <h5 style="font-size: 0.9rem;">Loading profile...</h5>
                     </div>
                     <span>⌄</span>
                 </div>
@@ -166,7 +168,7 @@
                 </div>
                 <div class="filter-group">
                     <label>Location / City</label>
-                    <input type="text" id="donor-location-filter" class="filter-control" placeholder="Enter city or district" value="Lucknow">
+                    <input type="text" id="donor-location-filter" class="filter-control" placeholder="Enter city or district">
                 </div>
                 <div class="filter-group">
                     <label>Distance</label>
@@ -207,8 +209,10 @@
     </main>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase.js"></script>
+    <script src="js/data-helpers.js"></script>
     <script src="js/map-service.js"></script>
     <script src="js/find-donors.js"></script>
     <script src="js/profile-sync.js"></script>

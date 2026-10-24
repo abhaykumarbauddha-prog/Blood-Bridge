@@ -33,6 +33,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const metadata = user.user_metadata || {};
     const current = { ...metadata, ...(profile || {}), email: user.email || '' };
+    let locationCoordinates = {
+        latitude: Number(current.latitude),
+        longitude: Number(current.longitude)
+    };
     const fields = [
         'full_name', 'email', 'phone', 'date_of_birth', 'blood_group', 'gender',
         'address', 'city', 'state', 'pincode', 'country', 'last_donation_date',
@@ -50,7 +54,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const bloodGroup = current.blood_group || 'Blood group not set';
     const city = current.city || 'Location not set';
     const role = current.role || 'Donor';
-    const avatarUrl = current.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=F5F7FA&color=101828&size=120`;
+    const avatarUrl = current.avatar_url || 'assets/profile-placeholder.svg';
 
     const profileName = document.getElementById('profile-name');
     profileName.textContent = `${name} `;
@@ -67,6 +71,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const avatarInput = document.getElementById('avatar-input');
     const editAvatar = document.getElementById('edit-avatar');
     const removeAvatar = document.getElementById('remove-avatar');
+    const setLocationButton = document.getElementById('set-profile-location');
+    const locationStatus = document.getElementById('profile-location-status');
+    if (locationStatus && locationCoordinates.latitude && locationCoordinates.longitude) {
+        locationStatus.textContent = 'A saved location is available for donor maps.';
+    }
     const setAvatar = (url) => {
         document.querySelectorAll('#profile-avatar, #topbar-avatar, [data-profile-avatar]').forEach((image) => {
             image.src = url;
@@ -123,34 +132,34 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
         await client.auth.updateUser({ data: { avatar_url: null } });
-        const fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=F5F7FA&color=101828&size=120`;
+        const fallbackAvatar = 'assets/profile-placeholder.svg';
         setAvatar(fallbackAvatar);
         setStatus('Profile photo removed.');
     });
 
-    const lastDonation = current.last_donation_date ? new Date(`${current.last_donation_date}T00:00:00`) : null;
-    const eligibilityBox = document.querySelector('.eligibility-box');
-    const eligibilityTitle = document.getElementById('eligibility-title');
-    const eligibilityMessage = document.getElementById('eligibility-message');
-    const eligibilityIcon = document.getElementById('eligibility-icon');
-
-    if (lastDonation && !Number.isNaN(lastDonation.getTime())) {
-        const eligibleDate = new Date(lastDonation);
-        eligibleDate.setDate(eligibleDate.getDate() + 90);
-        const formattedDate = eligibleDate.toLocaleDateString('en-IN', {
-            day: '2-digit', month: 'short', year: 'numeric'
+    if (setLocationButton) {
+        setLocationButton.addEventListener('click', async () => {
+            setLocationButton.disabled = true;
+            const location = await MapService.getUserLocation();
+            if (!location) {
+                if (locationStatus) locationStatus.textContent = 'Location unavailable. Allow browser location access and try again.';
+                setLocationButton.disabled = false;
+                return;
+            }
+            const { error } = await client.from('users').update({ latitude: location.lat, longitude: location.lng }).eq('id', user.id);
+            setLocationButton.disabled = false;
+            if (error) {
+                setStatus(`Location save failed: ${error.message}`, true);
+                return;
+            }
+            locationCoordinates = { latitude: location.lat, longitude: location.lng };
+            if (locationStatus) locationStatus.textContent = 'Current location saved for donor maps.';
+            setStatus('Location saved.');
         });
-        const isEligible = new Date() >= eligibleDate;
-        eligibilityBox.classList.toggle('pending', !isEligible);
-        eligibilityIcon.textContent = isEligible ? '✅' : '⏱️';
-        eligibilityTitle.textContent = isEligible ? 'Eligible to Donate' : 'Cooling Period';
-        eligibilityTitle.style.color = isEligible ? 'var(--status-available)' : 'var(--status-pending)';
-        eligibilityMessage.innerHTML = isEligible
-            ? 'You are currently eligible to donate blood.'
-            : `You can donate again on <strong>${formattedDate}</strong>.`;
-    } else {
-        eligibilityMessage.textContent = 'Add your last donation date to calculate eligibility.';
     }
+
+    const donorStats = await BloodMatchData.getDonorStats(user.id);
+    BloodMatchData.renderDonorStats(donorStats);
 
     const saveButton = document.getElementById('save-profile');
     saveButton.addEventListener('click', async () => {
@@ -169,7 +178,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             last_donation_date: getValue('last_donation_date'),
             weight_kg: getValue('weight_kg') ? Number(getValue('weight_kg')) : null,
             medical_conditions: getValue('medical_conditions'),
-            availability_status: getValue('availability_status') || 'Available'
+            availability_status: getValue('availability_status') || 'Available',
+            is_available: getValue('availability_status') === 'Available',
+            latitude: Number.isFinite(locationCoordinates.latitude) ? locationCoordinates.latitude : null,
+            longitude: Number.isFinite(locationCoordinates.longitude) ? locationCoordinates.longitude : null
         };
 
         if (!updates.full_name || !updates.phone) {
@@ -245,6 +257,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('profile-summary').textContent = `${role} | ${savedProfile?.blood_group || updates.blood_group || 'Blood group not set'} | ${savedProfile?.city || updates.city || 'Location not set'}`;
         document.getElementById('profile-name').firstChild.textContent = `${savedName} `;
         document.getElementById('topbar-name').textContent = savedName;
+
+        // Refresh stats, cooling period, and badges immediately
+        if (window.BloodMatchData?.getDonorStats && window.BloodMatchData?.renderDonorStats) {
+            try {
+                const refreshedStats = await BloodMatchData.getDonorStats(user.id);
+                BloodMatchData.renderDonorStats(refreshedStats);
+            } catch (statErr) {
+                console.warn('Profile stats refresh error:', statErr);
+            }
+        }
     });
 
     document.getElementById('share-profile').addEventListener('click', async () => {

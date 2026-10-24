@@ -6,39 +6,13 @@
  */
 
 const MapService = (() => {
-    // Default fallback center: Lucknow, UP (India)
-    const DEFAULT_COORDS = { lat: 26.8467, lng: 80.9462, name: 'Lucknow' };
     const DEFAULT_SEARCH_RADIUS_KM = 100;
-
-    // Cache of common city/locality coordinates in Uttar Pradesh & India for instant zero-latency mapping
-    const KNOWN_CITIES = {
-        'lucknow': { lat: 26.8467, lng: 80.9462 },
-        'kanpur': { lat: 26.4499, lng: 80.3319 },
-        'unnao': { lat: 26.5393, lng: 80.4878 },
-        'barabanki': { lat: 26.9272, lng: 81.1834 },
-        'raebareli': { lat: 26.2236, lng: 81.2409 },
-        'ayodhya': { lat: 26.7922, lng: 82.1998 },
-        'faizabad': { lat: 26.7730, lng: 82.1460 },
-        'sitapur': { lat: 27.5684, lng: 80.6829 },
-        'hardoi': { lat: 27.3946, lng: 80.1311 },
-        'prayagraj': { lat: 25.4358, lng: 81.8463 },
-        'allahabad': { lat: 25.4358, lng: 81.8463 },
-        'varanasi': { lat: 25.3176, lng: 82.9739 },
-        'gorakhpur': { lat: 26.7606, lng: 83.3732 },
-        'delhi': { lat: 28.6139, lng: 77.2090 },
-        'noida': { lat: 28.5355, lng: 77.3910 },
-        'agra': { lat: 27.1767, lng: 78.0081 },
-        'meerut': { lat: 28.9845, lng: 77.7064 },
-        'bareilly': { lat: 28.3670, lng: 79.4304 },
-        'aligarh': { lat: 27.8974, lng: 78.0880 },
-        'jhansi': { lat: 25.4484, lng: 78.5685 }
-    };
 
     /**
      * Calculate distance between two coordinates in Kilometers using Haversine formula
      */
     function calculateDistanceKm(lat1, lon1, lat2, lon2) {
-        if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+        if (![lat1, lon1, lat2, lon2].every(Number.isFinite)) return null;
         const R = 6371; // Earth's radius in KM
         const dLat = (lat2 - lat1) * (Math.PI / 180);
         const dLon = (lon2 - lon1) * (Math.PI / 180);
@@ -50,27 +24,25 @@ const MapService = (() => {
         return parseFloat((R * c).toFixed(1));
     }
 
-    /**
-     * Check if a location is within the search radius (default 100 km)
-     */
-    function isWithinRadius(userLat, userLng, targetLat, targetLng, radiusKm = DEFAULT_SEARCH_RADIUS_KM) {
-        const dist = calculateDistanceKm(userLat, userLng, targetLat, targetLng);
-        if (dist === null) return true; // If coordinates unavailable, keep visible
-        return dist <= radiusKm;
-    }
+    const DEFAULT_FALLBACK_COORDS = { lat: 26.8467, lng: 80.9462, city: 'Lucknow', isFallback: true, isLive: false };
 
     /**
-     * Get user's current GPS position via browser Geolocation API
+     * Get user's current GPS position via browser Geolocation API with resilient fallback
      */
-    function getUserLocation() {
-        return new Promise((resolve) => {
+    async function getUserLocation(fallbackOnFail = true) {
+        const livePromise = new Promise((resolve) => {
             if (!navigator.geolocation) {
-                console.warn('Geolocation not supported by browser. Falling back to default center.');
-                return resolve(DEFAULT_COORDS);
+                console.warn('Geolocation is not supported by this browser.');
+                return resolve(null);
             }
+
+            const timeoutId = setTimeout(() => {
+                resolve(null);
+            }, 4000);
 
             navigator.geolocation.getCurrentPosition(
                 (position) => {
+                    clearTimeout(timeoutId);
                     resolve({
                         lat: position.coords.latitude,
                         lng: position.coords.longitude,
@@ -79,30 +51,61 @@ const MapService = (() => {
                     });
                 },
                 (err) => {
-                    console.warn('Geolocation access failed or denied. Using default center:', err.message);
-                    resolve(DEFAULT_COORDS);
+                    clearTimeout(timeoutId);
+                    console.warn('Geolocation access failed or denied:', err.message);
+                    resolve(null);
                 },
-                { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
+                { enableHighAccuracy: true, timeout: 4000, maximumAge: 60000 }
             );
         });
+
+        const liveLoc = await livePromise;
+        if (liveLoc) return liveLoc;
+        if (!fallbackOnFail) return null;
+
+        // Try getting saved coordinates from Supabase user session
+        try {
+            const supabase = window.bloodBridgeSupabase;
+            if (supabase?.auth) {
+                const { data: sessionData } = await supabase.auth.getSession();
+                const userId = sessionData?.session?.user?.id;
+                if (userId) {
+                    const { data: profile } = await supabase
+                        .from('users')
+                        .select('latitude, longitude, city, state')
+                        .eq('id', userId)
+                        .maybeSingle();
+
+                    const pLat = Number(profile?.latitude);
+                    const pLng = Number(profile?.longitude);
+                    if (Number.isFinite(pLat) && Number.isFinite(pLng)) {
+                        return {
+                            lat: pLat,
+                            lng: pLng,
+                            city: profile.city || 'Profile Location',
+                            isProfile: true,
+                            isLive: false
+                        };
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn('Failed to load profile coordinates fallback:', e);
+        }
+
+        // Standard Indian Regional Fallback
+        return { ...DEFAULT_FALLBACK_COORDS };
+    }
+
+    function getDefaultLocation() {
+        return { ...DEFAULT_FALLBACK_COORDS };
     }
 
     /**
      * Resolve latitude and longitude from city name or address
      */
     async function geocodeAddress(addressText) {
-        if (!addressText) return DEFAULT_COORDS;
-        const clean = addressText.trim().toLowerCase();
-
-        // 1. Check known local cities cache
-        for (const [cityName, coords] of Object.entries(KNOWN_CITIES)) {
-            if (clean.includes(cityName)) {
-                // Add tiny jitter (100-300m) for multiple pins in same city
-                const jitterLat = (Math.random() - 0.5) * 0.015;
-                const jitterLng = (Math.random() - 0.5) * 0.015;
-                return { lat: coords.lat + jitterLat, lng: coords.lng + jitterLng };
-            }
-        }
+        if (!addressText) return null;
 
         // 2. Fallback to OpenStreetMap Nominatim Free Geocoder
         try {
@@ -118,7 +121,7 @@ const MapService = (() => {
             console.warn('OSM Geocoding failed:', e);
         }
 
-        return DEFAULT_COORDS;
+        return null;
     }
 
     /**
@@ -131,14 +134,14 @@ const MapService = (() => {
             });
             const data = await res.json();
             if (data && data.address) {
-                const city = data.address.city || data.address.town || data.address.county || data.address.state_district || 'Lucknow';
-                const displayName = data.display_name || `${city}, India`;
+                const city = data.address.city || data.address.town || data.address.county || data.address.state_district;
+                const displayName = data.display_name || city || 'Location found';
                 return { city, displayName, raw: data.address };
             }
         } catch (e) {
             console.warn('Reverse geocoding error:', e);
         }
-        return { city: 'Lucknow', displayName: 'Lucknow, Uttar Pradesh' };
+        return null;
     }
 
     /**
@@ -150,10 +153,26 @@ const MapService = (() => {
             return null;
         }
 
-        const center = options.center || [DEFAULT_COORDS.lat, DEFAULT_COORDS.lng];
+        const containerEl = typeof containerId === 'string' ? document.getElementById(containerId) : containerId;
+        if (!containerEl) {
+            console.warn('Map container element not found:', containerId);
+            return null;
+        }
+
+        // Guard against "Map container is already initialized"
+        if (containerEl._leaflet_id) {
+            try {
+                containerEl._leaflet_id = null;
+            } catch (e) {}
+        }
+
+        let center = options.center;
+        if (!Array.isArray(center) || center.length !== 2 || !center.every(Number.isFinite)) {
+            center = [DEFAULT_FALLBACK_COORDS.lat, DEFAULT_FALLBACK_COORDS.lng];
+        }
         const zoom = options.zoom || 11;
 
-        const map = L.map(containerId, {
+        const map = L.map(containerEl, {
             center: center,
             zoom: zoom,
             zoomControl: true,
@@ -164,6 +183,12 @@ const MapService = (() => {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
             maxZoom: 19
         }).addTo(map);
+
+        setTimeout(() => {
+            try {
+                map.invalidateSize();
+            } catch (e) {}
+        }, 300);
 
         return map;
     }
@@ -244,11 +269,10 @@ const MapService = (() => {
     }
 
     return {
-        DEFAULT_COORDS,
         DEFAULT_SEARCH_RADIUS_KM,
         calculateDistanceKm,
-        isWithinRadius,
         getUserLocation,
+        getDefaultLocation,
         geocodeAddress,
         reverseGeocode,
         createMap,

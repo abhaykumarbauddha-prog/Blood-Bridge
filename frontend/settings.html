@@ -117,12 +117,12 @@
             Blood<span>Match</span>
         </div>
         <ul class="nav-list">
-            <a href="user-dashboard.html" class="nav-item"><span>🏠</span> Dashboard</a>
+            <a href="dashboard.html" class="nav-item"><span>🏠</span> Dashboard</a>
             <a href="my-profile.html" class="nav-item"><span>👤</span> My Profile</a>
             <a href="find-donors.html" class="nav-item"><span>🔍</span> Find Donors</a>
             <a href="blood-request.html" class="nav-item"><span>🩸</span> Blood Requests</a>
             <a href="nearby-request.html" class="nav-item"><span>📍</span> Nearby Requests</a>
-            <a href="notifications.html" class="nav-item"><span>🔔</span> Notifications <span class="badge">3</span></a>
+            <a href="notifications.html" class="nav-item"><span>🔔</span> Notifications <span class="badge notification-badge" data-unread-badge hidden></span></a>
             <a href="donation-history.html" class="nav-item"><span>🕒</span> Donation History</a>
             <a href="settings.html" class="nav-item active"><span>⚙️</span> Settings</a>
             <a href="help-support.html" class="nav-item"><span>❓</span> Help & Support</a>
@@ -137,9 +137,9 @@
             </div>
             <div class="topbar-right">
                 <div class="user-profile-mini">
-                    <img src="https://ui-avatars.com/api/?name=Aman+Singh&background=F5F7FA&color=101828" alt="Profile">
+                    <img src="assets/profile-placeholder.svg" alt="Profile" data-profile-avatar>
                     <div>
-                        <h5 style="font-size: 0.9rem;">Aman Singh</h5>
+                        <h5 style="font-size: 0.9rem;">Loading profile...</h5>
                     </div>
                     <span>⌄</span>
                 </div>
@@ -157,17 +157,17 @@
                 
                 <!-- Left Nav -->
                 <div class="settings-nav">
-                    <button class="settings-tab active">🔒 Security & Password</button>
-                    <button class="settings-tab">🔔 Notifications</button>
-                    <button class="settings-tab">🛡️ Privacy</button>
-                    <button class="settings-tab">💳 Donation Preferences</button>
+                    <button class="settings-tab active" type="button" data-settings-tab="security">🔒 Security & Password</button>
+                    <button class="settings-tab" type="button" data-settings-tab="notifications">🔔 Notifications</button>
+                    <button class="settings-tab" type="button" data-settings-tab="privacy">🛡️ Privacy</button>
+                    <button class="settings-tab" type="button" data-settings-tab="donation">💳 Donation Preferences</button>
                 </div>
 
                 <!-- Right Content -->
                 <div class="settings-content">
                     
                     <!-- Section: Change Password -->
-                    <div>
+                    <div data-settings-section="security">
                         <div class="settings-section-header">
                             <h3>Security & Password</h3>
                             <p>Update your password and secure your account.</p>
@@ -188,40 +188,40 @@
                         
                         <div class="btn-group">
                             <button class="btn btn-outline">Cancel</button>
-                            <button class="btn btn-primary">Update Password</button>
+                            <button class="btn btn-primary" type="button" data-update-password>Update Password</button>
                         </div>
                     </div>
 
                     <!-- Section: Two-Factor Auth -->
-                    <div>
+                    <div data-settings-section="security">
                         <div class="settings-section-header">
                             <h3>Two-Factor Authentication (2FA)</h3>
-                            <p>Add an extra layer of security to your account.</p>
+                            <p>Coming soon — two-factor authentication is not available yet.</p>
                         </div>
                         <div class="toggle-row">
                             <div class="toggle-info">
                                 <h4>Enable SMS Authentication</h4>
-                                <p>Receive a verification code via SMS when logging in.</p>
+                            <p>Coming soon — SMS authentication is not available yet.</p>
                             </div>
                             <label class="switch">
-                                <input type="checkbox" checked>
+                                <input type="checkbox" disabled>
                                 <span class="slider"></span>
                             </label>
                         </div>
                         <div class="toggle-row">
                             <div class="toggle-info">
                                 <h4>Enable Email Authentication</h4>
-                                <p>Receive a verification link to your registered email address.</p>
+                            <p>Coming soon — email authentication is not available yet.</p>
                             </div>
                             <label class="switch">
-                                <input type="checkbox">
+                                <input type="checkbox" disabled>
                                 <span class="slider"></span>
                             </label>
                         </div>
                     </div>
 
                     <!-- Section: Notifications (Example integration of other tab logic) -->
-                    <div>
+                    <div data-settings-section="notifications">
                         <div class="settings-section-header">
                             <h3>Notification Preferences</h3>
                             <p>Choose what alerts you want to receive.</p>
@@ -232,7 +232,7 @@
                                 <p>Get instantly notified for critical matches in your area.</p>
                             </div>
                             <label class="switch">
-                                <input type="checkbox" checked>
+                                <input type="checkbox" data-setting="urgent_requests">
                                 <span class="slider"></span>
                             </label>
                         </div>
@@ -242,7 +242,7 @@
                                 <p>Receive a reminder when your cooling period ends.</p>
                             </div>
                             <label class="switch">
-                                <input type="checkbox" checked>
+                                <input type="checkbox" data-setting="donation_reminders">
                                 <span class="slider"></span>
                             </label>
                         </div>
@@ -252,14 +252,42 @@
                                 <p>Receive newsletters, feature updates, and community news.</p>
                             </div>
                             <label class="switch">
-                                <input type="checkbox">
+                                <input type="checkbox" data-setting="marketing_updates">
                                 <span class="slider"></span>
                             </label>
                         </div>
                     </div>
 
+                    <div data-settings-section="privacy">
+                        <div class="settings-section-header">
+                            <h3>Privacy</h3>
+                            <p>Control how your profile is shown to other authenticated users.</p>
+                        </div>
+                        <div class="toggle-row">
+                            <div class="toggle-info">
+                                <h4>Show my profile in donor search</h4>
+                                <p>Turn this off to remove your profile from donor discovery.</p>
+                            </div>
+                            <label class="switch"><input type="checkbox" data-setting="profile_search_visible"><span class="slider"></span></label>
+                        </div>
+                    </div>
+
+                    <div data-settings-section="donation">
+                        <div class="settings-section-header">
+                            <h3>Donation Preferences</h3>
+                            <p>Choose whether you want to be contacted for compatible requests.</p>
+                        </div>
+                        <div class="toggle-row">
+                            <div class="toggle-info">
+                                <h4>Available for donation requests</h4>
+                                <p>Your availability is used when matching nearby requests.</p>
+                            </div>
+                            <label class="switch"><input type="checkbox" data-setting="available_for_requests"><span class="slider"></span></label>
+                        </div>
+                    </div>
+
                     <!-- Section: Danger Zone -->
-                    <div class="danger-zone">
+                    <div class="danger-zone" data-settings-section="privacy">
                         <h4>Delete Account</h4>
                         <p>Once you delete your account, there is no going back. Please be certain.</p>
                         <button class="btn btn-danger">Deactivate Account</button>
@@ -273,6 +301,8 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase.js"></script>
+    <script src="js/settings.js"></script>
+    <script src="js/data-helpers.js"></script>
     <script src="js/profile-sync.js"></script>
 </body>
 </html>

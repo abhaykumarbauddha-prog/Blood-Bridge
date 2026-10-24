@@ -14,19 +14,33 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     let requestMap = null;
     let requestMarker = null;
+    let selectedCoordinates = null;
+
+    const defaultRequiredBy = () => {
+        const dateInput = requestForm?.elements.required_date;
+        const timeInput = requestForm?.elements.required_time;
+        if (!dateInput || !timeInput || dateInput.value || timeInput.value) return;
+        const future = new Date(Date.now() + 60 * 60 * 1000);
+        const pad = (value) => String(value).padStart(2, '0');
+        dateInput.value = `${future.getFullYear()}-${pad(future.getMonth() + 1)}-${pad(future.getDate())}`;
+        timeInput.value = `${pad(future.getHours())}:${pad(future.getMinutes())}`;
+    };
+    defaultRequiredBy();
 
     // ==========================================
     // 1. Interactive Map & Geolocation Setup
     // ==========================================
     if (locationMapContainer && window.MapService && window.L) {
-        // Initial coordinates (Default Lucknow)
-        let initialLat = MapService.DEFAULT_COORDS.lat;
-        let initialLng = MapService.DEFAULT_COORDS.lng;
+        const loc = await MapService.getUserLocation();
+        const initialLocation = loc || (MapService.getDefaultLocation ? MapService.getDefaultLocation() : { lat: 26.8467, lng: 80.9462 });
+        let initialLat = initialLocation.lat;
+        let initialLng = initialLocation.lng;
 
         requestMap = MapService.createMap('request-location-map', {
             center: [initialLat, initialLng],
             zoom: 13
         });
+        setTimeout(() => { if (requestMap) requestMap.invalidateSize(); }, 300);
 
         // Create draggable location pin
         requestMarker = L.marker([initialLat, initialLng], {
@@ -48,12 +62,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             await updateLocationFromCoords(e.latlng.lat, e.latlng.lng);
         });
 
-        // Auto-fetch user's current GPS position on load if allowed
-        MapService.getUserLocation().then((loc) => {
-            if (loc && loc.isLive) {
-                applyCoordsToMap(loc.lat, loc.lng, false);
-            }
-        });
+        applyCoordsToMap(initialLat, initialLng, false);
 
         // Helper to update text & inputs from coordinates
         async function updateLocationFromCoords(lat, lng) {
@@ -62,18 +71,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             const info = await MapService.reverseGeocode(lat, lng);
             if (selectedLocationText) {
-                selectedLocationText.textContent = info.displayName || `${info.city}, Uttar Pradesh`;
+                selectedLocationText.textContent = info?.displayName || 'Location selected';
             }
-            if (cityInput && (!cityInput.value || cityInput.value.trim() === '')) {
+            if (cityInput && info?.city && (!cityInput.value || cityInput.value.trim() === '')) {
                 cityInput.value = info.city;
             }
-            if (hospitalAddressInput && (!hospitalAddressInput.value || hospitalAddressInput.value.trim() === '')) {
+            if (hospitalAddressInput && info?.displayName && (!hospitalAddressInput.value || hospitalAddressInput.value.trim() === '')) {
                 hospitalAddressInput.value = info.displayName;
             }
         }
 
         function applyCoordsToMap(lat, lng, zoomIn = true) {
             if (!requestMap || !requestMarker) return;
+            selectedCoordinates = { latitude: lat, longitude: lng };
             requestMarker.setLatLng([lat, lng]);
             requestMap.panTo([lat, lng]);
             if (zoomIn) requestMap.setZoom(14);
@@ -131,6 +141,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (hospitalAddressInput) hospitalAddressInput.addEventListener('input', triggerMapPanFromInputs);
     }
 
+    if (!requestMap && useMyLocationBtn) {
+        useMyLocationBtn.addEventListener('click', async () => {
+            useMyLocationBtn.textContent = '⏳ Locating...';
+            const loc = await MapService.getUserLocation();
+            useMyLocationBtn.textContent = '🎯 Use My Location';
+            if (!loc) return;
+            selectedCoordinates = { latitude: loc.lat, longitude: loc.lng };
+            const info = await MapService.reverseGeocode(loc.lat, loc.lng);
+            if (selectedLocationText) selectedLocationText.textContent = info?.displayName || 'Location selected';
+        });
+    }
+
     // ==========================================
     // 2. Load Real Recent Requests from Database
     // ==========================================
@@ -141,6 +163,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             const { data: requests, error } = await supabaseClient
                 .from('blood_requests')
                 .select('*')
+                .eq('status', 'open')
+                .gt('required_by', new Date().toISOString())
                 .order('created_at', { ascending: false })
                 .limit(4);
 
@@ -156,17 +180,21 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
 
+            const requestIds = requests.map((request) => request.id);
+            const { data: responses } = await supabaseClient
+                .from('request_responses')
+                .select('id, request_id, status')
+                .in('request_id', requestIds)
+                .eq('status', 'accepted');
+            const acceptedResponseByRequest = new Map((responses || []).map((response) => [response.request_id, response]));
+
             recentRequestsContainer.innerHTML = requests.map(req => {
                 const urgency = req.urgency || 'Normal';
                 let tagClass = 'tag-pending';
                 if (urgency.toLowerCase() === 'critical') tagClass = 'tag-critical';
                 else if (urgency.toLowerCase() === 'urgent') tagClass = 'tag-urgent';
 
-                const reqDate = req.created_at ? new Date(req.created_at).toLocaleDateString('en-GB', {
-                    day: 'numeric',
-                    month: 'short',
-                    year: 'numeric'
-                }) : 'Recent';
+                const reqDate = BloodMatchData.formatDateTime(req.created_at);
 
                 return `
                     <div class="recent-req-item">
@@ -178,9 +206,49 @@ document.addEventListener('DOMContentLoaded', async () => {
                             <div class="status-tag ${tagClass}" style="margin-bottom: 4px;">${escapeHtml(urgency)}</div>
                             <p style="font-size: 0.7rem; color: var(--text-secondary);">${reqDate}</p>
                         </div>
+                        ${acceptedResponseByRequest.has(req.id) ? `<button type="button" class="btn-mark-donated" data-response-id="${acceptedResponseByRequest.get(req.id).id}">Mark donated</button>` : ''}
                     </div>
                 `;
             }).join('');
+
+            recentRequestsContainer.querySelectorAll('.btn-mark-donated').forEach((button) => {
+                button.addEventListener('click', async () => {
+                    button.disabled = true;
+                    const responseId = button.dataset.responseId;
+                    let markError = null;
+
+                    const { error: rpcErr } = await supabaseClient.rpc('mark_response_donated', { response_id_input: responseId });
+                    if (rpcErr) {
+                        if (/function .* does not exist|could not find the function/i.test(rpcErr.message || '')) {
+                            const { data: respData, error: respErr } = await supabaseClient
+                                .from('request_responses')
+                                .update({ status: 'donated', donated_at: new Date().toISOString() })
+                                .eq('id', responseId)
+                                .select('donor_id, request_id')
+                                .maybeSingle();
+                            if (respErr) {
+                                markError = respErr;
+                            } else if (respData) {
+                                await supabaseClient
+                                    .from('blood_requests')
+                                    .update({ status: 'fulfilled' })
+                                    .eq('id', respData.request_id);
+                                await supabaseClient
+                                    .from('users')
+                                    .update({ last_donation_date: new Date().toISOString().split('T')[0] })
+                                    .eq('id', respData.donor_id);
+                            }
+                        } else {
+                            markError = rpcErr;
+                        }
+                    }
+
+                    button.disabled = false;
+                    if (markError) return alert(`Unable to verify donation: ${markError.message}`);
+                    alert('Donation verified and marked as completed!');
+                    loadRecentRequests();
+                });
+            });
         } catch (err) {
             console.error('Error loading recent requests:', err);
             recentRequestsContainer.innerHTML = `
@@ -227,13 +295,21 @@ document.addEventListener('DOMContentLoaded', async () => {
                 required_date: value('required_date'),
                 required_time: value('required_time'),
                 additional_info: value('additional_info'),
-                requester_id: requesterId
+                requester_id: requesterId,
+                latitude: selectedCoordinates?.latitude || null,
+                longitude: selectedCoordinates?.longitude || null
             };
 
             if (!requestPayload.patient_name || !requestPayload.blood_group || !requestPayload.hospital_name ||
                 !requestPayload.hospital_address || !requestPayload.city || !requestPayload.required_date ||
                 !requestPayload.required_time || !Number.isInteger(requestPayload.units) || requestPayload.units < 1) {
                 alert('Please complete all required request details.');
+                return;
+            }
+
+            const requiredBy = new Date(`${requestPayload.required_date}T${requestPayload.required_time}:00`);
+            if (Number.isNaN(requiredBy.getTime()) || requiredBy <= new Date()) {
+                alert('Required by date and time must be in the future.');
                 return;
             }
 

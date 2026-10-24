@@ -24,9 +24,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     let donorsMap = null;
     let radiusCircle = null;
     let userMarker = null;
-    let centerCoords = MapService.DEFAULT_COORDS;
+    let centerCoords = null;
     let allDonors = [];
     const markerRegistry = new Map();
+    let markerLayer = null;
 
     // 1. Initialize View Toggles
     if (gridBtn && mapBtn) {
@@ -54,12 +55,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 2. Initialize Map
     function initDonorsMap() {
-        if (!mapContainer || !window.MapService || !window.L) return;
+        if (!mapContainer || !window.MapService || !window.L || !centerCoords) return;
 
         donorsMap = MapService.createMap('donors-map-container', {
             center: [centerCoords.lat, centerCoords.lng],
             zoom: 10
         });
+        if (!donorsMap) return;
+        markerLayer = window.L.markerClusterGroup ? L.markerClusterGroup() : L.layerGroup();
+        markerLayer.addTo(donorsMap);
 
         updateMapCenterAndRadius();
         renderMapMarkers();
@@ -84,17 +88,33 @@ document.addEventListener('DOMContentLoaded', async () => {
         donorsMap.setView([centerCoords.lat, centerCoords.lng], radiusKm <= 25 ? 12 : (radiusKm <= 50 ? 11 : 9));
     }
 
-    // 3. Detect Live Location
-    MapService.getUserLocation().then(loc => {
-        if (loc) {
-            centerCoords = loc;
-            if (locationInput && loc.isLive) {
-                MapService.reverseGeocode(loc.lat, loc.lng).then(info => {
-                    if (info.city) locationInput.value = info.city;
-                });
+    // 3. Detect Location & Handle Search Query
+    (async () => {
+        const loc = await MapService.getUserLocation();
+        centerCoords = loc || MapService.getDefaultLocation();
+
+        if (locationInput && loc?.city) {
+            locationInput.value = loc.city;
+        }
+
+        // Parse search query from URL parameter (?q=...)
+        const urlParams = new URLSearchParams(window.location.search);
+        const queryParam = urlParams.get('q');
+        if (queryParam) {
+            const cleanQ = queryParam.trim();
+            const upperQ = cleanQ.toUpperCase();
+            const bloodTypes = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+            if (bloodTypes.includes(upperQ) && bloodFilter) {
+                bloodFilter.value = upperQ;
+            } else {
+                const topSearch = document.querySelector('.search-bar input');
+                if (topSearch) topSearch.value = cleanQ;
             }
         }
-    });
+
+        if (mapBtn?.classList.contains('active')) initDonorsMap();
+        await fetchDonors();
+    })();
 
     // 4. Fetch Real Donors from Supabase
     async function fetchDonors() {
@@ -109,7 +129,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             // First try backend API endpoint
             let donorsData = null;
             try {
-                const res = await fetch('/api/donors');
+                const { data: sessionData } = await supabaseClient.auth.getSession();
+                const token = sessionData?.session?.access_token;
+                const res = await fetch('/api/donors', { headers: token ? { Authorization: `Bearer ${token}` } : {} });
                 const json = await res.json();
                 if (json.success && Array.isArray(json.data)) {
                     donorsData = json.data;
@@ -121,9 +143,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Fallback to direct client query
             if (!donorsData) {
                 const { data, error } = await supabaseClient
-                    .from('users')
-                    .select('id, full_name, phone, blood_group, city, address, state, last_donation_date, availability_status, avatar_url')
-                    .eq('role', 'Donor');
+                    .from('public_donors')
+                    .select('id, full_name, blood_group, city, state, last_donation_date, availability_status, is_donor, is_available, latitude, longitude, avatar_url');
 
                 if (error) throw error;
                 donorsData = data || [];
@@ -131,17 +152,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             allDonors = [];
 
-            // Process location & distance for each real donor
+            if (!centerCoords) {
+                if (countText) countText.textContent = 'Set your location to find nearby donors.';
+                renderGrid([]);
+                return;
+            }
+
+            // Only persisted donor coordinates are valid map locations.
             for (const donor of (donorsData || [])) {
-                const locationQuery = [donor.address, donor.city, donor.state || 'Uttar Pradesh'].filter(Boolean).join(', ');
-                const coords = await MapService.geocodeAddress(locationQuery);
+                const coords = { lat: Number(donor.latitude), lng: Number(donor.longitude) };
+                if (![coords.lat, coords.lng].every(Number.isFinite)) continue;
                 const distanceKm = MapService.calculateDistanceKm(centerCoords.lat, centerCoords.lng, coords.lat, coords.lng);
 
                 allDonors.push({
                     ...donor,
                     lat: coords.lat,
                     lng: coords.lng,
-                    distanceKm: distanceKm ?? 15
+                    distanceKm
                 });
             }
 
@@ -167,11 +194,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         const selectedStatus = statusFilter?.value || '';
         const sortVal = sortFilter?.value || 'nearest';
 
+        const topbarInput = document.querySelector('.search-bar input');
+        const searchKeyword = (topbarInput?.value || '').trim().toLowerCase();
+
         let filtered = allDonors.filter(donor => {
             const matchesGroup = !selectedGroup || donor.blood_group === selectedGroup;
-            const matchesRadius = donor.distanceKm <= selectedRadius;
-            const matchesStatus = !selectedStatus || (donor.availability_status || 'Available') === selectedStatus;
-            return matchesGroup && matchesRadius && matchesStatus;
+            const matchesRadius = BloodMatchData.withinRadius(centerCoords, { lat: donor.lat, lng: donor.lng }, selectedRadius);
+            const matchesStatus = !selectedStatus || (donor.is_available ? 'Available' : 'Unavailable') === selectedStatus;
+
+            let matchesKeyword = true;
+            if (searchKeyword) {
+                const name = (donor.full_name || '').toLowerCase();
+                const city = (donor.city || '').toLowerCase();
+                const state = (donor.state || '').toLowerCase();
+                const bg = (donor.blood_group || '').toLowerCase();
+                matchesKeyword = name.includes(searchKeyword) || city.includes(searchKeyword) || state.includes(searchKeyword) || bg === searchKeyword;
+            }
+
+            return matchesGroup && matchesRadius && matchesStatus && matchesKeyword;
         });
 
         // Sort
@@ -216,10 +256,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         gridContainer.innerHTML = donors.map(donor => {
             const name = donor.full_name || 'Donor';
             const blood = donor.blood_group || 'O+';
-            const city = donor.city || 'Lucknow';
-            const status = donor.availability_status || 'Available';
+            const city = donor.city || 'Location not set';
+            const status = donor.is_available ? 'Available' : 'Unavailable';
             const isAvailable = status.toLowerCase() === 'available';
-            const avatar = donor.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=FFF0F2&color=E60023`;
+            const avatar = donor.avatar_url || 'assets/profile-placeholder.svg';
 
             return `
                 <div class="donor-card">
@@ -258,12 +298,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!donorsMap) return;
 
         // Clear existing markers
-        markerRegistry.forEach(({ marker }) => donorsMap.removeLayer(marker));
+        if (markerLayer) markerLayer.clearLayers();
         markerRegistry.clear();
 
         donors.forEach(donor => {
             const icon = MapService.createBloodMarkerIcon(donor.blood_group, 'Normal');
-            const marker = L.marker([donor.lat, donor.lng], { icon }).addTo(donorsMap);
+            const marker = L.marker([donor.lat, donor.lng], { icon }).addTo(markerLayer || donorsMap);
 
             const popupContent = `
                 <div style="font-family: inherit; min-width: 180px; text-align: center;">
@@ -271,7 +311,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <p style="margin: 0 0 6px; font-size: 12px; color: #475467;">
                         🩸 Blood Group: <b>${escapeHtml(donor.blood_group || 'O+')}</b><br>
                         📍 ${donor.distanceKm} km away (${escapeHtml(donor.city || '')})<br>
-                        Status: <b style="color: #16A34A;">${escapeHtml(donor.availability_status || 'Available')}</b>
+                        Status: <b style="color: #16A34A;">${donor.is_available ? 'Available' : 'Unavailable'}</b>
                     </p>
                     <a href="blood-request.html" style="display: block; background: #E60023; color: white; text-decoration: none; padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 11px;">
                         Request Blood
@@ -294,8 +334,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                     updateMapCenterAndRadius();
                     // Recalculate distances relative to new center
                     allDonors.forEach(donor => {
-                        donor.distanceKm = MapService.calculateDistanceKm(centerCoords.lat, centerCoords.lng, donor.lat, donor.lng) ?? 15;
+                        donor.distanceKm = MapService.calculateDistanceKm(centerCoords.lat, centerCoords.lng, donor.lat, donor.lng);
                     });
+                    if (!allDonors.length) await fetchDonors();
                 }
             }
             applyFiltersAndRender();
@@ -322,6 +363,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             .replace(/'/g, '&#039;');
     }
 
-    // Initial load
-    fetchDonors();
+    const topbarInput = document.querySelector('.search-bar input');
+    if (topbarInput) {
+        topbarInput.addEventListener('input', applyFiltersAndRender);
+        topbarInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') applyFiltersAndRender();
+        });
+    }
+
+    const topbarSearchIcon = document.querySelector('.search-bar span');
+    if (topbarSearchIcon) {
+        topbarSearchIcon.style.cursor = 'pointer';
+        topbarSearchIcon.addEventListener('click', applyFiltersAndRender);
+    }
 });

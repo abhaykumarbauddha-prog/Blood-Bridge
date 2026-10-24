@@ -4,53 +4,427 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blood Bridge | Find Donors Save Lives</title>
+    <meta name="description" content="Connect blood donors, requesters, and verified hospitals in real-time. Blood Bridge saves lives through intelligent matching and community support.">
     <link rel="stylesheet" href="css/global.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Landing Page Specific Styles */
+        :root {
+            --brand-primary: #E60023;
+            --brand-hover: #c4001e;
+            --brand-light: #FFF0F2;
+            --bg-white: #FFFFFF;
+            --bg-light: #F8FAFC;
+            --text-dark: #0F172A;
+            --text-secondary: #475569;
+            --border-color: #E2E8F0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-white);
+            color: var(--text-dark);
+            line-height: 1.5;
+            overflow-x: hidden;
+        }
+
+        a { text-decoration: none; color: inherit; }
+        ul { list-style: none; }
+
+        /* Navbar */
         .navbar {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px 5%;
-            background-color: var(--bg-white);
-            border-bottom: 1px solid #eaeaea;
+            padding: 18px 5%;
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
-        .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.5rem; color: var(--text-dark); }
-        .logo span { color: var(--brand-primary); }
-        .nav-links { display: flex; gap: 24px; font-weight: 500; font-size: 0.95rem; }
-        .nav-links li:hover { color: var(--brand-primary); cursor: pointer; }
-        .nav-actions { display: flex; gap: 12px; align-items: center; }
 
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: var(--text-dark);
+            letter-spacing: -0.5px;
+        }
+
+        .logo svg {
+            filter: drop-shadow(0 2px 4px rgba(230, 0, 35, 0.3));
+        }
+
+        .logo span {
+            color: var(--brand-primary);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 28px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            transition: color 0.2s ease;
+            position: relative;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--brand-primary);
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 24px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.25s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background-color: var(--brand-primary);
+            color: #ffffff !important;
+            box-shadow: 0 4px 14px rgba(230, 0, 35, 0.25);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--brand-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(230, 0, 35, 0.35);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            color: var(--brand-primary) !important;
+            border-color: var(--brand-primary);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--brand-light);
+            transform: translateY(-2px);
+        }
+
+        /* Hero Section */
         .hero {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 60px 5%;
-            background: linear-gradient(135deg, var(--bg-pink) 0%, var(--bg-white) 100%);
+            padding: 70px 5% 90px;
+            background: radial-gradient(circle at 10% 20%, rgba(255, 240, 242, 0.8) 0%, rgba(255, 255, 255, 1) 60%);
+            gap: 40px;
+            position: relative;
         }
-        .hero-content { max-width: 50%; }
-        .hero-label { color: var(--brand-primary); font-weight: 600; display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
-        .hero-title { font-size: 4rem; font-weight: 800; line-height: 1.1; margin-bottom: 24px; color: var(--text-dark); }
-        .hero-title span { color: var(--brand-primary); }
-        .hero-text { font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 32px; line-height: 1.6; }
-        .hero-buttons { display: flex; gap: 16px; }
-        
+
+        .hero-content {
+            max-width: 580px;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            background: var(--brand-light);
+            color: var(--brand-primary);
+            font-weight: 700;
+            font-size: 0.85rem;
+            border-radius: 50px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(230, 0, 35, 0.15);
+        }
+
+        .hero-title {
+            font-size: 4rem;
+            font-weight: 800;
+            line-height: 1.08;
+            margin-bottom: 24px;
+            color: var(--text-dark);
+            letter-spacing: -1.5px;
+        }
+
+        .hero-title span {
+            color: var(--brand-primary);
+            background: linear-gradient(135deg, #E60023 0%, #FF4D6D 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-text {
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+            margin-bottom: 36px;
+            line-height: 1.65;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        /* Hero Visual Illustration */
+        .hero-image-wrapper {
+            flex: 1;
+            max-width: 520px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .hero-card {
+            background: #ffffff;
+            border-radius: 28px;
+            padding: 30px;
+            box-shadow: 0 25px 60px -15px rgba(230, 0, 35, 0.15), 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(230, 0, 35, 0.1);
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pulse-heart {
+            animation: heartPulse 2s infinite ease-in-out;
+            transform-origin: center;
+        }
+
+        @keyframes heartPulse {
+            0% { transform: scale(1); }
+            14% { transform: scale(1.08); }
+            28% { transform: scale(1); }
+            42% { transform: scale(1.08); }
+            70% { transform: scale(1); }
+        }
+
         /* Stats Strip */
         .stats-container {
-            display: flex;
-            justify-content: space-between;
-            background: var(--bg-white);
-            margin: -40px 5% 40px;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            background: #ffffff;
+            margin: -50px 5% 60px;
+            padding: 32px 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
+            border: 1px solid var(--border-color);
             position: relative;
             z-index: 10;
         }
-        .stat-item { display: flex; align-items: center; gap: 16px; }
-        .stat-icon { font-size: 2rem; color: var(--brand-primary); }
-        .stat-info h3 { font-size: 1.5rem; color: var(--text-dark); }
-        .stat-info p { font-size: 0.9rem; color: var(--text-secondary); }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .stat-item:not(:last-child) {
+            border-right: 1px solid var(--border-color);
+            padding-right: 24px;
+        }
+
+        .stat-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            background: var(--brand-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            color: var(--brand-primary);
+            flex-shrink: 0;
+        }
+
+        .stat-info h3 {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--text-dark);
+            line-height: 1.1;
+            margin-bottom: 4px;
+        }
+
+        .stat-info p {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* Feature Section */
+        .features-section {
+            padding: 60px 5% 80px;
+            background: var(--bg-light);
+        }
+
+        .section-header {
+            text-align: center;
+            max-width: 650px;
+            margin: 0 auto 50px;
+        }
+
+        .section-header h2 {
+            font-size: 2.4rem;
+            font-weight: 800;
+            color: var(--text-dark);
+            letter-spacing: -0.5px;
+            margin-bottom: 12px;
+        }
+
+        .section-header p {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+        }
+
+        .feature-box {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 36px 30px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.04);
+            transition: all 0.3s ease;
+        }
+
+        .feature-box:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 35px -10px rgba(230, 0, 35, 0.12);
+            border-color: rgba(230, 0, 35, 0.2);
+        }
+
+        .feature-icon-wrapper {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            background: var(--brand-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            margin-bottom: 20px;
+        }
+
+        .feature-box h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--text-dark);
+        }
+
+        .feature-box p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* Banner CTA */
+        .emergency-banner {
+            margin: 0 5% 80px;
+            background: linear-gradient(135deg, #E60023 0%, #9B0017 100%);
+            border-radius: 24px;
+            padding: 50px 60px;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 30px;
+            box-shadow: 0 20px 40px rgba(230, 0, 35, 0.3);
+        }
+
+        .banner-text h3 {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .banner-text p {
+            font-size: 1.05rem;
+            opacity: 0.9;
+        }
+
+        .banner-btn {
+            background: #ffffff;
+            color: var(--brand-primary) !important;
+            padding: 14px 32px;
+            font-size: 1rem;
+            font-weight: 700;
+            border-radius: 50px;
+            white-space: nowrap;
+            transition: all 0.25s ease;
+        }
+
+        .banner-btn:hover {
+            background: #FFF0F2;
+            transform: scale(1.04);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid var(--border-color);
+            padding: 40px 5% 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 24px;
+        }
+
+        .footer-links a:hover {
+            color: var(--brand-primary);
+        }
+
+        @media (max-width: 960px) {
+            .hero { flex-direction: column; text-align: center; padding: 40px 5% 60px; }
+            .hero-content { max-width: 100%; }
+            .hero-title { font-size: 2.8rem; }
+            .hero-buttons { justify-content: center; }
+            .stats-container { grid-template-columns: 1fr; margin-top: 0; }
+            .stat-item:not(:last-child) { border-right: none; border-bottom: 1px solid var(--border-color); padding-bottom: 20px; }
+            .feature-grid { grid-template-columns: 1fr; }
+            .emergency-banner { flex-direction: column; text-align: center; padding: 36px 24px; }
+            .nav-links { display: none; }
+        }
     </style>
 </head>
 <body>
@@ -58,63 +432,157 @@
     <!-- Navigation -->
     <nav class="navbar">
         <div class="logo">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="#E60023"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
-            Blood<span>Match</span>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="#E60023">
+                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+            </svg>
+            Blood<span>Bridge</span>
         </div>
         <ul class="nav-links">
-            <li style="color: var(--brand-primary); border-bottom: 2px solid var(--brand-primary);">Home</li>
-            <li>About</li>
-            <li>How It Works</li>
-            <li>Find Donors</li>
-            <li>For Hospitals</li>
-            <li>Impact</li>
-            <li>Contact</li>
+            <li><a href="index.html" class="active">Home</a></li>
+            <li><a href="find-donors.html">Find Donors</a></li>
+            <li><a href="nearby-request.html">Emergency Requests</a></li>
+            <li><a href="help-support.html">How It Works</a></li>
+            <li><a href="help-support.html">Contact</a></li>
         </ul>
         <div class="nav-actions">
-            <a href="auth.html" class="btn btn-outline">Login</a>
-            <a href="auth.html" class="btn btn-primary">Sign Up</a>
+            <a href="auth.html?mode=login" class="btn btn-outline" id="nav-login-btn">Login</a>
+            <a href="auth.html?mode=signup" class="btn btn-primary" id="nav-signup-btn">Sign Up</a>
         </div>
     </nav>
 
     <!-- Hero Section -->
     <section class="hero">
         <div class="hero-content">
-            <div class="hero-label">❤️ Every Drop Counts</div>
-            <h1 class="hero-title">Find Donors<br><span>Save Lives</span></h1>
-            <p class="hero-text">Join BloodMatch to donate blood, request help, and make a real difference in someone's life. Together we can build a healthier and stronger community.</p>
+            <div class="hero-badge">
+                <span>❤️</span> Every Drop Counts • 24/7 Life Saver
+            </div>
+            <h1 class="hero-title">
+                Find Donors.<br>
+                <span>Save Lives.</span>
+            </h1>
+            <p class="hero-text">
+                Blood Bridge instantly connects patients in urgent need with verified blood donors and certified hospitals. Fast, safe, and location-powered matching within your city.
+            </p>
             <div class="hero-buttons">
-                <a href="find-donors.html" class="btn btn-primary">🚀 Find a Donor</a>
-                <a href="auth.html" class="btn btn-outline">👥 Become a Donor</a>
+                <a href="find-donors.html" class="btn btn-primary">
+                    🔍 Find a Donor
+                </a>
+                <a href="auth.html?mode=signup" class="btn btn-outline">
+                    🩸 Become a Donor
+                </a>
             </div>
         </div>
-        <div class="hero-image">
-            <!-- Placeholder for the exact hands/heart image -->
-            <img src="https://via.placeholder.com/600x400?text=Hands+Holding+Heart+Image" alt="Hands holding heart" style="border-radius: 20px; max-width: 100%;">
+
+        <div class="hero-image-wrapper">
+            <div class="hero-card">
+                <svg viewBox="0 0 500 340" width="100%" height="auto" role="img" aria-label="Hands holding a heart illustration">
+                    <rect width="500" height="340" rx="20" fill="#FFF4F6"/>
+                    <circle cx="250" cy="160" r="120" fill="#FFE3E7" opacity="0.6"/>
+                    <g class="pulse-heart">
+                        <path d="M250 255c-12-15-100-75-100-136 0-31 24-53 53-53 22 0 40 12 47 31 7-19 25-31 47-31 29 0 53 22 53 53 0 61-88 121-100 136Z" fill="#E60023"/>
+                        <path d="M185 96c14-15 37-15 51 0" fill="none" stroke="#ffffff" stroke-width="7" stroke-linecap="round" opacity="0.8"/>
+                    </g>
+                    <!-- Floating badges -->
+                    <rect x="30" y="230" width="160" height="60" rx="14" fill="#ffffff" filter="drop-shadow(0 6px 12px rgba(0,0,0,0.06))"/>
+                    <text x="50" y="255" font-size="12" font-weight="700" fill="#E60023">⚡ Fast Match</text>
+                    <text x="50" y="274" font-size="11" fill="#64748B">Within 100km radius</text>
+
+                    <rect x="310" y="40" width="160" height="60" rx="14" fill="#ffffff" filter="drop-shadow(0 6px 12px rgba(0,0,0,0.06))"/>
+                    <text x="330" y="65" font-size="12" font-weight="700" fill="#16A34A">✓ 100% Verified</text>
+                    <text x="330" y="84" font-size="11" fill="#64748B">Partner Hospitals</text>
+                </svg>
+            </div>
         </div>
     </section>
 
     <!-- Stats Strip -->
-    <div class="stats-container">
-        <div class="stat-item">
-            <div class="stat-icon">👥</div>
-            <div class="stat-info"><h3>50K+</h3><p>Lives Impacted</p></div>
-        </div>
+    <div class="stats-container" id="impact">
         <div class="stat-item">
             <div class="stat-icon">💧</div>
-            <div class="stat-info"><h3>10K+</h3><p>Active Donors</p></div>
+            <div class="stat-info">
+                <h3 id="homepage-donors">1,420+</h3>
+                <p>Active Verified Donors</p>
+            </div>
         </div>
         <div class="stat-item">
             <div class="stat-icon">🏥</div>
-            <div class="stat-info"><h3>200+</h3><p>Partner Hospitals</p></div>
+            <div class="stat-info">
+                <h3 id="homepage-hospitals">48+</h3>
+                <p>Partner Hospitals</p>
+            </div>
         </div>
         <div class="stat-item">
-            <div class="stat-icon">⭐</div>
-            <div class="stat-info"><h3>4.8/5</h3><p>User Rating</p></div>
+            <div class="stat-icon">❤️</div>
+            <div class="stat-info">
+                <h3 id="homepage-donations">3,850+</h3>
+                <p>Fulfilled Blood Units</p>
+            </div>
         </div>
     </div>
 
+    <!-- How It Works Section -->
+    <section class="features-section">
+        <div class="section-header">
+            <h2>How Blood Bridge Works</h2>
+            <p>Our intelligent system bridges the critical gap between patients and donors in just three steps.</p>
+        </div>
+
+        <div class="feature-grid">
+            <div class="feature-box">
+                <div class="feature-icon-wrapper">📍</div>
+                <h3>1. Post or Search</h3>
+                <p>Post an emergency blood request with your blood group, hospital, and city, or search nearby verified donors.</p>
+            </div>
+            <div class="feature-box">
+                <div class="feature-icon-wrapper">⚡</div>
+                <h3>2. Instant Matching</h3>
+                <p>Our location algorithm alerts compatible donors within a 100km radius with real-time notifications.</p>
+            </div>
+            <div class="feature-box">
+                <div class="feature-icon-wrapper">🩸</div>
+                <h3>3. Save Lives</h3>
+                <p>Donors accept requests, visit the verified hospital, and complete the life-saving donation safely.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Emergency Callout -->
+    <div class="emergency-banner">
+        <div class="banner-text">
+            <h3>Urgent Blood Requirement?</h3>
+            <p>Post a request right now. Local donors and hospitals will be alerted immediately.</p>
+        </div>
+        <a href="blood-request.html" class="banner-btn">
+            🚨 Create Blood Request
+        </a>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="logo">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="#E60023">
+                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+            </svg>
+            Blood<span>Bridge</span>
+        </div>
+        <div class="footer-links">
+            <a href="find-donors.html">Find Donors</a>
+            <a href="nearby-request.html">Nearby Requests</a>
+            <a href="auth.html">Hospital Login</a>
+            <a href="help-support.html">Support</a>
+            <a href="terms.html">Terms</a>
+            <a href="privacy.html">Privacy</a>
+        </div>
+        <div>
+            © 2026 Blood Bridge. All rights reserved.
+        </div>
+    </footer>
+
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase.js"></script>
+    <script src="js/data-helpers.js"></script>
+    <script src="js/index.js"></script>
     <script src="js/profile-sync.js"></script>
 </body>
 </html>

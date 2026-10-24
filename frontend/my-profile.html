@@ -43,7 +43,7 @@
         .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
 
         /* Topbar */
-        .topbar { background-color: var(--bg-white); height: 72px; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-light); position: sticky; top: 0; z-index: 10; }
+        .topbar { background-color: var(--bg-white); height: 72px; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-light); position: sticky; top: 0; z-index: 10000; }
         .search-bar { display: flex; align-items: center; background-color: var(--bg-light-gray); padding: 10px 16px; border-radius: 8px; width: 400px; gap: 10px; }
         .search-bar input { border: none; background: transparent; width: 100%; outline: none; color: var(--text-dark); }
         .topbar-right { display: flex; align-items: center; gap: 24px; }
@@ -119,12 +119,12 @@
             Blood<span>Match</span>
         </div>
         <ul class="nav-list">
-            <a href="user-dashboard.html" class="nav-item"><span>🏠</span> Dashboard</a>
+            <a href="dashboard.html" class="nav-item"><span>🏠</span> Dashboard</a>
             <a href="my-profile.html" class="nav-item active"><span>👤</span> My Profile</a>
             <a href="find-donors.html" class="nav-item"><span>🔍</span> Find Donors</a>
             <a href="blood-request.html" class="nav-item"><span>🩸</span> Blood Requests</a>
             <a href="nearby-request.html" class="nav-item"><span>📍</span> Nearby Requests</a>
-            <a href="notifications.html" class="nav-item"><span>🔔</span> Notifications <span class="badge">3</span></a>
+            <a href="notifications.html" class="nav-item"><span>🔔</span> Notifications <span class="badge notification-badge" data-unread-badge hidden></span></a>
             <a href="donation-history.html" class="nav-item"><span>🕒</span> Donation History</a>
             <a href="settings.html" class="nav-item"><span>⚙️</span> Settings</a>
             <a href="help-support.html" class="nav-item"><span>❓</span> Help & Support</a>
@@ -139,7 +139,7 @@
             </div>
             <div class="topbar-right">
                 <div class="user-profile-mini">
-                    <img id="topbar-avatar" src="https://ui-avatars.com/api/?name=User&background=F5F7FA&color=101828" alt="Profile">
+                    <img id="topbar-avatar" src="assets/profile-placeholder.svg" alt="Profile">
                     <div>
                         <h5 id="topbar-name" style="font-size: 0.9rem;">Loading...</h5>
                         <p id="topbar-role" style="font-size: 0.75rem; color: var(--text-secondary);">Loading...</p>
@@ -157,7 +157,7 @@
                 <div class="profile-header-content">
                     <div class="profile-avatar-group">
                         <div class="avatar-container">
-                            <img id="profile-avatar" src="https://ui-avatars.com/api/?name=User&background=F5F7FA&color=101828&size=120" alt="Avatar">
+                            <img id="profile-avatar" src="assets/profile-placeholder.svg" alt="Avatar">
                             <button type="button" id="edit-avatar" class="edit-avatar-btn" aria-label="Change profile photo">📷</button>
                             <input id="avatar-input" type="file" accept="image/png,image/jpeg,image/webp" hidden>
                         </div>
@@ -224,6 +224,8 @@
                                     </select>
                                 </div>
                             </div>
+                            <button type="button" id="set-profile-location" class="btn btn-outline" style="margin-top: 8px;">📍 Set My Current Location</button>
+                            <small id="profile-location-status" style="display: block; margin-top: 8px; color: var(--text-secondary);">Location is required to appear on donor maps.</small>
                         </form>
                     </div>
 
@@ -302,21 +304,21 @@
                                     <div class="stat-icon" style="background: var(--bg-pink); color: var(--brand-primary);">💧</div>
                                     <div class="stat-text"><h5>Total Donations</h5></div>
                                 </div>
-                                <div id="total-donations" class="stat-value">0</div>
+                                <div id="total-donations" class="stat-value">-</div>
                             </div>
                             <div class="stat-item">
                                 <div class="stat-item-left">
                                     <div class="stat-icon" style="background: #DCFCE7; color: var(--status-available);">👥</div>
                                     <div class="stat-text"><h5>Lives Helped</h5></div>
                                 </div>
-                                <div id="lives-helped" class="stat-value">0</div>
+                                <div id="lives-helped" class="stat-value">-</div>
                             </div>
                             <div class="stat-item">
                                 <div class="stat-item-left">
                                     <div class="stat-icon" style="background: #FEF3C7; color: var(--status-pending);">⭐</div>
                                     <div class="stat-text"><h5>Donor Level</h5></div>
                                 </div>
-                                <div id="donor-level" class="stat-value" style="font-size: 1.1rem; color: var(--status-pending);">Starter</div>
+                                <div id="donor-level" class="stat-value" style="font-size: 1.1rem; color: var(--status-pending);">-</div>
                             </div>
                         </div>
 
@@ -324,18 +326,7 @@
                             <h3 style="font-size: 1rem;">Badges Earned</h3>
                         </div>
                         <div class="badges-grid">
-                            <div class="badge-card">
-                                <div class="badge-icon">🥉</div>
-                                <div class="badge-name">First Drop</div>
-                            </div>
-                            <div class="badge-card">
-                                <div class="badge-icon">🥈</div>
-                                <div class="badge-name">Silver Saver</div>
-                            </div>
-                            <div class="badge-card">
-                                <div class="badge-icon">🦸‍♂️</div>
-                                <div class="badge-name">Local Hero</div>
-                            </div>
+                            <div style="grid-column: 1 / -1; color: var(--text-secondary);">No badges earned yet.</div>
                         </div>
 
                         <div class="eligibility-box pending">
@@ -354,7 +345,10 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase.js"></script>
+    <script src="js/data-helpers.js"></script>
+    <script src="js/map-service.js"></script>
     <script src="js/profile.js"></script>
+    <script src="js/profile-sync.js"></script>
 
 </body>
 </html>

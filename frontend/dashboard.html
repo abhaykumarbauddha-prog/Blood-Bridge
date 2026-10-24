@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blood Bridge | User Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
     <!-- Leaflet CSS for Interactive OpenStreetMap -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
@@ -141,7 +143,7 @@
             border-bottom: 1px solid var(--border-light);
             position: sticky;
             top: 0;
-            z-index: 10;
+            z-index: 10000;
         }
         .search-bar {
             display: flex;
@@ -151,6 +153,13 @@
             border-radius: 8px;
             width: 400px;
             gap: 10px;
+            border: 1px solid transparent;
+            transition: border-color 0.2s, background-color 0.2s;
+        }
+        .search-bar:focus-within {
+            background-color: var(--bg-white);
+            border-color: var(--brand-primary);
+            box-shadow: 0 0 0 3px rgba(230, 0, 35, 0.1);
         }
         .search-bar input {
             border: none;
@@ -158,41 +167,271 @@
             width: 100%;
             outline: none;
             color: var(--text-dark);
+            font-size: 0.9rem;
+        }
+        .search-icon-btn {
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.15s;
+        }
+        .search-icon-btn:hover {
+            transform: scale(1.15);
         }
         .topbar-right {
             display: flex;
             align-items: center;
-            gap: 24px;
+            gap: 20px;
         }
-        .notif-icon { position: relative; cursor: pointer; font-size: 1.2rem; }
-        .notif-dot {
-            position: absolute;
-            top: -4px;
-            right: -4px;
-            background-color: var(--brand-primary);
-            color: white;
-            font-size: 0.6rem;
-            width: 16px;
-            height: 16px;
+        .notif-wrapper, .user-menu-wrapper {
+            position: relative;
+        }
+        .notif-icon {
+            position: relative;
+            cursor: pointer;
+            font-size: 1.25rem;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: background-color 0.2s, transform 0.15s;
+            user-select: none;
+        }
+        .notif-icon:hover {
+            background-color: var(--bg-pink);
+            transform: scale(1.05);
+        }
+        .notif-dot {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background-color: var(--brand-primary);
+            color: white;
+            font-size: 0.65rem;
+            font-weight: 700;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 4px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 0 2px var(--bg-white);
         }
         .user-profile-mini {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             cursor: pointer;
+            padding: 6px 10px;
+            border-radius: 24px;
+            transition: background-color 0.2s;
+            user-select: none;
+        }
+        .user-profile-mini:hover {
+            background-color: var(--bg-light-gray);
         }
         .user-profile-mini img {
             width: 40px;
             height: 40px;
             border-radius: 50%;
             object-fit: cover;
+            border: 2px solid var(--border-light);
         }
-        .user-profile-mini div h5 { font-size: 0.9rem; }
-        .user-profile-mini div p { font-size: 0.8rem; color: var(--text-secondary); }
+        .user-profile-mini div h5 { font-size: 0.9rem; font-weight: 600; }
+        .user-profile-mini div p { font-size: 0.75rem; color: var(--text-secondary); }
+
+        /* Floating Dropdown Panels */
+        .dropdown-panel {
+            position: absolute;
+            right: 0;
+            top: calc(100% + 10px);
+            background: var(--bg-white);
+            border-radius: 14px;
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.14), 0 4px 12px rgba(0, 0, 0, 0.06);
+            border: 1px solid var(--border-light);
+            z-index: 1000;
+            overflow: hidden;
+            animation: dropdownFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes dropdownFadeIn {
+            from { opacity: 0; transform: translateY(-8px) scale(0.97); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .notif-dropdown-panel {
+            width: 380px;
+            max-width: 90vw;
+            max-height: 480px;
+            display: flex;
+            flex-direction: column;
+        }
+        .dropdown-header {
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-light);
+            background: #fafbfc;
+        }
+        .dropdown-header h4 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin: 0;
+        }
+        .text-btn {
+            background: none;
+            border: none;
+            color: var(--brand-primary);
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 4px 6px;
+            border-radius: 4px;
+        }
+        .text-btn:hover {
+            text-decoration: underline;
+            background: var(--bg-pink);
+        }
+        .dropdown-list {
+            max-height: 330px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        .dropdown-item {
+            padding: 12px 16px;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            cursor: pointer;
+            transition: background 0.15s;
+            border-bottom: 1px solid #f4f5f7;
+            text-decoration: none;
+            color: inherit;
+        }
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+        .dropdown-item:hover {
+            background: var(--bg-pink);
+        }
+        .dropdown-item.unread {
+            background: #FFF8F9;
+        }
+        .dropdown-footer {
+            padding: 12px 16px;
+            border-top: 1px solid var(--border-light);
+            text-align: center;
+            background: #fafbfc;
+        }
+        .dropdown-footer a {
+            color: var(--brand-primary);
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .dropdown-footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* User Dropdown */
+        .user-dropdown-panel {
+            width: 290px;
+            padding: 6px 0;
+        }
+        .user-dropdown-header {
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .user-dropdown-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--brand-primary);
+        }
+        .user-dropdown-info h5 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 2px;
+            color: var(--text-dark);
+        }
+        .user-dropdown-email {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            word-break: break-all;
+            margin-bottom: 4px;
+        }
+        .user-role-badge {
+            display: inline-block;
+            background: var(--bg-pink);
+            color: var(--brand-primary);
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+        .user-dropdown-divider {
+            height: 1px;
+            background: var(--border-light);
+            margin: 6px 0;
+        }
+        .user-dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 18px;
+            color: var(--text-dark);
+            text-decoration: none;
+            font-size: 0.88rem;
+            font-weight: 500;
+            transition: background 0.15s;
+            width: 100%;
+            background: none;
+            border: none;
+            text-align: left;
+            cursor: pointer;
+        }
+        .user-dropdown-item:hover {
+            background: var(--bg-light-gray);
+        }
+        .user-dropdown-item.text-danger {
+            color: var(--brand-primary);
+            font-weight: 600;
+        }
+        .user-dropdown-item.text-danger:hover {
+            background: var(--bg-pink);
+        }
+
+        /* Referral Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(16, 24, 40, 0.5);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            animation: fadeIn 0.2s ease;
+        }
+        .modal-card {
+            background: var(--bg-white);
+            border-radius: 16px;
+            padding: 28px;
+            width: 480px;
+            max-width: 90vw;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            text-align: center;
+        }
 
         /* Dashboard Grid */
         .dashboard-container {
@@ -295,7 +534,7 @@
         .map-container {
             width: 100%;
             height: 200px;
-            background: url('https://via.placeholder.com/400x200?text=Map+View') center/cover;
+            background: var(--bg-light-gray);
             border-radius: 12px;
             position: relative;
             margin-bottom: 16px;
@@ -361,16 +600,16 @@
 </head>
 <body>
 
-    <!-- Sidebar[cite: 4] -->
+    <!-- Sidebar -->
     <aside class="sidebar">
         <div class="sidebar-logo">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="#E60023"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
             Blood<span>Match</span>
         </div>
-        <div class="sidebar-tagline">Donate Today Save Tomorrow[cite: 4]</div>
+        <div class="sidebar-tagline">Donate Today Save Tomorrow</div>
 
         <ul class="nav-list">
-            <a href="#" class="nav-item active">
+            <a href="dashboard.html" class="nav-item active">
                 <span>🏠</span> Dashboard
             </a>
             <a href="my-profile.html" class="nav-item">
@@ -386,7 +625,7 @@
                 <span>📍</span> Nearby Requests
             </a>
             <a href="notifications.html" class="nav-item">
-                <span>🔔</span> Notifications <span class="badge">3</span>
+                <span>🔔</span> Notifications <span class="badge notification-badge" data-unread-badge hidden></span>
             </a>
             <a href="donation-history.html" class="nav-item">
                 <span>🕒</span> Donation History
@@ -400,31 +639,76 @@
         </ul>
 
         <div class="sidebar-cta">
-            <h4>A Small Act Can Save A Life[cite: 4]</h4>
+            <h4>A Small Act Can Save A Life</h4>
             <button type="button" onclick="window.location.href='nearby-request.html'">Donate Now →</button>
         </div>
     </aside>
 
     <!-- Main Content -->
     <main class="main-content">
-        <!-- Topbar[cite: 4] -->
+        <!-- Topbar -->
         <header class="topbar">
             <div class="search-bar">
-                <span>🔍</span>
+                <span id="topbar-search-btn" class="search-icon-btn" title="Search">🔍</span>
                 <input type="text" id="topbar-search-input" placeholder="Search donors, requests, hospitals...">
             </div>
             <div class="topbar-right">
-                <div class="notif-icon" onclick="window.location.href='notifications.html'" title="Notifications">
-                    🔔
-                    <div class="notif-dot">3</div>
-                </div>
-                <div class="user-profile-mini" onclick="window.location.href='my-profile.html'" title="My Profile">
-                    <img data-profile-avatar src="https://ui-avatars.com/api/?name=User&background=F5F7FA&color=101828" alt="Profile">
-                    <div>
-                        <h5 data-profile-name>Loading...</h5>
-                        <p data-profile-role>Loading...</p>
+                <!-- Notifications Dropdown Trigger & Panel -->
+                <div class="notif-wrapper">
+                    <div class="notif-icon" id="dashboard-notif-bell" title="Notifications" role="button" tabindex="0">
+                        🔔
+                        <div class="notif-dot notification-badge" data-unread-badge hidden></div>
                     </div>
-                    <span>⌄</span>
+                    <div id="notif-dropdown" class="dropdown-panel notif-dropdown-panel" style="display: none;">
+                        <div class="dropdown-header">
+                            <h4>Notifications</h4>
+                            <button type="button" id="btn-mark-all-read" class="text-btn">Mark all read</button>
+                        </div>
+                        <div id="notif-dropdown-list" class="dropdown-list">
+                            <div style="padding: 24px; text-align: center; color: var(--text-secondary); font-size: 0.85rem;">Loading notifications...</div>
+                        </div>
+                        <div class="dropdown-footer">
+                            <a href="notifications.html">View all notifications →</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User Profile & Account Menu -->
+                <div class="user-menu-wrapper">
+                    <div class="user-profile-mini" id="dashboard-user-profile-btn" title="Account Menu" role="button" tabindex="0">
+                        <img data-profile-avatar src="assets/profile-placeholder.svg" alt="Profile">
+                        <div>
+                            <h5 data-profile-name>Loading...</h5>
+                            <p data-profile-role>Loading...</p>
+                        </div>
+                        <span style="font-size: 0.75rem; color: var(--text-secondary); margin-left: 2px;">▼</span>
+                    </div>
+                    <div id="user-profile-dropdown" class="dropdown-panel user-dropdown-panel" style="display: none;">
+                        <div class="user-dropdown-header">
+                            <img data-profile-avatar src="assets/profile-placeholder.svg" alt="Profile" class="user-dropdown-avatar">
+                            <div class="user-dropdown-info">
+                                <h5 data-profile-name>User Name</h5>
+                                <p id="user-dropdown-email" class="user-dropdown-email">user@example.com</p>
+                                <span id="user-dropdown-badge" class="user-role-badge">Donor</span>
+                            </div>
+                        </div>
+                        <a href="my-profile.html" class="user-dropdown-item">
+                            <span>👤</span> My Profile
+                        </a>
+                        <a href="donation-history.html" class="user-dropdown-item">
+                            <span>🕒</span> Donation History
+                        </a>
+                        <a href="settings.html" class="user-dropdown-item">
+                            <span>⚙️</span> Account Settings
+                        </a>
+                        <div class="user-dropdown-divider"></div>
+                        <button type="button" id="btn-switch-account" class="user-dropdown-item btn-dropdown-action">
+                            <span>🔄</span> Switch Account
+                        </button>
+                        <button type="button" id="btn-logout" class="user-dropdown-item btn-dropdown-action text-danger">
+                            <span>🚪</span> Logout
+                        </button>
+                    </div>
                 </div>
             </div>
         </header>
@@ -432,15 +716,15 @@
         <!-- Dashboard Grid -->
         <div class="dashboard-container">
             
-            <!-- Welcome Banner (Col Span 2)[cite: 4] -->
+            <!-- Welcome Banner -->
             <div class="card welcome-banner">
                 <div class="welcome-content">
-                    <p style="color: var(--text-dark); font-weight: 500; margin-bottom: 4px;">Good Morning,</p>
+                    <p id="greeting-time-text" style="color: var(--text-dark); font-weight: 500; margin-bottom: 4px;">Good Morning,</p>
                     <h2 data-profile-welcome>Loading... 👋</h2>
                     <p>Thank you for being a part of BloodMatch. Your willingness to donate can save lives.</p>
                     <div class="welcome-actions">
                         <button type="button" class="btn btn-primary" onclick="window.location.href='nearby-request.html'">🩸 Donate Blood →</button>
-                        <button type="button" class="btn btn-outline" onclick="window.location.href='my-profile.html'">👥 Update Profile</button>
+                        <button type="button" id="btn-update-profile" class="btn btn-outline" onclick="window.location.href='my-profile.html'">👥 Update Profile</button>
                     </div>
                 </div>
                 <div class="welcome-img">
@@ -448,10 +732,10 @@
                 </div>
             </div>
 
-            <!-- Profile Card (Col Span 1)[cite: 4] -->
+            <!-- Profile Card -->
             <div class="card profile-card">
                 <div class="edit-profile" onclick="window.location.href='my-profile.html'">✎ Edit Profile</div>
-                <img data-profile-avatar src="https://ui-avatars.com/api/?name=User&background=F5F7FA&color=101828" alt="Profile">
+                <img data-profile-avatar src="assets/profile-placeholder.svg" alt="Profile">
                 <h3 data-profile-card-name>Loading... <span class="verified-badge">✔</span></h3>
                 <p data-profile-card-role class="profile-role">Loading...</p>
                 
@@ -463,13 +747,13 @@
                 </div>
 
                 <div class="profile-stats-mini">
-                    <div><h4>12</h4><p>Total Donations</p></div>
-                    <div><h4>3</h4><p>Lives Helped</p></div>
-                    <div><h4>Silver</h4><p>Donor Level</p></div>
+                    <div><h4 id="dashboard-total-donations">-</h4><p>Total Donations</p></div>
+                    <div><h4 id="dashboard-lives-helped">-</h4><p>Lives Helped</p></div>
+                    <div><h4 id="dashboard-donor-level">-</h4><p>Donor Level</p></div>
                 </div>
             </div>
 
-            <!-- Stats Row (Col Span 2)[cite: 4] -->
+            <!-- Stats Row -->
             <div class="card stats-row">
                 <div class="stat-box">
                     <div class="stat-icon">🩸</div>
@@ -481,22 +765,22 @@
                 <div class="stat-box">
                     <div class="stat-icon" style="color: var(--status-available); background: #DCFCE7;">👥</div>
                     <div class="stat-info">
-                        <h4>12</h4>
-                        <p>People Helped <br><span class="stat-trend">↑ +3 this year</span></p>
+                        <h4 id="dashboard-lives-helped-secondary">-</h4>
+                        <p>People Helped</p>
                     </div>
                 </div>
                 <div class="stat-box">
                     <div class="stat-icon" style="color: var(--status-info); background: #EFF6FF;">📅</div>
                     <div class="stat-info">
-                        <h4>3 Months Ago</h4>
-                        <p>Last Donation <br><span style="font-size: 0.75rem; color: var(--text-secondary);">Next eligible in 3 months</span></p>
+                        <h4 id="dashboard-last-donation">-</h4>
+                        <p>Last Donation <br><span id="dashboard-next-eligible" style="font-size: 0.75rem; color: var(--text-secondary);">-</span></p>
                     </div>
                 </div>
                 <div class="stat-box">
                     <div class="stat-icon" style="color: var(--status-pending); background: #FEF3C7;">🏆</div>
                     <div class="stat-info">
-                        <h4>Silver Donor</h4>
-                        <p>Donor Badge <br><span style="font-size: 0.75rem; color: var(--text-secondary);">Keep donating!</span></p>
+                        <h4 id="dashboard-donor-level-secondary">-</h4>
+                        <p>Donor Badge</p>
                     </div>
                 </div>
             </div>
@@ -524,7 +808,7 @@
                 </div>
             </div>
 
-            <!-- Quick Actions[cite: 4] -->
+            <!-- Quick Actions -->
             <div class="card">
                 <div class="card-header">
                     <h3>Quick Actions</h3>
@@ -553,41 +837,18 @@
                 </div>
             </div>
 
-            <!-- Recent Notifications[cite: 4] -->
+            <!-- Recent Notifications -->
             <div class="card">
                 <div class="card-header">
                     <h3>Recent Notifications</h3>
                     <a href="notifications.html" class="view-all">View All →</a>
                 </div>
-                <div class="notif-list">
-                    <div class="notif-item">
-                        <div class="notif-icon-circle icon-red">🔔</div>
-                        <div class="notif-content">
-                            <h5>New blood request near you</h5>
-                            <p>A+ blood required at City Care Hospital</p>
-                        </div>
-                        <div class="notif-time">5 min ago <span class="status-dot" style="background: var(--brand-primary); margin-left: 4px;"></span></div>
-                    </div>
-                    <div class="notif-item">
-                        <div class="notif-icon-circle icon-green">✔</div>
-                        <div class="notif-content">
-                            <h5>Blood request active</h5>
-                            <p>Matching donors are being notified in 100km radius</p>
-                        </div>
-                        <div class="notif-time">2 hours ago</div>
-                    </div>
-                    <div class="notif-item">
-                        <div class="notif-icon-circle icon-red">❤️</div>
-                        <div class="notif-content">
-                            <h5>Be a hero today</h5>
-                            <p>Check active emergency requests near your location</p>
-                        </div>
-                        <div class="notif-time">1 day ago</div>
-                    </div>
+                <div id="dashboard-notifications-container" class="notif-list">
+                    <div style="padding: 24px 12px; color: var(--text-secondary); text-align: center;">No notifications available yet.</div>
                 </div>
             </div>
 
-            <!-- Upcoming Eligibility[cite: 4] -->
+            <!-- Upcoming Eligibility -->
             <div class="card">
                 <div class="card-header">
                     <h3>Upcoming Eligibility</h3>
@@ -631,11 +892,31 @@
             </div>
 
         </div>
+        
+        <!-- Referral Modal -->
+        <div id="referral-modal" class="modal-overlay" style="display: none;">
+            <div class="modal-card">
+                <div style="font-size: 2.5rem; margin-bottom: 8px;">🤝</div>
+                <h3 style="font-size: 1.3rem; margin-bottom: 8px;">Refer a Friend & Save Lives</h3>
+                <p style="color: var(--text-secondary); font-size: 0.88rem; margin-bottom: 20px; line-height: 1.4;">
+                    Share this invitation link with your friends, family, and colleagues. Every new donor brings life-saving hope to emergency patients.
+                </p>
+                <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                    <input type="text" id="referral-link-input" readonly style="flex: 1; padding: 10px 14px; border: 1px solid var(--border-light); border-radius: 8px; font-size: 0.85rem; background: var(--bg-light-gray); outline: none; font-family: monospace;">
+                    <button type="button" id="btn-copy-referral-link" class="btn btn-primary" style="padding: 10px 18px; font-size: 0.85rem; white-space: nowrap;">Copy Link</button>
+                </div>
+                <div id="referral-copy-success" style="color: var(--status-available); font-size: 0.85rem; font-weight: 600; min-height: 20px; margin-bottom: 16px; display: none;">✔ Referral link copied to clipboard!</div>
+                <button type="button" id="btn-close-referral-modal" class="btn btn-outline" style="width: 100%;">Close</button>
+            </div>
+        </div>
     </main>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase.js"></script>
+    <script src="js/auth-guard.js"></script>
+    <script src="js/data-helpers.js"></script>
     <script src="js/map-service.js"></script>
     <script src="js/dashboard.js"></script>
     <script src="js/profile-sync.js"></script>

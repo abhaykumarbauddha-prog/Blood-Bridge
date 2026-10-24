@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +9,8 @@
     <style>
         :root {
             --brand-primary: #E60023;
+            --brand-hover: #C5001E;
+            --status-critical: #DC2626;
             --bg-pink: #FFF0F2;
             --bg-white: #FFFFFF;
             --bg-light-gray: #F5F7FA;
@@ -41,6 +44,7 @@
             justify-content: space-between;
             z-index: 10;
         }
+
         .logo {
             display: flex;
             align-items: center;
@@ -48,7 +52,10 @@
             font-weight: 700;
             font-size: 1.5rem;
         }
-        .logo span { color: var(--brand-primary); }
+
+        .logo span {
+            color: var(--brand-primary);
+        }
 
         /* Main Container */
         .auth-container {
@@ -68,7 +75,7 @@
             position: relative;
             overflow: hidden;
         }
-        
+
         .auth-left-content {
             max-width: 480px;
             z-index: 2;
@@ -82,6 +89,7 @@
             align-items: center;
             gap: 8px;
         }
+
         .auth-label::before {
             content: "—";
         }
@@ -92,8 +100,11 @@
             line-height: 1.1;
             margin-bottom: 16px;
         }
-        .auth-title span { color: var(--brand-primary); }
-        
+
+        .auth-title span {
+            color: var(--brand-primary);
+        }
+
         .auth-desc {
             color: var(--text-secondary);
             font-size: 1.1rem;
@@ -106,11 +117,13 @@
             flex-direction: column;
             gap: 24px;
         }
+
         .feature-item {
             display: flex;
             align-items: flex-start;
             gap: 16px;
         }
+
         .feature-icon {
             width: 40px;
             height: 40px;
@@ -122,8 +135,16 @@
             justify-content: center;
             font-size: 1.2rem;
         }
-        .feature-text h4 { font-size: 1rem; margin-bottom: 4px; }
-        .feature-text p { font-size: 0.9rem; color: var(--text-secondary); }
+
+        .feature-text h4 {
+            font-size: 1rem;
+            margin-bottom: 4px;
+        }
+
+        .feature-text p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
 
         /* Right Side (Form) */
         .auth-right {
@@ -131,14 +152,15 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: url('https://via.placeholder.com/800x1000?text=Background+Image') center/cover;
+            background: linear-gradient(135deg, #FFF0F2 0%, #FCA5A5 100%);
             position: relative;
         }
+
         .auth-right::before {
             content: '';
             position: absolute;
             inset: 0;
-            background: rgba(0,0,0,0.2);
+            background: rgba(0, 0, 0, 0.2);
         }
 
         .auth-card {
@@ -147,22 +169,36 @@
             max-width: 480px;
             padding: 40px;
             border-radius: 16px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
             position: relative;
             z-index: 2;
             max-height: 90vh;
             overflow-y: auto;
         }
-        
-        .auth-card::-webkit-scrollbar { width: 6px; }
-        .auth-card::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+
+        .auth-card::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .auth-card::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 4px;
+        }
 
         .auth-card-header {
             text-align: center;
             margin-bottom: 32px;
         }
-        .auth-card-header h2 { font-size: 1.5rem; margin-bottom: 8px; }
-        .auth-card-header p { color: var(--text-secondary); font-size: 0.9rem; }
+
+        .auth-card-header h2 {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+        }
+
+        .auth-card-header p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
 
         /* Role Selector */
         .role-selector {
@@ -172,6 +208,7 @@
             padding: 4px;
             margin-bottom: 24px;
         }
+
         .role-btn {
             flex: 1;
             padding: 10px;
@@ -183,10 +220,11 @@
             color: var(--text-secondary);
             transition: 0.3s;
         }
+
         .role-btn.active {
             background: var(--brand-primary);
             color: var(--bg-white);
-            box-shadow: 0 2px 4px rgba(230,0,35,0.2);
+            box-shadow: 0 2px 4px rgba(230, 0, 35, 0.2);
         }
 
         /* Form Inputs */
@@ -194,6 +232,7 @@
             margin-bottom: 16px;
             position: relative;
         }
+
         .form-group label {
             display: block;
             font-size: 0.85rem;
@@ -201,6 +240,7 @@
             margin-bottom: 6px;
             color: var(--text-dark);
         }
+
         .form-control {
             width: 100%;
             padding: 12px 16px 12px 40px;
@@ -210,17 +250,19 @@
             outline: none;
             transition: 0.2s;
         }
+
         .form-control:focus {
             border-color: var(--brand-primary);
             box-shadow: 0 0 0 3px var(--bg-pink);
         }
+
         .input-icon {
             position: absolute;
             left: 14px;
             top: 36px;
             color: var(--text-secondary);
         }
-        
+
         .form-options {
             display: flex;
             justify-content: space-between;
@@ -228,6 +270,7 @@
             margin-bottom: 24px;
             font-size: 0.9rem;
         }
+
         .form-options label {
             display: flex;
             align-items: center;
@@ -235,6 +278,7 @@
             color: var(--text-secondary);
             cursor: pointer;
         }
+
         .forgot-link {
             color: var(--brand-primary);
             font-weight: 500;
@@ -243,8 +287,8 @@
 
         .btn-submit {
             width: 100%;
-            background: var(--brand-primary);
-            color: var(--bg-white);
+            background: var(--brand-primary, #E60023);
+            color: #FFFFFF !important;
             border: none;
             padding: 14px;
             border-radius: 8px;
@@ -252,22 +296,39 @@
             font-weight: 600;
             cursor: pointer;
             margin-bottom: 24px;
-            transition: 0.3s;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 12px rgba(230, 0, 35, 0.22);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
+
         .btn-submit:hover {
-            background: var(--status-critical);
+            background: var(--brand-hover, #C5001E) !important;
+            color: #FFFFFF !important;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(197, 0, 30, 0.35);
+        }
+
+        .btn-submit:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 6px rgba(197, 0, 30, 0.25);
         }
 
         .social-login {
             text-align: center;
         }
+
         .social-login p {
             color: var(--text-secondary);
             font-size: 0.9rem;
             margin-bottom: 16px;
             position: relative;
         }
-        .social-login p::before, .social-login p::after {
+
+        .social-login p::before,
+        .social-login p::after {
             content: '';
             position: absolute;
             top: 50%;
@@ -275,14 +336,21 @@
             height: 1px;
             background: var(--border-color);
         }
-        .social-login p::before { left: 0; }
-        .social-login p::after { right: 0; }
+
+        .social-login p::before {
+            left: 0;
+        }
+
+        .social-login p::after {
+            right: 0;
+        }
 
         .social-buttons {
             display: flex;
             gap: 12px;
             margin-bottom: 24px;
         }
+
         .btn-social {
             flex: 1;
             display: flex;
@@ -298,13 +366,17 @@
             font-size: 0.9rem;
             transition: 0.2s;
         }
-        .btn-social:hover { background: var(--bg-light-gray); }
+
+        .btn-social:hover {
+            background: var(--bg-light-gray);
+        }
 
         .auth-switch {
             text-align: center;
             font-size: 0.95rem;
             color: var(--text-secondary);
         }
+
         .auth-switch a {
             color: var(--brand-primary);
             font-weight: 600;
@@ -313,17 +385,21 @@
         }
 
         /* Toggle Views */
-        #signup-view { display: none; }
-        
+        #signup-view {
+            display: none;
+        }
     </style>
 </head>
+
 <body>
 
     <nav class="auth-nav">
-        <div class="logo">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="#E60023"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
-            Blood<span>Match</span>
-        </div>
+        <a href="index.html" class="logo" style="text-decoration: none; color: var(--text-dark);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="#E60023">
+                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
+            </svg>
+            Blood<span>Bridge</span>
+        </a>
         <a href="index.html" style="color: var(--text-secondary); text-decoration: none; font-weight: 500;">Back to Home</a>
     </nav>
 
@@ -336,7 +412,13 @@
         <!-- Right Side: Forms -->
         <div class="auth-right">
             <div class="auth-card">
-                
+
+                <!-- Mode Selector Tabs at Top of Card -->
+                <div class="auth-mode-tabs" style="display: flex; gap: 8px; margin-bottom: 24px; background: var(--bg-light-gray); padding: 4px; border-radius: 10px;">
+                    <button type="button" class="auth-mode-btn" id="btn-tab-login" onclick="toggleAuth('login')" style="flex: 1; padding: 10px; border: none; background: white; color: var(--brand-primary); font-weight: 700; border-radius: 8px; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">Login</button>
+                    <button type="button" class="auth-mode-btn" id="btn-tab-signup" onclick="toggleAuth('signup')" style="flex: 1; padding: 10px; border: none; background: transparent; color: var(--text-secondary); font-weight: 600; border-radius: 8px; cursor: pointer; transition: 0.2s;">Sign Up</button>
+                </div>
+
                 <!-- LOGIN FORM -->
                 <div id="login-view">
                     <div class="auth-card-header">
@@ -347,89 +429,75 @@
                         <div class="form-group">
                             <label>Email Address</label>
                             <span class="input-icon">✉️</span>
-                            <input type="email" class="form-control" placeholder="Enter your email address" required>
+                            <input type="email" class="form-control" placeholder="Enter your email address" required autocomplete="email">
                         </div>
                         <div class="form-group">
                             <label>Password</label>
                             <span class="input-icon">🔒</span>
-                            <input type="password" class="form-control" placeholder="Enter your password" required>
+                            <input type="password" class="form-control" placeholder="Enter your password" required autocomplete="current-password">
                         </div>
                         <div class="form-options">
                             <label><input type="checkbox"> Remember me</label>
-                            <a href="#" class="forgot-link">Forgot password?</a>
+                            <a href="reset-password.html" class="forgot-link" data-forgot-password>Forgot password?</a>
                         </div>
                         <button type="submit" class="btn-submit">Login →</button>
                     </form>
-                    
-                    <div class="social-login">
-                        <p>or continue with</p>
-                        <div class="social-buttons">
-                            <button class="btn-social">🌐 Google</button>
-                            <button class="btn-social">🐙 GitHub</button>
-                            <button class="btn-social">✉️ Email</button>
-                        </div>
-                    </div>
+
                     <div class="auth-switch">
-                        Don't have an account? <a onclick="toggleAuth('signup')">Sign Up</a>
+                        Don't have an account? <a href="auth.html?mode=signup" onclick="event.preventDefault(); toggleAuth('signup');">Sign Up</a>
                     </div>
                 </div>
 
                 <!-- SIGN UP FORM -->
-                <div id="signup-view">
+                <div id="signup-view" style="display: none;">
                     <div class="auth-card-header">
                         <h2>Create Your Account</h2>
                         <p>Join our community and start saving lives.</p>
                     </div>
-                    
+
                     <div class="role-selector">
-                        <button class="role-btn active" type="button">👤 Donor</button>
-                        <button class="role-btn" type="button">👥 Requester</button>
-                        <button class="role-btn" type="button">🏥 Hospital</button>
+                        <button class="role-btn active" type="button" data-role="Donor">👤 Donor</button>
+                        <button class="role-btn" type="button" data-role="Requester">👥 Requester</button>
+                        <button class="role-btn" type="button" data-role="Hospital">🏥 Hospital</button>
                     </div>
 
                     <form>
                         <div class="form-group">
                             <label>Full Name</label>
                             <span class="input-icon">👤</span>
-                            <input type="text" class="form-control" placeholder="Enter your full name" required>
+                            <input type="text" class="form-control" placeholder="Enter your full name" required autocomplete="name">
                         </div>
                         <div class="form-group">
                             <label>Email Address</label>
                             <span class="input-icon">✉️</span>
-                            <input type="email" class="form-control" placeholder="Enter your email address" required>
+                            <input type="email" class="form-control" placeholder="Enter your email address" required autocomplete="email">
                         </div>
                         <div class="form-group">
                             <label>Phone Number</label>
                             <span class="input-icon">📞</span>
-                            <input type="tel" class="form-control" placeholder="+91 98765 43210" required>
+                            <input type="tel" class="form-control" placeholder="+91 98765 43210" required autocomplete="tel">
                         </div>
                         <div class="form-group">
                             <label>Password</label>
                             <span class="input-icon">🔒</span>
-                            <input type="password" class="form-control" placeholder="Create a strong password" required>
+                            <input type="password" class="form-control" placeholder="Create a strong password (min 6 characters)" minlength="6" required autocomplete="new-password">
                         </div>
                         <div class="form-group">
                             <label>Confirm Password</label>
                             <span class="input-icon">🔒</span>
-                            <input type="password" class="form-control" placeholder="Confirm your password" required>
+                            <input type="password" class="form-control" placeholder="Confirm your password" minlength="6" required autocomplete="new-password">
                         </div>
-                        
+
                         <div class="form-options">
-                            <label><input type="checkbox" required> I agree to the <a href="#" style="color: var(--brand-primary);">Terms of Service</a> and <a href="#" style="color: var(--brand-primary);">Privacy Policy</a></label>
+                            <label><input type="checkbox" required checked> I agree to the <a href="terms.html"
+                                    style="color: var(--brand-primary);">Terms of Service</a> and <a href="privacy.html"
+                                    style="color: var(--brand-primary);">Privacy Policy</a></label>
                         </div>
                         <button type="submit" class="btn-submit">Sign Up →</button>
                     </form>
 
-                    <div class="social-login">
-                        <p>or continue with</p>
-                        <div class="social-buttons">
-                            <button class="btn-social">🌐 Google</button>
-                            <button class="btn-social">🐙 GitHub</button>
-                            <button class="btn-social">✉️ Email</button>
-                        </div>
-                    </div>
                     <div class="auth-switch">
-                        Already have an account? <a onclick="toggleAuth('login')">Login</a>
+                        Already have an account? <a href="auth.html?mode=login" onclick="event.preventDefault(); toggleAuth('login');">Login</a>
                     </div>
                 </div>
 
@@ -443,7 +511,7 @@
             <div class="auth-left-content">
                 <div class="auth-label">Welcome Back</div>
                 <h1 class="auth-title">Together<br>We Save<br><span>Lives</span></h1>
-                <p class="auth-desc">Log in to your BloodMatch account and continue making a difference in someone's life.</p>
+                <p class="auth-desc">Log in to your BloodBridge account and continue making a difference in someone's life.</p>
                 
                 <div class="feature-list">
                     <div class="feature-item">
@@ -517,26 +585,79 @@
             </div>
         `;
 
-        const infoContainer = document.getElementById('auth-info-container');
-        const loginView = document.getElementById('login-view');
-        const signupView = document.getElementById('signup-view');
+        function getRequestedMode() {
+            const params = new URLSearchParams(window.location.search);
+            const mode = (params.get('mode') || params.get('tab') || '').toLowerCase();
+            if (mode === 'signup' || window.location.hash.toLowerCase() === '#signup') {
+                return 'signup';
+            }
+            return 'login';
+        }
 
         function toggleAuth(type) {
-            if (type === 'login') {
-                infoContainer.innerHTML = loginData;
-                loginView.style.display = 'block';
-                signupView.style.display = 'none';
-                document.querySelector('.auth-right').style.background = "url('https://images.unsplash.com/photo-1615461066841-6116e61058f4?auto=format&fit=crop&q=80') center/cover";
-            } else {
-                infoContainer.innerHTML = signupData;
+            const infoContainer = document.getElementById('auth-info-container');
+            const loginView = document.getElementById('login-view');
+            const signupView = document.getElementById('signup-view');
+            const btnLogin = document.getElementById('btn-tab-login');
+            const btnSignup = document.getElementById('btn-tab-signup');
+            const authRight = document.querySelector('.auth-right');
+
+            if (!loginView || !signupView) return;
+
+            if (type === 'signup') {
+                if (infoContainer) infoContainer.innerHTML = signupData;
                 loginView.style.display = 'none';
                 signupView.style.display = 'block';
-                document.querySelector('.auth-right').style.background = "var(--bg-pink)";
+                if (authRight) authRight.style.background = "var(--bg-pink)";
+                if (btnLogin) {
+                    btnLogin.style.background = 'transparent';
+                    btnLogin.style.color = 'var(--text-secondary)';
+                    btnLogin.style.fontWeight = '500';
+                    btnLogin.style.boxShadow = 'none';
+                }
+                if (btnSignup) {
+                    btnSignup.style.background = 'white';
+                    btnSignup.style.color = 'var(--brand-primary)';
+                    btnSignup.style.fontWeight = '700';
+                    btnSignup.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)';
+                }
+                if (window.history.replaceState) {
+                    window.history.replaceState(null, '', 'auth.html?mode=signup');
+                }
+            } else {
+                if (infoContainer) infoContainer.innerHTML = loginData;
+                loginView.style.display = 'block';
+                signupView.style.display = 'none';
+                if (authRight) authRight.style.background = "url('https://images.unsplash.com/photo-1615461066841-6116e61058f4?auto=format&fit=crop&q=80') center/cover";
+                if (btnLogin) {
+                    btnLogin.style.background = 'white';
+                    btnLogin.style.color = 'var(--brand-primary)';
+                    btnLogin.style.fontWeight = '700';
+                    btnLogin.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)';
+                }
+                if (btnSignup) {
+                    btnSignup.style.background = 'transparent';
+                    btnSignup.style.color = 'var(--text-secondary)';
+                    btnSignup.style.fontWeight = '500';
+                    btnSignup.style.boxShadow = 'none';
+                }
+                if (window.history.replaceState) {
+                    window.history.replaceState(null, '', 'auth.html?mode=login');
+                }
             }
         }
 
-        // Initialize with Login view
-        toggleAuth('login');
+        // Attach to window so onclick always finds it
+        window.toggleAuth = toggleAuth;
+
+        // Initialize based on URL query or hash
+        window.addEventListener('DOMContentLoaded', () => {
+            toggleAuth(getRequestedMode());
+        });
+
+        window.addEventListener('popstate', () => {
+            toggleAuth(getRequestedMode());
+        });
 
         // Role Selector Logic
         const roleBtns = document.querySelectorAll('.role-btn');
@@ -549,7 +670,9 @@
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase.js"></script>
+    <script src="js/data-helpers.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/profile-sync.js"></script>
 </body>
+
 </html>

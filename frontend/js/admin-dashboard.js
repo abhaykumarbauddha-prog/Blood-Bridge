@@ -30,7 +30,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const donutLegend = document.getElementById('admin-donut-legend');
 
     let adminMap = null;
-    const defaultCenter = (window.MapService && window.MapService.DEFAULT_COORDS) ? window.MapService.DEFAULT_COORDS : { lat: 26.8467, lng: 80.9462 };
+    let adminCenter = null;
+    let donorMarkerLayer = null;
 
     // Blood group colors for donut chart
     const bloodGroupColors = {
@@ -49,18 +50,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!supabaseClient) return;
 
         try {
-            // Total Users
-            const { count: usersCount } = await supabaseClient
-                .from('users')
-                .select('*', { count: 'exact', head: true });
-
-            if (kpiTotalUsers) kpiTotalUsers.textContent = String(usersCount || 0);
+            // Total users and verified hospitals are intentionally unavailable from the protected users table.
+            if (kpiTotalUsers) kpiTotalUsers.textContent = '-';
 
             // Registered Donors
             const { data: donorsData, count: donorsCount } = await supabaseClient
-                .from('users')
-                .select('blood_group, role')
-                .eq('role', 'Donor');
+                .from('public_donors')
+                .select('blood_group', { count: 'exact' });
 
             const totalDonors = donorsCount || (donorsData ? donorsData.length : 0);
             if (kpiDonors) kpiDonors.textContent = String(totalDonors);
@@ -74,15 +70,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             const totalReqs = reqsCount || (reqsData ? reqsData.length : 0);
             if (kpiRequests) kpiRequests.textContent = String(totalReqs);
 
-            const fulfilledCount = (reqsData || []).filter(r => (r.status || '').toLowerCase() === 'fulfilled').length;
-            if (kpiDonations) kpiDonations.textContent = String(fulfilledCount);
+            if (kpiDonations) kpiDonations.textContent = '-';
 
-            // Hospitals count
-            const { count: hospitalCount } = await supabaseClient
-                .from('users')
-                .select('*', { count: 'exact', head: true })
-                .eq('role', 'Hospital');
-            if (kpiHospitals) kpiHospitals.textContent = String(hospitalCount || 12);
+            if (kpiHospitals) kpiHospitals.textContent = '-';
 
             // Compute Donut Distribution
             renderDonutDistribution(donorsData || []);
@@ -161,7 +151,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 else if (urgency.toLowerCase() === 'urgent') tagClass = 'tag-urgent';
 
                 const reqId = `#BR-${(req.id || String(idx)).slice(0, 4).toUpperCase()}`;
-                const reqDate = req.created_at ? new Date(req.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : 'Today';
+                const reqDate = BloodMatchData.formatDateTime(req.created_at);
 
                 return `
                     <tr class="admin-data-row">
@@ -169,7 +159,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <td><strong>${escapeHtml(req.patient_name)}</strong></td>
                         <td class="blood-type-text">${escapeHtml(req.blood_group)}</td>
                         <td>${req.units}</td>
-                        <td>${escapeHtml(req.city || 'Lucknow')}</td>
+                        <td>${escapeHtml(req.city || 'Location not set')}</td>
                         <td><span class="status-tag ${tagClass}">${escapeHtml(urgency)}</span></td>
                         <td>${reqDate}</td>
                     </tr>
@@ -187,10 +177,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         try {
             const { data: donors, error } = await supabaseClient
-                .from('users')
-                .select('id, full_name, phone, blood_group, city, availability_status, avatar_url, created_at')
-                .eq('role', 'Donor')
-                .order('created_at', { ascending: false })
+                .from('public_donors')
+                .select('id, full_name, blood_group, city, is_available, avatar_url')
                 .limit(8);
 
             if (error) throw error;
@@ -208,8 +196,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             donorsTbody.innerHTML = donors.map(donor => {
                 const name = donor.full_name || 'Donor';
-                const avatar = donor.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=FFF0F2&color=E60023`;
-                const isAvailable = (donor.availability_status || 'Available').toLowerCase() === 'available';
+                const avatar = donor.avatar_url || 'assets/profile-placeholder.svg';
+                const isAvailable = donor.is_available === true;
 
                 return `
                     <tr class="admin-data-row">
@@ -218,9 +206,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                             ${escapeHtml(name)}
                         </td>
                         <td class="blood-type-text">${escapeHtml(donor.blood_group || 'O+')}</td>
-                        <td>${escapeHtml(donor.city || 'Lucknow')}</td>
-                        <td><span style="color: ${isAvailable ? 'var(--status-available)' : 'var(--status-pending)'}; font-weight: 500;">${escapeHtml(donor.availability_status || 'Available')}</span></td>
-                        <td>${escapeHtml(donor.phone || 'Protected')}</td>
+                        <td>${escapeHtml(donor.city || 'Location not set')}</td>
+                        <td><span style="color: ${isAvailable ? 'var(--status-available)' : 'var(--status-pending)'}; font-weight: 500;">${isAvailable ? 'Available' : 'Unavailable'}</span></td>
+                        <td>Protected</td>
                     </tr>
                 `;
             }).join('');
@@ -234,34 +222,39 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function initAdminMap() {
         if (!mapContainer || !window.MapService || !window.L) return;
 
+        const loc = await MapService.getUserLocation();
+        adminCenter = loc || (MapService.getDefaultLocation ? MapService.getDefaultLocation() : { lat: 26.8467, lng: 80.9462 });
+
         adminMap = MapService.createMap('admin-donors-map', {
-            center: [defaultCenter.lat, defaultCenter.lng],
+            center: [adminCenter.lat, adminCenter.lng],
             zoom: 8,
             scrollWheelZoom: false
         });
 
         // 100 KM Radius Boundary Circle
-        MapService.addRadiusCircle(adminMap, defaultCenter.lat, defaultCenter.lng, 100);
+        if (!adminMap) return;
+        donorMarkerLayer = window.L.markerClusterGroup ? L.markerClusterGroup() : L.layerGroup();
+        donorMarkerLayer.addTo(adminMap);
+        MapService.addRadiusCircle(adminMap, adminCenter.lat, adminCenter.lng, 100);
 
         try {
             const { data: donors } = await supabaseClient
-                .from('users')
-                .select('full_name, blood_group, city, address, availability_status')
-                .eq('role', 'Donor')
+                .from('public_donors')
+                .select('full_name, blood_group, city, state, is_available, latitude, longitude')
                 .limit(20);
 
             let availableCount = 0;
             let busyCount = 0;
 
             for (const d of (donors || [])) {
-                if ((d.availability_status || '').toLowerCase() === 'available') availableCount++;
+                const coords = { lat: Number(d.latitude), lng: Number(d.longitude) };
+                if (![coords.lat, coords.lng].every(Number.isFinite) || !BloodMatchData.withinRadius(adminCenter, coords, 100)) continue;
+                if (d.is_available) availableCount++;
                 else busyCount++;
-
-                const coords = await MapService.geocodeAddress([d.address, d.city].filter(Boolean).join(', '));
                 const icon = MapService.createBloodMarkerIcon(d.blood_group, 'Normal');
                 L.marker([coords.lat, coords.lng], { icon })
-                    .addTo(adminMap)
-                    .bindPopup(`<b>${escapeHtml(d.full_name)}</b> (${d.blood_group})<br>📍 ${escapeHtml(d.city || 'Lucknow')}`);
+                    .addTo(donorMarkerLayer || adminMap)
+                    .bindPopup(`<b>${escapeHtml(d.full_name)}</b> (${d.blood_group})<br>📍 ${escapeHtml(d.city || 'Location not set')}`);
             }
 
             if (legendContainer) {
@@ -325,11 +318,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 9. Logout Handler
     if (logoutBtn) {
-        logoutBtn.addEventListener('click', (e) => {
+        logoutBtn.addEventListener('click', async (e) => {
             e.preventDefault();
             if (confirm('Are you sure you want to log out from Admin Dashboard?')) {
-                localStorage.removeItem('bloodbridge_user');
-                sessionStorage.clear();
+                await supabaseClient.auth.signOut();
                 window.location.href = 'auth.html';
             }
         });

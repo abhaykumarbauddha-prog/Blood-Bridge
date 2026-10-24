@@ -109,12 +109,12 @@
             Blood<span>Match</span>
         </div>
         <ul class="nav-list">
-            <a href="user-dashboard.html" class="nav-item"><span>🏠</span> Dashboard</a>
+            <a href="dashboard.html" class="nav-item"><span>🏠</span> Dashboard</a>
             <a href="my-profile.html" class="nav-item"><span>👤</span> My Profile</a>
             <a href="find-donors.html" class="nav-item"><span>🔍</span> Find Donors</a>
             <a href="blood-request.html" class="nav-item"><span>🩸</span> Blood Requests</a>
             <a href="nearby-request.html" class="nav-item"><span>📍</span> Nearby Requests</a>
-            <a href="notifications.html" class="nav-item active"><span>🔔</span> Notifications <span class="badge">3</span></a>
+            <a href="notifications.html" class="nav-item active"><span>🔔</span> Notifications <span class="badge notification-badge" data-unread-badge hidden></span></a>
             <a href="donation-history.html" class="nav-item"><span>🕒</span> Donation History</a>
             <a href="settings.html" class="nav-item"><span>⚙️</span> Settings</a>
             <a href="help-support.html" class="nav-item"><span>❓</span> Help & Support</a>
@@ -129,9 +129,9 @@
             </div>
             <div class="topbar-right">
                 <div class="user-profile-mini">
-                    <img src="https://ui-avatars.com/api/?name=Aman+Singh&background=F5F7FA&color=101828" alt="Profile">
+                    <img src="assets/profile-placeholder.svg" alt="Profile" data-profile-avatar>
                     <div>
-                        <h5 style="font-size: 0.9rem;">Aman Singh</h5>
+                        <h5 style="font-size: 0.9rem;">Loading profile...</h5>
                     </div>
                     <span>⌄</span>
                 </div>
@@ -149,79 +149,22 @@
             </div>
 
             <div class="tabs-container">
-                <button class="tab active">All <span class="tab-count">3</span></button>
-                <button class="tab">Unread <span class="tab-count">3</span></button>
-                <button class="tab">Requests</button>
-                <button class="tab">System</button>
+                <button class="tab active" data-filter="all">All <span class="tab-count" hidden></span></button>
+                <button class="tab" data-filter="unread">Unread <span class="tab-count" hidden></span></button>
+                <button class="tab" data-filter="requests">Requests <span class="tab-count" hidden></span></button>
+                <button class="tab" data-filter="system">System <span class="tab-count" hidden></span></button>
             </div>
 
-            <div class="notifications-wrapper">
-                
-                <!-- Notification Item 1 (Unread, Request) -->
-                <div class="notification-item unread">
-                    <div class="notif-icon-container icon-urgent">🩸</div>
-                    <div class="notif-content">
-                        <h4>Urgent: O+ Blood Required Near You</h4>
-                        <p>City Care Hospital is requesting 2 units of O+ blood for an emergency patient. The hospital is 2.5 km away from your location.</p>
-                        <div class="notif-actions">
-                            <button class="btn-action btn-primary">View Request</button>
-                        </div>
-                        <div class="notif-time" style="margin-top: 12px;"><span>⏱️</span> 10 minutes ago</div>
-                    </div>
-                    <div class="unread-dot"></div>
-                </div>
-
-                <!-- Notification Item 2 (Unread, Match) -->
-                <div class="notification-item unread">
-                    <div class="notif-icon-container icon-info">👤</div>
-                    <div class="notif-content">
-                        <h4>New Donor Match</h4>
-                        <p>A new O+ donor (Ravi Kumar) just registered in your area and is available to donate.</p>
-                        <div class="notif-actions">
-                            <button class="btn-action btn-outline">View Profile</button>
-                        </div>
-                        <div class="notif-time" style="margin-top: 12px;"><span>⏱️</span> 2 hours ago</div>
-                    </div>
-                    <div class="unread-dot"></div>
-                </div>
-
-                <!-- Notification Item 3 (Unread, System) -->
-                <div class="notification-item unread">
-                    <div class="notif-icon-container icon-system">🏆</div>
-                    <div class="notif-content">
-                        <h4>Badge Earned: Silver Donor!</h4>
-                        <p>Congratulations! You have been upgraded to the Silver Donor tier for completing 10 successful donations.</p>
-                        <div class="notif-time" style="margin-top: 12px;"><span>⏱️</span> 5 hours ago</div>
-                    </div>
-                    <div class="unread-dot"></div>
-                </div>
-
-                <!-- Notification Item 4 (Read, Success) -->
-                <div class="notification-item">
-                    <div class="notif-icon-container icon-success">✔</div>
-                    <div class="notif-content">
-                        <h4>Donation Verified</h4>
-                        <p>Your recent blood donation at King George's Medical University has been successfully verified by the hospital admin. Thank you for saving a life!</p>
-                        <div class="notif-time" style="margin-top: 12px;"><span>⏱️</span> 2 days ago</div>
-                    </div>
-                </div>
-
-                <!-- Notification Item 5 (Read, Info) -->
-                <div class="notification-item">
-                    <div class="notif-icon-container icon-info">📅</div>
-                    <div class="notif-content">
-                        <h4>Eligibility Reminder</h4>
-                        <p>Your cooling period is almost over. You will be eligible to donate blood again starting next week.</p>
-                        <div class="notif-time" style="margin-top: 12px;"><span>⏱️</span> 1 week ago</div>
-                    </div>
-                </div>
-
+            <div class="notifications-wrapper" id="notifications-container">
+                <div style="padding: 32px; text-align: center; color: var(--text-secondary);">No notifications available yet.</div>
             </div>
         </div>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase.js"></script>
+    <script src="js/data-helpers.js"></script>
+    <script src="js/notifications.js"></script>
     <script src="js/profile-sync.js"></script>
 </body>
 </html>

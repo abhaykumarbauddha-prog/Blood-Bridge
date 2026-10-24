@@ -102,12 +102,12 @@
             Blood<span>Match</span>
         </div>
         <ul class="nav-list">
-            <a href="user-dashboard.html" class="nav-item"><span>🏠</span> Dashboard</a>
+            <a href="dashboard.html" class="nav-item"><span>🏠</span> Dashboard</a>
             <a href="my-profile.html" class="nav-item"><span>👤</span> My Profile</a>
             <a href="find-donors.html" class="nav-item"><span>🔍</span> Find Donors</a>
             <a href="blood-request.html" class="nav-item"><span>🩸</span> Blood Requests</a>
             <a href="nearby-request.html" class="nav-item"><span>📍</span> Nearby Requests</a>
-            <a href="notifications.html" class="nav-item"><span>🔔</span> Notifications <span class="badge">3</span></a>
+            <a href="notifications.html" class="nav-item"><span>🔔</span> Notifications <span class="badge notification-badge" data-unread-badge hidden></span></a>
             <a href="donation-history.html" class="nav-item"><span>🕒</span> Donation History</a>
             <a href="settings.html" class="nav-item"><span>⚙️</span> Settings</a>
             <a href="help-support.html" class="nav-item active"><span>❓</span> Help & Support</a>
@@ -122,9 +122,9 @@
             </div>
             <div class="topbar-right">
                 <div class="user-profile-mini">
-                    <img src="https://ui-avatars.com/api/?name=Aman+Singh&background=F5F7FA&color=101828" alt="Profile">
+                    <img src="assets/profile-placeholder.svg" alt="Profile" data-profile-avatar>
                     <div>
-                        <h5 style="font-size: 0.9rem;">Aman Singh</h5>
+                        <h5 style="font-size: 0.9rem;">Loading profile...</h5>
                     </div>
                     <span>⌄</span>
                 </div>
@@ -139,7 +139,7 @@
                 <p>Search our knowledge base or browse categories below to find answers.</p>
                 <div class="help-search">
                     <span>🔍</span>
-                    <input type="text" placeholder="Type your question here (e.g., 'How to donate')">
+                    <input type="text" placeholder="Type your question here (e.g., 'How to donate')" data-faq-search>
                 </div>
             </div>
 
@@ -196,10 +196,10 @@
                     <h2 class="section-title"><span>✉️</span> Contact Us</h2>
                     <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 24px;">Need further assistance? Send us a message and our support team will get back to you within 24 hours.</p>
                     
-                    <form>
+                    <form id="support-form">
                         <div class="form-group">
                             <label>Subject</label>
-                            <select class="form-control">
+                            <select class="form-control" id="support-subject">
                                 <option>General Inquiry</option>
                                 <option>Technical Issue</option>
                                 <option>Report a User/Request</option>
@@ -208,9 +208,10 @@
                         </div>
                         <div class="form-group">
                             <label>Message</label>
-                            <textarea class="form-control" placeholder="Describe your issue or question in detail..."></textarea>
+                            <textarea class="form-control" id="support-message" placeholder="Describe your issue or question in detail..." required></textarea>
                         </div>
-                        <button type="button" class="btn-submit">Send Message →</button>
+                        <button type="submit" class="btn-submit">Send Message →</button>
+                        <p id="support-form-status" role="status" style="font-size: 0.8rem; margin-top: 12px;"></p>
                     </form>
                 </div>
 
@@ -220,6 +221,8 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase.js"></script>
+    <script src="js/data-helpers.js"></script>
+    <script src="js/help-support.js"></script>
     <script src="js/profile-sync.js"></script>
 </body>
 </html>

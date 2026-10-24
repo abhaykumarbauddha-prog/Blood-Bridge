@@ -1,16 +1,64 @@
 // backend/server.js
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || '127.0.0.1';
+const allowedOrigin = process.env.CORS_ORIGIN || `http://${HOST}:${PORT}`;
 
-// Middleware
-app.use(cors());
-app.use(express.json()); 
+// Security middleware configured for local development and CDN assets
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: [
+        "'self'",
+        "'unsafe-inline'",
+        "'unsafe-eval'",
+        "https://cdn.jsdelivr.net",
+        "https://unpkg.com",
+        "https://cdnjs.cloudflare.com"
+      ],
+      styleSrc: [
+        "'self'",
+        "'unsafe-inline'",
+        "https://fonts.googleapis.com",
+        "https://cdn.jsdelivr.net",
+        "https://unpkg.com",
+        "https://cdnjs.cloudflare.com"
+      ],
+      fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
+      imgSrc: ["'self'", "data:", "blob:", "https:", "http:"],
+      connectSrc: [
+        "'self'",
+        "https://*.supabase.co",
+        "wss://*.supabase.co",
+        "https://api.mapbox.com",
+        "https://*.tile.openstreetmap.org",
+        "http://127.0.0.1:*",
+        "http://localhost:*"
+      ],
+      upgradeInsecureRequests: null
+    }
+  },
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  strictTransportSecurity: false
+}));
+
+app.use(cors({
+  origin: (origin, callback) => callback(null, true),
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+app.use(express.json({ limit: '5mb' }));
+app.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 500, standardHeaders: 'draft-7', legacyHeaders: false }));
+app.use('/api', rateLimit({ windowMs: 15 * 60 * 1000, limit: 300, standardHeaders: 'draft-7', legacyHeaders: false, skip: (req) => req.method === 'GET' }));
 
 // Serve the browser application from the dedicated frontend directory.
 app.use(express.static(path.resolve(__dirname, '../frontend')));
@@ -18,6 +66,14 @@ app.use(express.static(path.resolve(__dirname, '../frontend')));
 // Base route test
 app.get('/', (req, res) => {
   res.sendFile(path.resolve(__dirname, '../frontend/index.html'));
+});
+
+// Friendly auth shortcuts
+app.get('/signup', (req, res) => {
+  res.redirect('/auth.html?mode=signup');
+});
+app.get('/login', (req, res) => {
+  res.redirect('/auth.html?mode=login');
 });
 
 // Import Routes (Inhe hum next step mein banayenge)

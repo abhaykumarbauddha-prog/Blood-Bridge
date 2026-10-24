@@ -28,7 +28,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
         body { background-color: var(--bg-light-gray); color: var(--text-dark); display: flex; height: 100vh; overflow: hidden; }
 
-        /* Sidebar[cite: 6] */
+        /* Sidebar */
         .sidebar { width: 260px; background-color: var(--bg-white); border-right: 1px solid var(--border-light); display: flex; flex-direction: column; padding: 24px 0; flex-shrink: 0; overflow-y: auto; }
         .sidebar::-webkit-scrollbar { width: 4px; }
         .sidebar-logo { padding: 0 24px; display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 1.5rem; margin-bottom: 8px; }
@@ -50,7 +50,7 @@
         /* Main Content */
         .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
 
-        /* Topbar[cite: 6] */
+        /* Topbar */
         .topbar { background-color: var(--bg-white); height: 72px; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-light); position: sticky; top: 0; z-index: 10; }
         .search-bar { display: flex; align-items: center; background-color: var(--bg-light-gray); padding: 10px 16px; border-radius: 8px; width: 400px; gap: 10px; border: 1px solid var(--border-light); }
         .search-bar input { border: none; background: transparent; width: 100%; outline: none; font-size: 0.9rem; }
@@ -60,18 +60,18 @@
         .user-profile-mini { display: flex; align-items: center; gap: 12px; cursor: pointer; }
         .user-profile-mini img { width: 40px; height: 40px; border-radius: 8px; }
 
-        /* Dashboard Layout[cite: 6] */
+        /* Dashboard Layout */
         .dashboard-container { padding: 24px 32px; display: grid; grid-template-columns: 1fr 300px; gap: 24px; align-items: start; }
         .main-col { display: flex; flex-direction: column; gap: 24px; }
         .side-col { display: flex; flex-direction: column; gap: 24px; }
 
-        /* Welcome Banner[cite: 6] */
+        /* Welcome Banner */
         .welcome-banner { background: linear-gradient(90deg, var(--bg-pink) 0%, var(--bg-white) 100%); border-radius: 12px; padding: 32px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-light); position: relative; overflow: hidden; }
         .welcome-text h2 { font-size: 2rem; color: var(--text-dark); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
         .welcome-text p { color: var(--text-secondary); font-size: 0.95rem; max-width: 450px; line-height: 1.5; }
         .welcome-bg { position: absolute; right: 0; top: 0; height: 100%; opacity: 0.6; z-index: 0; }
 
-        /* Stats Grid[cite: 6] */
+        /* Stats Grid */
         .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
         .stat-card { background: var(--bg-white); padding: 16px; border-radius: 12px; border: 1px solid var(--border-light); display: flex; align-items: center; gap: 16px; }
         .stat-icon { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
@@ -79,7 +79,7 @@
         .stat-info p { font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 4px; font-weight: 500; }
         .trend-up { font-size: 0.7rem; color: var(--status-available); font-weight: 600; display: flex; align-items: center; gap: 4px; }
 
-        /* Inner Grid (Tables & Charts)[cite: 6] */
+        /* Inner Grid (Tables & Charts) */
         .inner-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 24px; }
         
         .card { background: var(--bg-white); border-radius: 12px; padding: 24px; border: 1px solid var(--border-light); }
@@ -87,7 +87,7 @@
         .card-header h3 { font-size: 1.1rem; color: var(--text-dark); }
         .view-all { color: var(--brand-primary); font-size: 0.85rem; font-weight: 500; text-decoration: none; cursor: pointer; }
 
-        /* Tables[cite: 6] */
+        /* Tables */
         table { width: 100%; border-collapse: collapse; }
         th { text-align: left; padding: 10px 8px; font-size: 0.75rem; color: var(--text-secondary); font-weight: 600; border-bottom: 1px solid var(--border-light); text-transform: uppercase; }
         td { padding: 12px 8px; font-size: 0.85rem; color: var(--text-dark); border-bottom: 1px solid var(--border-light); vertical-align: middle; }
@@ -103,7 +103,7 @@
 
         .btn-view { border: 1px solid var(--brand-primary); color: var(--brand-primary); background: transparent; padding: 4px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
         
-        /* Blood Inventory Bars[cite: 6] */
+        /* Blood Inventory Bars */
         .inventory-list { display: flex; flex-direction: column; gap: 14px; }
         .inventory-item { display: flex; align-items: center; gap: 12px; font-size: 0.85rem; font-weight: 600; }
         .blood-badge { width: 32px; text-align: center; color: var(--brand-primary); }
@@ -111,7 +111,7 @@
         .progress-fill { height: 100%; background: var(--brand-primary); border-radius: 4px; }
         .unit-count { width: 50px; text-align: right; color: var(--text-secondary); font-weight: 500; font-size: 0.8rem; }
 
-        /* Donor Matching List[cite: 6] */
+        /* Donor Matching List */
         .donor-match-list { display: flex; flex-direction: column; gap: 16px; }
         .donor-match-item { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-light); padding-bottom: 12px; }
         .donor-match-item:last-child { border: none; padding-bottom: 0; }
@@ -122,7 +122,7 @@
         .distance { font-size: 0.75rem; color: var(--text-secondary); }
         .btn-contact { background: var(--brand-primary); color: white; border: none; padding: 6px 16px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
 
-        /* Stats Chart Mockup[cite: 6] */
+        /* Stats Chart Mockup */
         .chart-mockup { height: 180px; display: flex; align-items: flex-end; justify-content: space-around; padding-top: 20px; border-bottom: 1px solid var(--border-light); margin-bottom: 16px; position: relative; }
         .chart-legend { position: absolute; top: 0; right: 0; display: flex; gap: 12px; font-size: 0.75rem; color: var(--text-secondary); }
         .legend-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; }
@@ -135,7 +135,7 @@
         .stats-summary h4.orange { color: var(--status-pending); }
         .stats-summary p { font-size: 0.75rem; color: var(--text-secondary); }
 
-        /* Right Sidebar Cards[cite: 6] */
+        /* Right Sidebar Cards */
         .hospital-info-card { text-align: left; }
         .hospital-info-card img { width: 100%; height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 16px; }
         .hospital-info-card h3 { font-size: 1.1rem; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
@@ -179,7 +179,7 @@
 </head>
 <body>
 
-    <!-- Sidebar[cite: 6] -->
+    <!-- Sidebar -->
     <aside class="sidebar">
         <div class="sidebar-logo">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="#E60023"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
@@ -187,9 +187,9 @@
         </div>
         
         <div class="hospital-account-tag">
-            <img src="https://via.placeholder.com/40" alt="Hospital">
+            <img src="assets/hospital-building.svg" alt="Hospital" data-hospital-avatar>
             <div>
-                <div style="color: var(--text-dark);">City Care Hospital</div>
+                <div style="color: var(--text-dark);" data-hospital-name>Loading hospital profile...</div>
                 <div style="color: var(--text-secondary); font-size: 0.75rem; font-weight: 400;">Hospital Account ⌄</div>
             </div>
         </div>
@@ -201,7 +201,7 @@
             <a href="find-donors.html" class="nav-item"><span>🔍</span> Find Donors</a>
             <a href="find-donors.html" class="nav-item"><span>👥</span> Donor Management</a>
             <a href="my-profile.html" class="nav-item"><span>🏥</span> Hospital Profile</a>
-            <a href="notifications.html" class="nav-item"><span>🔔</span> Notifications <span class="badge">5</span></a>
+            <a href="notifications.html" class="nav-item"><span>🔔</span> Notifications <span class="badge notification-badge" data-unread-badge hidden></span></a>
             <a href="settings.html" class="nav-item"><span>⚙️</span> Settings</a>
             <a href="auth.html" class="nav-item" id="hospital-logout-btn"><span>🚪</span> Logout</a>
         </ul>
@@ -215,18 +215,18 @@
     </aside>
 
     <main class="main-content">
-        <!-- Topbar[cite: 6] -->
+        <!-- Topbar -->
         <header class="topbar">
             <div class="search-bar">
                 <span>🔍</span>
                 <input type="text" id="hospital-search-input" placeholder="Search requests, donors, patients...">
             </div>
             <div class="topbar-right">
-                <div class="notif-icon" onclick="window.location.href='notifications.html'" style="cursor: pointer;">🔔<div class="notif-dot">5</div></div>
+                <div class="notif-icon" onclick="window.location.href='notifications.html'" style="cursor: pointer;">🔔<div class="notif-dot notification-badge" data-unread-badge hidden></div></div>
                 <div class="user-profile-mini" onclick="window.location.href='my-profile.html'" style="cursor: pointer;">
-                    <img src="https://via.placeholder.com/40" alt="Hospital Logo">
+                    <img src="assets/hospital-building.svg" alt="Hospital Logo" data-hospital-avatar>
                     <div>
-                        <h5 style="font-size: 0.9rem;">City Care Hospital</h5>
+                        <h5 style="font-size: 0.9rem;" data-hospital-name>Loading hospital profile...</h5>
                         <p style="font-size: 0.8rem; color: var(--text-secondary);">Hospital Account</p>
                     </div>
                     <span>⌄</span>
@@ -239,11 +239,11 @@
             <!-- Left Main Column -->
             <div class="main-col">
                 
-                <!-- Welcome Banner[cite: 6] -->
+                <!-- Welcome Banner -->
                 <div class="welcome-banner">
                     <div class="welcome-text" style="z-index: 2;">
                         <p style="color: var(--text-dark); font-weight: 500; margin-bottom: 4px;">Welcome Back,</p>
-                        <h2>City Care Hospital <span style="color: var(--brand-primary); font-size: 1.5rem;">✔</span></h2>
+                        <h2><span data-hospital-welcome>Loading hospital profile...</span> <span style="color: var(--brand-primary); font-size: 1.5rem;">✔</span></h2>
                         <p>Manage blood requests, connect with donors, and ensure timely care for patients.</p>
                     </div>
                     <div style="z-index: 2; text-align: right; margin-right: 40px;">
@@ -251,13 +251,13 @@
                     </div>
                 </div>
 
-                <!-- Stats Grid[cite: 6] -->
+                <!-- Stats Grid -->
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-icon" style="background: var(--bg-pink); color: var(--brand-primary);">💧</div>
                         <div class="stat-info">
                             <p>Active Requests</p>
-                            <h4 id="hospital-kpi-active-requests">0</h4>
+                            <h4 id="hospital-kpi-active-requests">-</h4>
                             <div class="trend-up">Live DB Synced</div>
                         </div>
                     </div>
@@ -265,7 +265,7 @@
                         <div class="stat-icon" style="background: #DCFCE7; color: var(--status-available);">👥</div>
                         <div class="stat-info">
                             <p>Registered Donors</p>
-                            <h4 id="hospital-kpi-donors">0</h4>
+                            <h4 id="hospital-kpi-donors">-</h4>
                             <div class="trend-up">100km Network</div>
                         </div>
                     </div>
@@ -273,7 +273,7 @@
                         <div class="stat-icon" style="background: #EFF6FF; color: var(--status-info);">📋</div>
                         <div class="stat-info">
                             <p>Units in Stock</p>
-                            <h4 id="hospital-kpi-units">147</h4>
+                            <h4 id="hospital-kpi-units">-</h4>
                             <div class="trend-up">Blood Bank Stock</div>
                         </div>
                     </div>
@@ -281,13 +281,13 @@
                         <div class="stat-icon" style="background: #FEF3C7; color: var(--status-pending);">🫂</div>
                         <div class="stat-info">
                             <p>Successful Donations</p>
-                            <h4 id="hospital-kpi-fulfilled">0</h4>
+                            <h4 id="hospital-kpi-fulfilled">-</h4>
                             <div class="trend-up">Fulfilled Cases</div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Inner Grid Row 1[cite: 6] -->
+                <!-- Inner Grid Row 1 -->
                 <div class="inner-grid">
                     <!-- Recent Blood Requests -->
                     <div class="card">
@@ -321,35 +321,12 @@
                             <button type="button" id="btn-edit-inventory-link" style="background: none; border: none; color: var(--brand-primary); font-size: 0.85rem; font-weight: 500; cursor: pointer;">Manage Stock ✎</button>
                         </div>
                         <div class="inventory-list" id="hospital-inventory-list-container">
-                            <div class="inventory-item" data-group="O+">
-                                <div class="blood-badge">O+</div><div class="progress-track"><div class="progress-fill" style="width: 85%;"></div></div><div class="unit-count">45 Units</div>
-                            </div>
-                            <div class="inventory-item" data-group="O-">
-                                <div class="blood-badge">O-</div><div class="progress-track"><div class="progress-fill" style="width: 35%;"></div></div><div class="unit-count">18 Units</div>
-                            </div>
-                            <div class="inventory-item" data-group="A+">
-                                <div class="blood-badge">A+</div><div class="progress-track"><div class="progress-fill" style="width: 65%;"></div></div><div class="unit-count">32 Units</div>
-                            </div>
-                            <div class="inventory-item" data-group="A-">
-                                <div class="blood-badge">A-</div><div class="progress-track"><div class="progress-fill" style="width: 25%;"></div></div><div class="unit-count">14 Units</div>
-                            </div>
-                            <div class="inventory-item" data-group="B+">
-                                <div class="blood-badge">B+</div><div class="progress-track"><div class="progress-fill" style="width: 55%;"></div></div><div class="unit-count">28 Units</div>
-                            </div>
-                            <div class="inventory-item" data-group="B-">
-                                <div class="blood-badge">B-</div><div class="progress-track"><div class="progress-fill" style="width: 15%;"></div></div><div class="unit-count">10 Units</div>
-                            </div>
-                            <div class="inventory-item" data-group="AB+">
-                                <div class="blood-badge" style="color: #9333EA;">AB+</div><div class="progress-track"><div class="progress-fill" style="width: 12%; background: #9333EA;"></div></div><div class="unit-count">8 Units</div>
-                            </div>
-                            <div class="inventory-item" data-group="AB-">
-                                <div class="blood-badge" style="color: #9333EA;">AB-</div><div class="progress-track"><div class="progress-fill" style="width: 8%; background: #9333EA;"></div></div><div class="unit-count">6 Units</div>
-                            </div>
+                            <div style="padding: 16px; color: var(--text-secondary); text-align: center;">Loading inventory...</div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Inner Grid Row 2[cite: 6] -->
+            <!-- Inner Grid Row 2 -->
                 <div class="inner-grid">
                     <!-- Donor Matching -->
                     <div class="card">
@@ -399,16 +376,16 @@
                             <span>Week 1</span><span>Week 2</span><span>Week 3</span><span>Week 4</span>
                         </div>
                         <div class="stats-summary">
-                            <div><h4 id="stat-summary-total">0</h4><p>Total Requests</p></div>
-                            <div><h4 id="stat-summary-fulfilled" class="green">0</h4><p>Fulfilled</p></div>
-                            <div><h4 id="stat-summary-pending" class="orange">0</h4><p>Pending</p></div>
-                            <div><h4 style="color: var(--status-critical);">0</h4><p>Critical</p></div>
+                            <div><h4 id="stat-summary-total">-</h4><p>Total Requests</p></div>
+                            <div><h4 id="stat-summary-fulfilled" class="green">-</h4><p>Fulfilled</p></div>
+                            <div><h4 id="stat-summary-pending" class="orange">-</h4><p>Pending</p></div>
+                            <div><h4 id="stat-summary-critical" style="color: var(--status-critical);">-</h4><p>Critical</p></div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Right Sidebar Column[cite: 6] -->
+            <!-- Right Sidebar Column -->
             <div class="side-col">
                 
                 <!-- Hospital Information -->
@@ -417,18 +394,18 @@
                         <button type="button" onclick="window.location.href='my-profile.html'" style="background: var(--bg-white); border: 1px solid var(--border-light); padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; cursor: pointer;">✎ Edit</button>
                     </div>
                     <h3 style="font-size: 1rem; margin-bottom: 16px;">Hospital Information</h3>
-                    <img src="https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&q=80&w=400" alt="Hospital Building">
-                    <h3>City Care Hospital <span style="color: var(--brand-primary);">✔</span></h3>
-                    <p>Multi-Speciality Hospital</p>
+                    <img src="assets/hospital-building.svg" alt="Hospital Building" data-hospital-avatar>
+                    <h3><span data-hospital-info-name>Loading hospital profile...</span> <span style="color: var(--brand-primary);">✔</span></h3>
+                    <p data-hospital-type>Hospital type not set</p>
                     
                     <div class="info-list">
-                        <div><span>📍</span> Lucknow, Uttar Pradesh</div>
-                        <div><span>📞</span> +91 522 123 4567</div>
-                        <div><span>✉️</span> contact@citycarehospital.in</div>
-                        <div><span>🌐</span> www.citycarehospital.in</div>
+                        <div><span>📍</span> <span data-hospital-location>Location not set</span></div>
+                        <div><span>📞</span> <span data-hospital-phone>Phone not set</span></div>
+                        <div><span>✉️</span> <span data-hospital-email>Email not available</span></div>
+                        <div><span>🌐</span> <a data-hospital-website>Website not set</a></div>
                     </div>
 
-                    <div class="verified-badge-box">
+                    <div class="verified-badge-box" data-hospital-verification>
                         <div style="font-size: 1.5rem; color: var(--brand-primary);">🛡️</div>
                         <div>
                             <h5>Verified Hospital</h5>
@@ -467,46 +444,7 @@
                         <a href="notifications.html" class="view-all">View All →</a>
                     </div>
                     <div class="notif-list">
-                        <div class="notif-item">
-                            <div class="notif-icon-circle" style="background: var(--bg-pink); color: var(--brand-primary);">🔔</div>
-                            <div class="notif-content">
-                                <h5>New blood request received</h5>
-                                <p>2 units of O+ at City Care Hospital</p>
-                            </div>
-                            <div class="notif-time">10 min ago</div>
-                        </div>
-                        <div class="notif-item">
-                            <div class="notif-icon-circle" style="background: #DCFCE7; color: var(--status-available);">✔</div>
-                            <div class="notif-content">
-                                <h5>Donor confirmed</h5>
-                                <p>Aditya Singh has accepted the request</p>
-                            </div>
-                            <div class="notif-time">1 hour ago</div>
-                        </div>
-                        <div class="notif-item">
-                            <div class="notif-icon-circle" style="background: #EFF6FF; color: var(--status-info);">📦</div>
-                            <div class="notif-content">
-                                <h5>Inventory updated</h5>
-                                <p>10 units of A+ added to inventory</p>
-                            </div>
-                            <div class="notif-time">3 hours ago</div>
-                        </div>
-                        <div class="notif-item">
-                            <div class="notif-icon-circle" style="background: #F3E8FF; color: #9333EA;">👥</div>
-                            <div class="notif-content">
-                                <h5>New donor registered</h5>
-                                <p>Priya Sharma joined near your hospital</p>
-                            </div>
-                            <div class="notif-time">5 hours ago</div>
-                        </div>
-                        <div class="notif-item">
-                            <div class="notif-icon-circle" style="background: var(--bg-pink); color: var(--brand-primary);">❤️</div>
-                            <div class="notif-content">
-                                <h5>Request fulfilled</h5>
-                                <p>Blood request #BR-1045 completed</p>
-                            </div>
-                            <div class="notif-time">1 day ago</div>
-                        </div>
+                        <div style="padding: 16px; color: var(--text-secondary); text-align: center;">Open Notifications to view updates from the database.</div>
                     </div>
                 </div>
 
@@ -536,6 +474,8 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase.js"></script>
+    <script src="js/auth-guard.js"></script>
+    <script src="js/data-helpers.js"></script>
     <script src="js/map-service.js"></script>
     <script src="js/hospital-dashboard.js"></script>
     <script src="js/profile-sync.js"></script>

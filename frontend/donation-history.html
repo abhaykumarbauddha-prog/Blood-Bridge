@@ -43,7 +43,7 @@
         .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
 
         /* Topbar */
-        .topbar { background-color: var(--bg-white); height: 72px; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-light); position: sticky; top: 0; z-index: 10; }
+        .topbar { background-color: var(--bg-white); height: 72px; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-light); position: sticky; top: 0; z-index: 10000; }
         .search-bar { display: flex; align-items: center; background-color: var(--bg-light-gray); padding: 10px 16px; border-radius: 8px; width: 400px; gap: 10px; }
         .search-bar input { border: none; background: transparent; width: 100%; outline: none; color: var(--text-dark); }
         .topbar-right { display: flex; align-items: center; gap: 24px; }
@@ -104,12 +104,12 @@
             Blood<span>Match</span>
         </div>
         <ul class="nav-list">
-            <a href="user-dashboard.html" class="nav-item"><span>🏠</span> Dashboard</a>
+            <a href="dashboard.html" class="nav-item"><span>🏠</span> Dashboard</a>
             <a href="my-profile.html" class="nav-item"><span>👤</span> My Profile</a>
             <a href="find-donors.html" class="nav-item"><span>🔍</span> Find Donors</a>
             <a href="blood-request.html" class="nav-item"><span>🩸</span> Blood Requests</a>
             <a href="nearby-request.html" class="nav-item"><span>📍</span> Nearby Requests</a>
-            <a href="notifications.html" class="nav-item"><span>🔔</span> Notifications <span class="badge">3</span></a>
+            <a href="notifications.html" class="nav-item"><span>🔔</span> Notifications <span class="badge notification-badge" data-unread-badge hidden></span></a>
             <a href="donation-history.html" class="nav-item active"><span>🕒</span> Donation History</a>
             <a href="settings.html" class="nav-item"><span>⚙️</span> Settings</a>
             <a href="help-support.html" class="nav-item"><span>❓</span> Help & Support</a>
@@ -120,13 +120,13 @@
         <header class="topbar">
             <div class="search-bar">
                 <span>🔍</span>
-                <input type="text" placeholder="Search by hospital or date...">
+                <input type="text" placeholder="Search by hospital or date..." data-history-search>
             </div>
             <div class="topbar-right">
                 <div class="user-profile-mini">
-                    <img src="https://ui-avatars.com/api/?name=Aman+Singh&background=F5F7FA&color=101828" alt="Profile">
+                    <img src="assets/profile-placeholder.svg" alt="Profile" data-profile-avatar>
                     <div>
-                        <h5 style="font-size: 0.9rem;">Aman Singh</h5>
+                        <h5 style="font-size: 0.9rem;">Loading profile...</h5>
                     </div>
                     <span>⌄</span>
                 </div>
@@ -140,7 +140,7 @@
                     <h1>Donation History</h1>
                     <p>Track your past donations and download your certificates.</p>
                 </div>
-                <button class="btn-download"><span>📥</span> Download Full Report</button>
+                <button class="btn-download" id="download-donation-report" type="button"><span>📥</span> Download Full Report</button>
             </div>
 
             <!-- Stats Grid -->
@@ -150,28 +150,28 @@
                         <p>Total Donations</p>
                         <div class="stat-icon" style="background: var(--bg-pink); color: var(--brand-primary);">💧</div>
                     </div>
-                    <h3>12</h3>
+                    <h3 id="history-total-donations">-</h3>
                 </div>
                 <div class="stat-card">
                     <div class="stat-card-header">
                         <p>Total Units</p>
                         <div class="stat-icon" style="background: #EFF6FF; color: var(--status-info);">📦</div>
                     </div>
-                    <h3>14</h3>
+                    <h3 id="history-total-units">-</h3>
                 </div>
                 <div class="stat-card">
                     <div class="stat-card-header">
                         <p>Lives Impacted</p>
                         <div class="stat-icon" style="background: #DCFCE7; color: var(--status-available);">👥</div>
                     </div>
-                    <h3>36</h3>
+                    <h3 id="history-lives-impacted">-</h3>
                 </div>
                 <div class="stat-card">
                     <div class="stat-card-header">
                         <p>Next Eligible Date</p>
                         <div class="stat-icon" style="background: #FEF3C7; color: var(--status-pending);">📅</div>
                     </div>
-                    <h3 style="font-size: 1.25rem; line-height: 1.4; margin-top: 8px;">12 Sept 2024</h3>
+                    <h3 id="history-next-eligible" style="font-size: 1.25rem; line-height: 1.4; margin-top: 8px;">-</h3>
                 </div>
             </div>
 
@@ -179,10 +179,10 @@
             <div class="history-card">
                 <div class="history-card-header">
                     <h3>Recent Activity</h3>
-                    <select class="filter-select">
-                        <option>All Time</option>
-                        <option>This Year</option>
-                        <option>Last Year</option>
+                    <select class="filter-select" data-history-filter>
+                        <option value="all">All Time</option>
+                        <option value="year">This Year</option>
+                        <option value="last-year">Last Year</option>
                     </select>
                 </div>
                 <table>
@@ -190,99 +190,16 @@
                         <tr>
                             <th>Donation ID</th>
                             <th>Date</th>
+                            <th>Patient & Requester</th>
                             <th>Location / Hospital</th>
                             <th>Blood Group</th>
                             <th>Units</th>
                             <th>Status</th>
-                            <th>Certificate</th>
+                            <th>Action / Cert</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr>
-                            <td style="font-weight: 500; color: var(--text-secondary);">#DN-8092</td>
-                            <td>12 Jun 2024</td>
-                            <td>
-                                <div class="hospital-col">
-                                    <div class="hospital-icon">🏥</div>
-                                    <div>
-                                        <div style="font-weight: 500;">King George's Medical University</div>
-                                        <div style="font-size: 0.75rem; color: var(--text-secondary);">Lucknow, UP</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="blood-type-col">O+</td>
-                            <td>1</td>
-                            <td><span class="status-tag tag-completed">Completed</span></td>
-                            <td><a href="#" class="cert-btn">📄 Download</a></td>
-                        </tr>
-                        <tr>
-                            <td style="font-weight: 500; color: var(--text-secondary);">#DN-7541</td>
-                            <td>05 Feb 2024</td>
-                            <td>
-                                <div class="hospital-col">
-                                    <div class="hospital-icon">🏥</div>
-                                    <div>
-                                        <div style="font-weight: 500;">City Care Hospital</div>
-                                        <div style="font-size: 0.75rem; color: var(--text-secondary);">Lucknow, UP</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="blood-type-col">O+</td>
-                            <td>2</td>
-                            <td><span class="status-tag tag-completed">Completed</span></td>
-                            <td><a href="#" class="cert-btn">📄 Download</a></td>
-                        </tr>
-                        <tr>
-                            <td style="font-weight: 500; color: var(--text-secondary);">#DN-6210</td>
-                            <td>18 Nov 2023</td>
-                            <td>
-                                <div class="hospital-col">
-                                    <div class="hospital-icon">🏥</div>
-                                    <div>
-                                        <div style="font-weight: 500;">Medanta Hospital</div>
-                                        <div style="font-size: 0.75rem; color: var(--text-secondary);">Lucknow, UP</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="blood-type-col">O+</td>
-                            <td>1</td>
-                            <td><span class="status-tag tag-pending">Verification Pending</span></td>
-                            <td><span class="cert-btn disabled">⏳ Processing</span></td>
-                        </tr>
-                        <tr>
-                            <td style="font-weight: 500; color: var(--text-secondary);">#DN-5199</td>
-                            <td>10 Jul 2023</td>
-                            <td>
-                                <div class="hospital-col">
-                                    <div class="hospital-icon">🏥</div>
-                                    <div>
-                                        <div style="font-weight: 500;">Blood Bank, Civil Hospital</div>
-                                        <div style="font-size: 0.75rem; color: var(--text-secondary);">Kanpur, UP</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="blood-type-col">O+</td>
-                            <td>1</td>
-                            <td><span class="status-tag tag-cancelled">Cancelled</span></td>
-                            <td><span class="cert-btn disabled">—</span></td>
-                        </tr>
-                        <tr>
-                            <td style="font-weight: 500; color: var(--text-secondary);">#DN-4421</td>
-                            <td>22 Mar 2023</td>
-                            <td>
-                                <div class="hospital-col">
-                                    <div class="hospital-icon">🏥</div>
-                                    <div>
-                                        <div style="font-weight: 500;">King George's Medical University</div>
-                                        <div style="font-size: 0.75rem; color: var(--text-secondary);">Lucknow, UP</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="blood-type-col">O+</td>
-                            <td>1</td>
-                            <td><span class="status-tag tag-completed">Completed</span></td>
-                            <td><a href="#" class="cert-btn">📄 Download</a></td>
-                        </tr>
+                    <tbody id="donation-history-tbody">
+                        <tr><td colspan="8" style="padding: 32px; text-align: center; color: var(--text-secondary);">No donation history available yet.</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -292,6 +209,8 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase.js"></script>
+    <script src="js/data-helpers.js"></script>
+    <script src="js/donation-history.js"></script>
     <script src="js/profile-sync.js"></script>
 </body>
 </html>

@@ -194,38 +194,51 @@ const MapService = (() => {
             scrollWheelZoom: options.scrollWheelZoom !== false
         });
 
-        // 1. Production-Grade Street Layer (CARTO Voyager - Fast CDN, OpenStreetMap data, no 403 blocks on deployed apps)
-        const streetLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-            subdomains: 'abcd',
-            maxZoom: 20
-        });
-
-        // 2. NavIC / High-Resolution Satellite Layer (ISRO / NavIC aligned)
+        // 1. Primary Default: NavIC / ISRO Aligned High-Resolution Satellite Layer
+        // Completely free, requires NO API key, zero watermarks, high-resolution global & Indian coverage
         const navicSatelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
             attribution: 'Tiles &copy; NavIC / ISRO Geoportal, Esri Imagery',
-            maxZoom: 18
+            maxZoom: 19
         });
 
-        // 3. Indian Administrative & Street Labels Overlay
-        const labelsOverlay = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png', {
-            attribution: 'Labels &copy; NavIC / OSM / CARTO',
-            subdomains: 'abcd',
-            maxZoom: 20
+        // 2. Clear Locality, City & Boundary Reference Labels Overlay (Zero API Key, No Watermark)
+        const labelsOverlay = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Labels &copy; Esri, NavIC / ISRO',
+            maxZoom: 19
         });
 
-        // Default to Standard Street (CARTO Voyager)
-        streetLayer.addTo(map);
+        // 3. 2nd Option: Standard Street Map (Detailed roads, hospitals, landmarks - Zero API key, no 403 blocks)
+        const streetLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; Esri',
+            maxZoom: 19
+        });
 
-        // Add Layer Switcher Control in top-right corner
+        // Default to NavIC / Satellite as primary map with labels
+        navicSatelliteLayer.addTo(map);
+        labelsOverlay.addTo(map);
+
+        // Add Layer Switcher Control in top-right corner with NavIC 1st and Street 2nd
         const baseMaps = {
-            "🗺️ Standard Street": streetLayer,
-            "🛰️ 🇮🇳 NavIC / Satellite": navicSatelliteLayer
+            "🛰️ 🇮🇳 NavIC / Satellite": navicSatelliteLayer,
+            "🗺️ Standard Street (Leaflet)": streetLayer
         };
         const overlayMaps = {
             "🏷️ Locality Labels": labelsOverlay
         };
         L.control.layers(baseMaps, overlayMaps, { position: 'topright' }).addTo(map);
+
+        // Auto-manage labels overlay when switching between Satellite and Street views
+        map.on('baselayerchange', (e) => {
+            if (e.name.includes('Standard Street')) {
+                if (map.hasLayer(labelsOverlay)) {
+                    map.removeLayer(labelsOverlay);
+                }
+            } else if (e.name.includes('NavIC')) {
+                if (!map.hasLayer(labelsOverlay)) {
+                    labelsOverlay.addTo(map);
+                }
+            }
+        });
 
         setTimeout(() => {
             try {

@@ -73,10 +73,35 @@
         .leaflet-container { z-index: 1; }
         .leaflet-popup-pane { z-index: 800; }
         .leaflet-popup { z-index: 801; }
-        .map-overlay { position: absolute; top: 20px; left: 20px; right: 20px; display: flex; justify-content: space-between; align-items: center; pointer-events: none; z-index: 500; }
-        .map-controls { pointer-events: auto; display: flex; gap: 12px; }
-        .map-btn { background: var(--bg-white); border: 1px solid var(--border-light); padding: 10px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.08); transition: 0.2s; }
+        .map-overlay { position: absolute; top: 16px; left: 16px; right: 16px; display: flex; justify-content: space-between; align-items: center; pointer-events: none; z-index: 500; }
+        .map-controls { pointer-events: auto; display: flex; gap: 10px; }
+        .map-btn { background: var(--bg-white); border: 1px solid var(--border-light); padding: 9px 15px; border-radius: 8px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.08); transition: 0.2s; font-size: 0.85rem; }
         .map-btn:hover { background: var(--bg-light-gray); }
+
+        /* Ensure Leaflet Zoom (+/-) and Layer Switcher cleanly sit below top overlay controls with ZERO overlap */
+        .map-col .leaflet-top {
+            top: 66px !important;
+        }
+        .map-col .leaflet-left {
+            left: 16px !important;
+        }
+        .map-col .leaflet-right {
+            right: 16px !important;
+        }
+        .map-col .leaflet-control-zoom {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12) !important;
+            border: 1px solid var(--border-light) !important;
+            border-radius: 8px !important;
+            overflow: hidden;
+            margin: 0 !important;
+        }
+        .map-col .leaflet-control-layers {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12) !important;
+            border: 1px solid var(--border-light) !important;
+            border-radius: 8px !important;
+            z-index: 900 !important;
+            margin: 0 !important;
+        }
         
         .map-pin { position: absolute; transform: translate(-50%, -100%); display: flex; flex-direction: column; align-items: center; cursor: pointer; pointer-events: auto; }
         .map-pin-icon { width: 32px; height: 32px; background: var(--bg-white); border: 2px solid var(--brand-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--brand-primary); font-size: 0.8rem; box-shadow: 0 4px 10px rgba(230,0,35,0.3); }

@@ -194,10 +194,11 @@ const MapService = (() => {
             scrollWheelZoom: options.scrollWheelZoom !== false
         });
 
-        // 1. Standard OpenStreetMap Layer
-        const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-            maxZoom: 19
+        // 1. Production-Grade Street Layer (CARTO Voyager - Fast CDN, OpenStreetMap data, no 403 blocks on deployed apps)
+        const streetLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            subdomains: 'abcd',
+            maxZoom: 20
         });
 
         // 2. NavIC / High-Resolution Satellite Layer (ISRO / NavIC aligned)
@@ -208,16 +209,17 @@ const MapService = (() => {
 
         // 3. Indian Administrative & Street Labels Overlay
         const labelsOverlay = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png', {
-            attribution: 'Labels &copy; NavIC / OSM',
-            maxZoom: 19
+            attribution: 'Labels &copy; NavIC / OSM / CARTO',
+            subdomains: 'abcd',
+            maxZoom: 20
         });
 
-        // Default to Standard OSM
-        osmLayer.addTo(map);
+        // Default to Standard Street (CARTO Voyager)
+        streetLayer.addTo(map);
 
         // Add Layer Switcher Control in top-right corner
         const baseMaps = {
-            "🗺️ Standard Street": osmLayer,
+            "🗺️ Standard Street": streetLayer,
             "🛰️ 🇮🇳 NavIC / Satellite": navicSatelliteLayer
         };
         const overlayMaps = {

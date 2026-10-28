@@ -40,6 +40,8 @@ app.use(helmet({
         "wss://*.supabase.co",
         "https://api.mapbox.com",
         "https://*.tile.openstreetmap.org",
+        "https://*.basemaps.cartocdn.com",
+        "https://server.arcgisonline.com",
         "https://nominatim.openstreetmap.org",
         "https://*.nrsc.gov.in",
         "https://bhuvan.nrsc.gov.in",

@@ -27,7 +27,7 @@ const MapService = (() => {
     const DEFAULT_FALLBACK_COORDS = { lat: 26.8467, lng: 80.9462, city: 'Lucknow', isFallback: true, isLive: false };
 
     /**
-     * Get user's current GPS position via browser Geolocation API with resilient fallback
+     * Get user's current GPS position via browser Geolocation API with high accuracy
      */
     async function getUserLocation(fallbackOnFail = true) {
         const livePromise = new Promise((resolve) => {
@@ -38,7 +38,7 @@ const MapService = (() => {
 
             const timeoutId = setTimeout(() => {
                 resolve(null);
-            }, 4000);
+            }, 7000);
 
             navigator.geolocation.getCurrentPosition(
                 (position) => {
@@ -55,7 +55,7 @@ const MapService = (() => {
                     console.warn('Geolocation access failed or denied:', err.message);
                     resolve(null);
                 },
-                { enableHighAccuracy: true, timeout: 4000, maximumAge: 60000 }
+                { enableHighAccuracy: true, timeout: 7000, maximumAge: 0 }
             );
         });
 
@@ -102,30 +102,34 @@ const MapService = (() => {
     }
 
     /**
-     * Resolve latitude and longitude from city name or address
+     * Resolve latitude and longitude from city name or address (India prioritized)
      */
     async function geocodeAddress(addressText) {
         if (!addressText) return null;
 
-        // 2. Fallback to OpenStreetMap Nominatim Free Geocoder
         try {
-            const encoded = encodeURIComponent(`${addressText}, India`);
-            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encoded}&limit=1`, {
+            const query = addressText.includes('India') ? addressText : `${addressText}, India`;
+            const encoded = encodeURIComponent(query);
+            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&countrycodes=in&q=${encoded}&limit=3`, {
                 headers: { 'Accept': 'application/json' }
             });
             const data = await res.json();
             if (data && data.length > 0) {
-                return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+                return { 
+                    lat: parseFloat(data[0].lat), 
+                    lng: parseFloat(data[0].lon),
+                    displayName: data[0].display_name
+                };
             }
         } catch (e) {
-            console.warn('OSM Geocoding failed:', e);
+            console.warn('Indian geocoding failed:', e);
         }
 
         return null;
     }
 
     /**
-     * Reverse geocode coordinates to get address/city
+     * Reverse geocode coordinates to get address/city/state/pincode
      */
     async function reverseGeocode(lat, lng) {
         try {
@@ -134,9 +138,20 @@ const MapService = (() => {
             });
             const data = await res.json();
             if (data && data.address) {
-                const city = data.address.city || data.address.town || data.address.county || data.address.state_district;
-                const displayName = data.display_name || city || 'Location found';
-                return { city, displayName, raw: data.address };
+                const addr = data.address;
+                const city = addr.city || addr.town || addr.village || addr.county || addr.state_district || '';
+                const state = addr.state || '';
+                const pincode = addr.postcode || '';
+                const road = [addr.building || addr.amenity, addr.road, addr.suburb || addr.neighbourhood].filter(Boolean).join(', ');
+                const displayName = data.display_name || [road, city, state].filter(Boolean).join(', ') || 'Selected Location';
+                return { 
+                    city, 
+                    state, 
+                    pincode, 
+                    address: road || displayName, 
+                    displayName, 
+                    raw: addr 
+                };
             }
         } catch (e) {
             console.warn('Reverse geocoding error:', e);
@@ -145,7 +160,7 @@ const MapService = (() => {
     }
 
     /**
-     * Initialize Leaflet map with standard tiles
+     * Initialize Leaflet map with Dual Layer Switcher (Standard Street + NavIC / Satellite)
      */
     function createMap(containerId, options = {}) {
         if (!window.L) {
@@ -179,10 +194,36 @@ const MapService = (() => {
             scrollWheelZoom: options.scrollWheelZoom !== false
         });
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        // 1. Standard OpenStreetMap Layer
+        const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
             maxZoom: 19
-        }).addTo(map);
+        });
+
+        // 2. NavIC / High-Resolution Satellite Layer (ISRO / NavIC aligned)
+        const navicSatelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Tiles &copy; NavIC / ISRO Geoportal, Esri Imagery',
+            maxZoom: 18
+        });
+
+        // 3. Indian Administrative & Street Labels Overlay
+        const labelsOverlay = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png', {
+            attribution: 'Labels &copy; NavIC / OSM',
+            maxZoom: 19
+        });
+
+        // Default to Standard OSM
+        osmLayer.addTo(map);
+
+        // Add Layer Switcher Control in top-right corner
+        const baseMaps = {
+            "🗺️ Standard Street": osmLayer,
+            "🛰️ 🇮🇳 NavIC / Satellite": navicSatelliteLayer
+        };
+        const overlayMaps = {
+            "🏷️ Locality Labels": labelsOverlay
+        };
+        L.control.layers(baseMaps, overlayMaps, { position: 'topright' }).addTo(map);
 
         setTimeout(() => {
             try {
@@ -254,6 +295,48 @@ const MapService = (() => {
     }
 
     /**
+     * Create an interactive draggable location arrow/pin marker
+     */
+    function createDraggableArrowPin(label = 'Drag to Set Location', color = '#E60023') {
+        if (!window.L) return null;
+        return L.divIcon({
+            className: 'custom-draggable-arrow-pin',
+            html: `
+                <div style="position: relative; display: flex; flex-direction: column; align-items: center; cursor: grab;">
+                    <div style="
+                        background: ${color};
+                        color: #FFFFFF;
+                        padding: 3px 8px;
+                        border-radius: 12px;
+                        font-size: 11px;
+                        font-weight: 700;
+                        white-space: nowrap;
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+                        border: 2px solid #FFFFFF;
+                        margin-bottom: 2px;
+                        display: flex;
+                        align-items: center;
+                        gap: 4px;
+                        pointer-events: none;
+                        user-select: none;
+                    ">
+                        <span>📍</span> ${label}
+                    </div>
+                    <svg width="34" height="42" viewBox="0 0 34 42" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4));">
+                        <path d="M17 0C7.61 0 0 7.61 0 17C0 27.5 14.5 40.5 15.8 41.6C16.5 42.2 17.5 42.2 18.2 41.6C19.5 40.5 34 27.5 34 17C34 7.61 26.39 0 17 0Z" fill="${color}" stroke="#FFFFFF" stroke-width="2"/>
+                        <circle cx="17" cy="17" r="7" fill="#FFFFFF"/>
+                        <!-- Directional Arrow Inside Pin -->
+                        <path d="M17 12L21 19H13L17 12Z" fill="${color}"/>
+                    </svg>
+                </div>
+            `,
+            iconSize: [34, 62],
+            iconAnchor: [17, 62],
+            popupAnchor: [0, -58]
+        });
+    }
+
+    /**
      * Add a 100 KM radius boundary circle
      */
     function addRadiusCircle(map, lat, lng, radiusKm = DEFAULT_SEARCH_RADIUS_KM) {
@@ -277,6 +360,7 @@ const MapService = (() => {
         reverseGeocode,
         createMap,
         createBloodMarkerIcon,
+        createDraggableArrowPin,
         addRadiusCircle
     };
 })();

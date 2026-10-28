@@ -233,22 +233,32 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             const isCooling = currentDonorStats && !currentDonorStats.isEligible && currentDonorStats.daysRemaining > 0;
+            const isMatched = (req.status || '').toLowerCase() === 'matched';
 
-            const actionButtons = isCompleted
-                ? `
+            let actionButtons = '';
+            if (isCompleted) {
+                actionButtons = `
                     <button type="button" class="btn btn-outline btn-share-req" data-req-id="${req.id}">Share</button>
+                    <a href="chat.html?request_id=${req.id}&tab=requesters" class="btn btn-outline" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 10px 12px; color: #64748B; border-color: #CBD5E1;" title="Coordination concluded and read-only">🔒 Chat Closed</a>
                     <button type="button" class="btn btn-completed" disabled style="background: var(--status-available, #10B981); color: white; cursor: default; opacity: 0.95; font-weight: 600;">Completed ✔</button>
-                `
-                : (isCooling
-                    ? `
-                        <button type="button" class="btn btn-outline btn-share-req" data-req-id="${req.id}">Share</button>
-                        <button type="button" class="btn btn-warning btn-accept-req" data-req-id="${req.id}" style="background: #F59E0B; color: white; border: none; font-weight: 700; box-shadow: 0 2px 6px rgba(245,158,11,0.25);">⏱️ Cooling Period (${currentDonorStats.daysRemaining}d)</button>
-                    `
-                    : `
-                        <button type="button" class="btn btn-outline btn-share-req" data-req-id="${req.id}">Share</button>
-                        <button type="button" class="btn btn-primary btn-accept-req" data-req-id="${req.id}">Accept & Donate</button>
-                    `
-                );
+                `;
+            } else if (isMatched) {
+                actionButtons = `
+                    <button type="button" class="btn btn-outline btn-share-req" data-req-id="${req.id}">Share</button>
+                    <a href="chat.html?request_id=${req.id}&tab=requesters" class="btn btn-outline" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 10px 12px; color: var(--brand-primary); border-color: var(--brand-primary); font-weight: 600;" title="Live Chat with Requester">💬 Active Chat</a>
+                    <button type="button" class="btn btn-success btn-complete-req" data-req-id="${req.id}" style="background: #10B981; color: white; border: none; font-weight: 600; padding: 10px 14px; border-radius: 8px; cursor: pointer;">✅ Mark Completed</button>
+                `;
+            } else if (isCooling) {
+                actionButtons = `
+                    <button type="button" class="btn btn-outline btn-share-req" data-req-id="${req.id}">Share</button>
+                    <button type="button" class="btn btn-warning btn-accept-req" data-req-id="${req.id}" style="background: #F59E0B; color: white; border: none; font-weight: 700; box-shadow: 0 2px 6px rgba(245,158,11,0.25);">⏱️ Cooling Period (${currentDonorStats.daysRemaining}d)</button>
+                `;
+            } else {
+                actionButtons = `
+                    <button type="button" class="btn btn-outline btn-share-req" data-req-id="${req.id}">Share</button>
+                    <button type="button" class="btn btn-primary btn-accept-req" data-req-id="${req.id}">Accept & Donate</button>
+                `;
+            }
 
             return `
                 <div class="req-card ${isCompleted ? 'req-completed' : ''}" data-req-id="${req.id}" style="${borderStyle} cursor: pointer;">
@@ -377,10 +387,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 btn.disabled = true;
                 const originalText = btn.innerHTML;
-                btn.innerHTML = 'Accepting & Completing... ⏳';
+                btn.innerHTML = 'Accepting & Starting Chat... ⏳';
 
-                let completedSuccessfully = false;
-                const donationDate = new Date().toISOString();
+                let acceptedSuccessfully = false;
+                let conversationId = null;
 
                 // 1. Try Backend API
                 try {
@@ -392,13 +402,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                         },
                         body: JSON.stringify({
                             donor_id: user.id,
-                            complete: true,
-                            donated_at: donationDate
+                            complete: false
                         })
                     });
                     const resData = await response.json();
                     if (resData.success) {
-                        completedSuccessfully = true;
+                        acceptedSuccessfully = true;
+                        conversationId = resData.conversation_id;
                     } else if (resData.cooling_period) {
                         // Backend detected cooling period
                         btn.disabled = false;
@@ -414,9 +424,95 @@ document.addEventListener('DOMContentLoaded', async () => {
                     console.warn('API accept note:', apiErr);
                 }
 
-                // 2. Direct Supabase Fallback (ensures 100% completion & resilience)
+                // 2. Direct Supabase Fallback (ensures resilient state transition)
                 try {
-                    // Update request_responses with donated status
+                    // Update request_responses with accepted status
+                    await supabaseClient
+                        .from('request_responses')
+                        .upsert({
+                            request_id: reqId,
+                            donor_id: user.id,
+                            status: 'accepted'
+                        }, { onConflict: 'request_id,donor_id' });
+                    
+                    // Mark request as matched in blood_requests
+                    await supabaseClient
+                        .from('blood_requests')
+                        .update({ status: 'matched' })
+                        .eq('id', reqId);
+
+                    acceptedSuccessfully = true;
+                } catch (sbErr) {
+                    console.warn('Supabase direct update error:', sbErr);
+                }
+
+                // 3. Send Notification to Requester about Acceptance
+                if (req?.requester_id) {
+                    const donorName = user.user_metadata?.full_name || 'A verified donor';
+                    const donorPhone = user.user_metadata?.phone || '';
+                    try {
+                        await supabaseClient.from('notifications').insert([{
+                            user_id: req.requester_id,
+                            type: 'response',
+                            title: 'Donor Accepted Your Request! ❤️',
+                            body: `Great news! Donor ${donorName} has accepted your blood request for ${req.patient_name || 'the patient'} at ${req.hospital_name || 'the hospital'}.${donorPhone ? ' Contact: ' + donorPhone : ''} Live chat is now open to coordinate!`,
+                            link: `chat.html?request_id=${reqId}&tab=donors`
+                        }]);
+                    } catch (_) {}
+                }
+
+                btn.innerHTML = 'Accepted! Opening Chat... 💬';
+                btn.style.background = 'var(--brand-primary)';
+                btn.style.color = 'white';
+
+                // 4. Redirect to Live Chat with Requester
+                setTimeout(() => {
+                    const chatTarget = `chat.html?request_id=${reqId}&tab=requesters${conversationId ? '&conversation_id=' + conversationId : ''}`;
+                    window.location.href = chatTarget;
+                }, 600);
+            });
+        });
+
+        // Mark Completed buttons (for accepted/matched requests)
+        document.querySelectorAll('.btn-complete-req').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const reqId = btn.dataset.reqId;
+                const req = allRequests.find(r => r.id === reqId);
+
+                if (!confirm(`Confirm completion of blood donation for patient ${req?.patient_name || ''} at ${req?.hospital_name || 'the hospital'}?\n\nThis will verify the blood donation, update your 3-month cooling period, and close the live coordination chat.`)) {
+                    return;
+                }
+
+                if (!supabaseClient?.auth) return alert('Authentication service is unavailable.');
+                const { data: sessionData } = await supabaseClient.auth.getSession();
+                const user = sessionData?.session?.user;
+                if (!user) return alert('Please log in.');
+
+                btn.disabled = true;
+                btn.innerHTML = 'Completing... ⏳';
+
+                const donationDate = new Date().toISOString();
+
+                // 1. Call Backend API
+                try {
+                    await fetch(`/api/requests/${reqId}/complete`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${sessionData?.session?.access_token || ''}`
+                        },
+                        body: JSON.stringify({
+                            donor_id: user.id,
+                            donated_at: donationDate
+                        })
+                    });
+                } catch (err) {
+                    console.warn('Complete donation API note:', err);
+                }
+
+                // 2. Direct fallback
+                try {
                     await supabaseClient
                         .from('request_responses')
                         .upsert({
@@ -425,71 +521,34 @@ document.addEventListener('DOMContentLoaded', async () => {
                             status: 'donated',
                             donated_at: donationDate
                         }, { onConflict: 'request_id,donor_id' });
-                    
-                    // Mark request as fulfilled / completed in blood_requests
+
                     await supabaseClient
                         .from('blood_requests')
                         .update({ status: 'fulfilled' })
                         .eq('id', reqId);
 
-                    // Update donor's last_donation_date in users table
                     await supabaseClient
                         .from('users')
                         .update({ last_donation_date: donationDate.split('T')[0] })
                         .eq('id', user.id);
-
-                    completedSuccessfully = true;
                 } catch (sbErr) {
-                    console.warn('Supabase direct update error:', sbErr);
+                    console.warn('Direct complete fallback note:', sbErr);
                 }
 
-                // 3. Send Notification to Requester
-                if (req?.requester_id) {
-                    const donorName = user.user_metadata?.full_name || 'A verified donor';
-                    const donorPhone = user.user_metadata?.phone || '';
-                    try {
-                        await supabaseClient.from('notifications').insert([{
-                            user_id: req.requester_id,
-                            type: 'system',
-                            title: 'Blood Donation Completed! 🎉',
-                            body: `Good news! Donor ${donorName} has accepted and completed your blood request for ${req.patient_name || 'the patient'} at ${req.hospital_name || 'the hospital'}.${donorPhone ? ' Contact: ' + donorPhone : ''} The request is now marked as Completed.`,
-                            link: 'nearby-request.html'
-                        }]);
-                    } catch (_) {}
-                }
-
-                // 4. Send Confirmation Notification to Donor
-                try {
-                    const donorName = user.user_metadata?.full_name || 'Donor';
-                    await supabaseClient.from('notifications').insert([{
-                        user_id: user.id,
-                        type: 'badge_earned',
-                        title: `Blood Donation Successful! 🏆`,
-                        body: `Thank you, ${donorName}! Your blood donation for patient ${req?.patient_name || 'the patient'} at ${req?.hospital_name || 'Hospital'} has been completed and recorded in your Donation History.`,
-                        link: 'donation-history.html'
-                    }]);
-                } catch (_) {}
-
-                btn.innerHTML = 'Completed ✔';
-                btn.style.background = 'var(--status-available, #10B981)';
-                btn.style.color = 'white';
-
-                // 5. Update Universal Donor Stats across all components immediately
+                // 3. Update Donor Stats
                 if (window.BloodMatchData?.getDonorStats && window.BloodMatchData?.renderDonorStats) {
                     try {
                         currentDonorStats = await BloodMatchData.getDonorStats(user.id);
                         BloodMatchData.renderDonorStats(currentDonorStats);
-                    } catch (statErr) {
-                        console.warn('Stats refresh error:', statErr);
-                    }
+                    } catch (_) {}
                 }
 
                 alert(
-                    `Thank you! Your blood donation for ${req?.patient_name || 'the patient'} has been completed. ❤️\n\n` +
+                    `🎉 Blood Donation Successfully Completed!\n\n` +
+                    `• Patient: ${req?.patient_name || 'Patient'}\n` +
                     `• Hospital: ${req?.hospital_name || 'Hospital'}\n` +
-                    `• Units Donated: ${req?.units || 1} (${req?.blood_group || ''})\n` +
                     `• Status: Completed ✔\n\n` +
-                    `A notification has been sent to the requester, and your Donation History and stats have been updated!`
+                    `Your Donation History has been updated, 3-month cooling period is active, and the coordination chat has now been concluded.`
                 );
 
                 await fetchRequests();

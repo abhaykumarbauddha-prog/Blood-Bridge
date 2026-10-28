@@ -40,6 +40,10 @@ app.use(helmet({
         "wss://*.supabase.co",
         "https://api.mapbox.com",
         "https://*.tile.openstreetmap.org",
+        "https://nominatim.openstreetmap.org",
+        "https://*.nrsc.gov.in",
+        "https://bhuvan.nrsc.gov.in",
+        "https://generativelanguage.googleapis.com",
         "http://127.0.0.1:*",
         "http://localhost:*"
       ],
@@ -81,13 +85,16 @@ app.get('/login', (req, res) => {
  const donorRoutes = require('./routes/donorRoutes');
  const requestRoutes = require('./routes/requestRoutes');
  const hospitalRoutes = require('./routes/hospitalRoutes');
+ const smartMatchRoutes = require('./routes/smartMatchRoutes');
+ const chatRoutes = require('./routes/chatRoutes');
 
 // Use Routes (Abhi inko comment kiya hua hai jab tak files nahi ban jati)
 // app.use('/api/auth', authRoutes);
 app.use('/api/donors', donorRoutes);
 app.use('/api/requests', requestRoutes);
 app.use('/api/hospitals', hospitalRoutes);
-// app.use('/api/hospitals', hospitalRoutes);
+app.use('/api/smart-match', smartMatchRoutes);
+app.use('/api/chat', chatRoutes);
 
 // Unknown API routes ko consistent JSON response do.
 app.use((req, res) => {

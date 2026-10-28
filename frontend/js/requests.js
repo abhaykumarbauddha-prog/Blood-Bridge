@@ -27,58 +27,85 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
     defaultRequiredBy();
 
+    // Radius chip selector interactive click
+    document.querySelectorAll('.radius-chip-card').forEach(card => {
+        card.addEventListener('click', () => {
+            document.querySelectorAll('.radius-chip-card').forEach(c => {
+                c.classList.remove('active');
+                c.style.border = '1px solid var(--border-light)';
+                c.style.background = 'transparent';
+                const mainText = c.querySelector('div:first-of-type');
+                if (mainText) mainText.style.color = 'var(--text-dark)';
+                const subText = c.querySelector('div:last-of-type');
+                if (subText) subText.style.color = 'var(--text-secondary)';
+            });
+            card.classList.add('active');
+            card.style.border = '2px solid var(--brand-primary)';
+            card.style.background = 'var(--bg-pink)';
+            const mainText = card.querySelector('div:first-of-type');
+            if (mainText) mainText.style.color = 'var(--brand-primary)';
+            const subText = card.querySelector('div:last-of-type');
+            if (subText) subText.style.color = 'var(--brand-primary)';
+            const radio = card.querySelector('input[type="radio"]');
+            if (radio) radio.checked = true;
+        });
+    });
+
     // ==========================================
     // 1. Interactive Map & Geolocation Setup
     // ==========================================
     if (locationMapContainer && window.MapService && window.L) {
-        const loc = await MapService.getUserLocation();
-        const initialLocation = loc || (MapService.getDefaultLocation ? MapService.getDefaultLocation() : { lat: 26.8467, lng: 80.9462 });
-        let initialLat = initialLocation.lat;
-        let initialLng = initialLocation.lng;
+        const defaultLoc = MapService.getDefaultLocation ? MapService.getDefaultLocation() : { lat: 26.8467, lng: 80.9462 };
+        let currentLat = defaultLoc.lat;
+        let currentLng = defaultLoc.lng;
 
         requestMap = MapService.createMap('request-location-map', {
-            center: [initialLat, initialLng],
+            center: [currentLat, currentLng],
             zoom: 13
         });
-        setTimeout(() => { if (requestMap) requestMap.invalidateSize(); }, 300);
+        setTimeout(() => { if (requestMap) requestMap.invalidateSize(); }, 250);
 
-        // Create draggable location pin
-        requestMarker = L.marker([initialLat, initialLng], {
+        // Create prominent draggable location pin with directional arrow
+        const pinIcon = MapService.createDraggableArrowPin ? 
+            MapService.createDraggableArrowPin('Drag Arrow to Hospital', '#E60023') : null;
+
+        requestMarker = L.marker([currentLat, currentLng], {
+            icon: pinIcon || undefined,
             draggable: true,
-            title: 'Drag to set hospital location'
+            title: 'Drag me to set exact hospital location',
+            autoPan: true
         }).addTo(requestMap);
 
-        requestMarker.bindPopup('<b>Hospital Location</b><br>Drag me to adjust location').openPopup();
-
-        // Update inputs when pin is dragged
-        requestMarker.on('dragend', async () => {
-            const position = requestMarker.getLatLng();
-            await updateLocationFromCoords(position.lat, position.lng);
-        });
-
-        // Click anywhere on map to move pin
-        requestMap.on('click', async (e) => {
-            requestMarker.setLatLng(e.latlng);
-            await updateLocationFromCoords(e.latlng.lat, e.latlng.lng);
-        });
-
-        applyCoordsToMap(initialLat, initialLng, false);
+        requestMarker.bindPopup(`
+            <div style="text-align: center; padding: 4px;">
+                <b style="color: #E60023;">📍 Hospital Location</b><br>
+                <span style="font-size: 11px; color: #475467;">Drag pin or click map to reposition</span>
+            </div>
+        `).openPopup();
 
         // Helper to update text & inputs from coordinates
         async function updateLocationFromCoords(lat, lng) {
+            selectedCoordinates = { latitude: lat, longitude: lng };
             if (selectedLocationText) {
-                selectedLocationText.textContent = 'Locating address...';
+                selectedLocationText.textContent = `📍 ${lat.toFixed(4)}, ${lng.toFixed(4)} (Resolving...)`;
             }
             const info = await MapService.reverseGeocode(lat, lng);
             if (selectedLocationText) {
-                selectedLocationText.textContent = info?.displayName || 'Location selected';
+                selectedLocationText.textContent = info?.displayName || `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`;
             }
-            if (cityInput && info?.city && (!cityInput.value || cityInput.value.trim() === '')) {
+            if (cityInput && info?.city) {
                 cityInput.value = info.city;
             }
-            if (hospitalAddressInput && info?.displayName && (!hospitalAddressInput.value || hospitalAddressInput.value.trim() === '')) {
-                hospitalAddressInput.value = info.displayName;
+            if (hospitalAddressInput && info?.displayName) {
+                hospitalAddressInput.value = info.address || info.displayName;
             }
+            requestMarker.setPopupContent(`
+                <div style="text-align: center; padding: 4px; max-width: 220px;">
+                    <b style="color: #E60023;">📍 Hospital Location</b><br>
+                    <span style="font-size: 12px; font-weight: 500;">${info?.displayName || 'Selected Point'}</span><br>
+                    <small style="color: #667085; font-size: 10px;">Drag pin anytime to change</small>
+                </div>
+            `);
         }
 
         function applyCoordsToMap(lat, lng, zoomIn = true) {
@@ -86,18 +113,47 @@ document.addEventListener('DOMContentLoaded', async () => {
             selectedCoordinates = { latitude: lat, longitude: lng };
             requestMarker.setLatLng([lat, lng]);
             requestMap.panTo([lat, lng]);
-            if (zoomIn) requestMap.setZoom(14);
+            if (zoomIn) requestMap.setZoom(15);
             updateLocationFromCoords(lat, lng);
         }
+
+        // Update inputs when pin is dragged
+        requestMarker.on('dragend', async () => {
+            const position = requestMarker.getLatLng();
+            await updateLocationFromCoords(position.lat, position.lng);
+        });
+
+        // Click anywhere on map to move pin immediately
+        requestMap.on('click', async (e) => {
+            requestMarker.setLatLng(e.latlng);
+            await updateLocationFromCoords(e.latlng.lat, e.latlng.lng);
+        });
+
+        // Attempt non-blocking live GPS in background to center on requester
+        MapService.getUserLocation(false).then((liveLoc) => {
+            if (liveLoc && Number.isFinite(liveLoc.lat) && Number.isFinite(liveLoc.lng)) {
+                applyCoordsToMap(liveLoc.lat, liveLoc.lng, true);
+            } else {
+                updateLocationFromCoords(currentLat, currentLng);
+            }
+        }).catch(() => {
+            updateLocationFromCoords(currentLat, currentLng);
+        });
 
         // "🎯 Use My Location" Button
         if (useMyLocationBtn) {
             useMyLocationBtn.addEventListener('click', async () => {
-                useMyLocationBtn.textContent = '⏳ Locating...';
-                const loc = await MapService.getUserLocation();
-                useMyLocationBtn.textContent = '🎯 Use My Location';
-                if (loc) {
+                const originalText = useMyLocationBtn.innerHTML;
+                useMyLocationBtn.innerHTML = '⏳ Locating GPS...';
+                useMyLocationBtn.disabled = true;
+                const loc = await MapService.getUserLocation(true);
+                useMyLocationBtn.disabled = false;
+                useMyLocationBtn.innerHTML = originalText;
+                if (loc && Number.isFinite(loc.lat) && Number.isFinite(loc.lng)) {
                     applyCoordsToMap(loc.lat, loc.lng, true);
+                    requestMarker.openPopup();
+                } else {
+                    alert('Could not retrieve GPS location. Please check browser permissions or drag the marker pin manually on the map.');
                 }
             });
         }
@@ -110,6 +166,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const coords = await MapService.geocodeAddress(query);
                 if (coords) {
                     applyCoordsToMap(coords.lat, coords.lng, true);
+                } else {
+                    alert(`Could not find coordinates for "${query}". You can drag the pin manually.`);
                 }
             };
 
@@ -132,6 +190,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if (coords) {
                         requestMarker.setLatLng([coords.lat, coords.lng]);
                         requestMap.panTo([coords.lat, coords.lng]);
+                        selectedCoordinates = { latitude: coords.lat, longitude: coords.lng };
                     }
                 }
             }, 800);
@@ -151,6 +210,48 @@ document.addEventListener('DOMContentLoaded', async () => {
             const info = await MapService.reverseGeocode(loc.lat, loc.lng);
             if (selectedLocationText) selectedLocationText.textContent = info?.displayName || 'Location selected';
         });
+    }
+
+    // Auto-prefill hospital and facility details if logged-in user is Hospital
+    if (supabaseClient?.auth) {
+        (async () => {
+            try {
+                const { data: sessionData } = await supabaseClient.auth.getSession();
+                const currentUserId = sessionData?.session?.user?.id;
+                if (!currentUserId) return;
+                const { data: userProfile } = await supabaseClient
+                    .from('users')
+                    .select('role, full_name, city, state, address, latitude, longitude')
+                    .eq('id', currentUserId)
+                    .maybeSingle();
+
+                if (userProfile) {
+                    const isHospital = userProfile.role === 'Hospital' || window.location.search.includes('source=hospital');
+                    const hNameInput = document.querySelector('input[name="hospital_name"]');
+                    if (isHospital && hNameInput && !hNameInput.value && userProfile.full_name) {
+                        hNameInput.value = userProfile.full_name;
+                    }
+                    if (cityInput && !cityInput.value && userProfile.city) {
+                        cityInput.value = userProfile.city;
+                    }
+                    if (hospitalAddressInput && !hospitalAddressInput.value) {
+                        const fullAddr = [userProfile.address, userProfile.city, userProfile.state].filter(Boolean).join(', ');
+                        if (fullAddr) hospitalAddressInput.value = fullAddr;
+                    }
+                    if (Number.isFinite(Number(userProfile.latitude)) && Number.isFinite(Number(userProfile.longitude))) {
+                        const pLat = Number(userProfile.latitude);
+                        const pLng = Number(userProfile.longitude);
+                        selectedCoordinates = { latitude: pLat, longitude: pLng };
+                        if (requestMarker && requestMap) {
+                            requestMarker.setLatLng([pLat, pLng]);
+                            requestMap.setView([pLat, pLng], 13);
+                        }
+                    }
+                }
+            } catch (err) {
+                console.warn('Could not auto-prefill user/hospital profile:', err);
+            }
+        })();
     }
 
     // ==========================================
@@ -269,6 +370,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             e.preventDefault();
 
             const urgencyInput = document.querySelector('input[name="urgency"]:checked');
+            const radiusInput = document.querySelector('input[name="search_radius_km"]:checked');
 
             if (!supabaseClient?.auth) {
                 alert('Authentication service is unavailable. Please refresh the page.');
@@ -284,6 +386,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             const value = (name) => requestForm.elements[name].value.trim();
+            const selectedRadius = Number(radiusInput?.value) || 25;
             const requestPayload = {
                 patient_name: value('patient_name'),
                 blood_group: value('blood_group'),
@@ -296,6 +399,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 required_time: value('required_time'),
                 additional_info: value('additional_info'),
                 requester_id: requesterId,
+                search_radius_km: selectedRadius,
                 latitude: selectedCoordinates?.latitude || null,
                 longitude: selectedCoordinates?.longitude || null
             };
@@ -316,7 +420,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const submitBtn = requestForm.querySelector('button[type="submit"]');
             if (submitBtn) {
                 submitBtn.disabled = true;
-                submitBtn.textContent = 'Submitting Request...';
+                submitBtn.textContent = 'Submitting Request & Scanning Donors...';
             }
 
             try {
@@ -333,8 +437,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const result = await response.json();
 
                 if (result.success) {
-                    alert("Blood request submitted successfully!");
-                    window.location.href = 'nearby-request.html';
+                    const createdId = result.data?.[0]?.id || result.data?.id;
+                    const destination = createdId
+                        ? `smart-match.html?request_id=${createdId}&blood_group=${encodeURIComponent(requestPayload.blood_group)}&radius=${selectedRadius}&urgency=${encodeURIComponent(requestPayload.urgency)}`
+                        : `smart-match.html?blood_group=${encodeURIComponent(requestPayload.blood_group)}&radius=${selectedRadius}`;
+                    alert("Blood request submitted successfully! Redirecting to Smart AI Matching...");
+                    window.location.href = destination;
                 } else {
                     alert("Error: " + (result.error || 'Failed to submit request.'));
                 }

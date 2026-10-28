@@ -252,7 +252,7 @@ Donor clicks "Accept & Donate" on Nearby Requests
 Donation Accepted / Fulfilled
     │
     ▼
-BloodMatchData.getDonorStats(userId) fetches real-time response count
+BloodBridgeData.getDonorStats(userId) fetches real-time response count
     │
     ├── Updates Total Donations & Total Units
     ├── Computes Lives Helped (Donations × 3)

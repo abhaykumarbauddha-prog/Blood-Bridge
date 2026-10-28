@@ -21,6 +21,7 @@ const requiredFiles = [
   'frontend/js/donation-history.js',
   'frontend/js/help-support.js',
   'frontend/js/settings.js',
+  'frontend/js/admin-management.js',
   'frontend/js/requests.js',
   'database/schema.sql'
 ];
@@ -40,6 +41,8 @@ for (const migration of [
   '20261011_phase6_hospital_inventory.sql',
   '20261011_phase7_remaining_pages.sql',
   '20261011_phase8_completion_fixes.sql'
+  , '20261026_admin_dashboard_security.sql'
+  , '20261026_admin_management.sql'
 ]) {
   assert.equal(fs.existsSync(path.join(migrationDir, migration)), true, `${migration} is missing`);
 }

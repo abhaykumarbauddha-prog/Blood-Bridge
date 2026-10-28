@@ -21,4 +21,15 @@ router.post('/inventory', [
     body('units').isInt({ min: 0, max: 100000 }).withMessage('units must be a non-negative integer.')
 ], validate, hospitalController.updateInventory);
 
+// PUT request: Hospital type update karne ke liye
+router.put('/type', [
+    body('hospital_id').isUUID().withMessage('hospital_id must be a valid UUID.'),
+    body('hospital_type').isString().trim().isLength({ min: 2, max: 50 }).withMessage('hospital_type is required.')
+], validate, hospitalController.updateHospitalType);
+
+// PUT request: Hospital profile update karne ke liye
+router.put('/profile', [
+    body('hospital_id').isUUID().withMessage('hospital_id must be a valid UUID.')
+], validate, hospitalController.updateHospitalProfile);
+
 module.exports = router;

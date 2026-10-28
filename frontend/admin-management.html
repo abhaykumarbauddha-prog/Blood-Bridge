@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Blood Bridge | Admin Management</title>
+  <link rel="stylesheet" href="css/global.css">
+  <style>
+    :root { --admin-red:#e60023; --admin-bg:#f5f7fa; --admin-border:#e4e7ec; --admin-muted:#667085; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--admin-bg); color:#101828; font-family:Inter,system-ui,sans-serif; }
+    .admin-shell { min-height:100vh; display:flex; }
+    .admin-sidebar { width:250px; flex:0 0 250px; background:#fff; border-right:1px solid var(--admin-border); padding:24px 0; }
+    .brand { padding:0 24px 26px; font-size:1.35rem; font-weight:800; color:#101828; }
+    .brand span { color:var(--admin-red); }
+    .nav-title { margin:16px 24px 8px; color:var(--admin-muted); font-size:.72rem; font-weight:800; letter-spacing:.08em; }
+    .nav-link { display:flex; gap:10px; align-items:center; padding:11px 24px; color:#475467; text-decoration:none; font-size:.9rem; font-weight:600; }
+    .nav-link:hover,.nav-link.active { background:#fff0f2; color:var(--admin-red); border-right:3px solid var(--admin-red); }
+    .admin-main { flex:1; min-width:0; }
+    .topbar { height:72px; background:#fff; border-bottom:1px solid var(--admin-border); display:flex; align-items:center; justify-content:space-between; padding:0 30px; }
+    .topbar h1 { margin:0; font-size:1.25rem; }
+    .topbar p { margin:4px 0 0; color:var(--admin-muted); font-size:.8rem; }
+    .content { padding:28px 30px; }
+    .toolbar { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:18px; }
+    input,select { border:1px solid var(--admin-border); border-radius:8px; padding:10px 12px; background:#fff; color:#101828; }
+    input { min-width:260px; }
+    button { border:0; border-radius:8px; padding:10px 14px; cursor:pointer; font-weight:700; }
+    .btn-primary { background:var(--admin-red); color:#fff; }
+    .btn-light { background:#fff; color:#344054; border:1px solid var(--admin-border); }
+    .card { background:#fff; border:1px solid var(--admin-border); border-radius:12px; padding:20px; overflow:auto; }
+    .card h2 { margin:0 0 16px; font-size:1.05rem; }
+    .status { display:inline-block; padding:4px 8px; border-radius:999px; background:#f2f4f7; font-size:.72rem; font-weight:800; text-transform:capitalize; }
+    .status.verified,.status.fulfilled,.status.resolved,.status.active { background:#dcfce7; color:#166534; }
+    .status.rejected,.status.cancelled,.status.suspended { background:#fee2e2; color:#991b1b; }
+    .status.pending,.status.open,.status.in_progress,.status.matched { background:#fef3c7; color:#92400e; }
+    table { width:100%; border-collapse:collapse; min-width:850px; }
+    th,td { text-align:left; padding:12px 10px; border-bottom:1px solid #f0f2f5; font-size:.82rem; vertical-align:top; }
+    th { color:var(--admin-muted); font-size:.72rem; text-transform:uppercase; letter-spacing:.04em; white-space:nowrap; }
+    td small { color:var(--admin-muted); }
+    .empty { padding:35px; text-align:center; color:var(--admin-muted); }
+    .error { color:#b42318; background:#fff1f0; border:1px solid #fecdca; padding:12px; border-radius:8px; margin-bottom:16px; display:none; }
+    .system-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; }
+    .system-card { border:1px solid var(--admin-border); border-radius:10px; padding:16px; }
+    .system-card strong { display:block; font-size:1.2rem; margin-top:8px; }
+    @media (max-width:800px) { .admin-sidebar { width:210px; flex-basis:210px; } .content { padding:18px; } .topbar { padding:0 18px; } }
+  </style>
+</head>
+<body>
+  <div class="admin-shell">
+    <aside class="admin-sidebar">
+      <div class="brand">Blood<span>Bridge</span></div>
+      <div class="nav-title">MAIN</div>
+      <a class="nav-link" data-section="dashboard" href="admin-dashboard.html">📊 Dashboard</a>
+      <a class="nav-link" data-section="users" href="admin-management.html?section=users">👥 Users</a>
+      <a class="nav-link" data-section="donors" href="admin-management.html?section=donors">🩸 Donors</a>
+      <a class="nav-link" data-section="requests" href="admin-management.html?section=requests">📄 Blood Requests</a>
+      <a class="nav-link" data-section="hospitals" href="admin-management.html?section=hospitals">🏥 Hospitals</a>
+      <a class="nav-link" data-section="donations" href="admin-management.html?section=donations">❤️ Donations</a>
+      <a class="nav-link" data-section="notifications" href="admin-management.html?section=notifications">🔔 Notifications</a>
+      <div class="nav-title">MANAGEMENT</div>
+      <a class="nav-link" data-section="reports" href="admin-management.html?section=reports">📁 Reports</a>
+      <a class="nav-link" data-section="audit" href="admin-management.html?section=audit">⏱️ Audit Logs</a>
+      <a class="nav-link" data-section="settings" href="admin-management.html?section=settings">⚙️ System Settings</a>
+      <a class="nav-link" href="auth.html" id="admin-logout">🚪 Logout</a>
+    </aside>
+    <main class="admin-main">
+      <header class="topbar"><div><h1 id="page-title">Admin Management</h1><p>All records are loaded from protected database functions.</p></div><button class="btn-light" id="refresh-btn">↻ Refresh</button></header>
+      <section class="content">
+        <div class="error" id="admin-error"></div>
+        <div id="admin-toolbar" class="toolbar"></div>
+        <div id="admin-content" class="card"><div class="empty">Loading admin data…</div></div>
+      </section>
+    </main>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/auth-guard.js"></script>
+  <script src="js/admin-management.js"></script>
+</body>
+</html>

@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const fields = [
         'full_name', 'email', 'phone', 'date_of_birth', 'blood_group', 'gender',
         'address', 'city', 'state', 'pincode', 'country', 'last_donation_date',
-        'weight_kg', 'medical_conditions', 'availability_status'
+        'weight_kg', 'medical_conditions', 'availability_status', 'hospital_type'
     ];
 
     fields.forEach((name) => {
@@ -73,6 +73,159 @@ document.addEventListener('DOMContentLoaded', async () => {
     const removeAvatar = document.getElementById('remove-avatar');
     const setLocationButton = document.getElementById('set-profile-location');
     const locationStatus = document.getElementById('profile-location-status');
+    const coordsDisplay = document.getElementById('profile-location-coords');
+    const mapStatus = document.getElementById('profile-map-status');
+
+    let profileMap = null;
+    let profileMarker = null;
+
+    const setMapStatus = (message, isError = false) => {
+        if (!mapStatus) return;
+        mapStatus.textContent = message;
+        mapStatus.style.color = isError ? 'var(--status-critical)' : 'var(--brand-primary)';
+    };
+
+    const updateCoordsDisplay = (lat, lng) => {
+        if (!coordsDisplay) return;
+        if (Number.isFinite(lat) && Number.isFinite(lng)) {
+            coordsDisplay.textContent = `${Number(lat).toFixed(4)}°, ${Number(lng).toFixed(4)}°`;
+        } else {
+            coordsDisplay.textContent = 'Drag arrow pin or click map to reposition';
+        }
+    };
+
+    const handleNewCoordinates = async (lat, lng, shouldReverseGeocode = true) => {
+        locationCoordinates = { latitude: Number(lat), longitude: Number(lng) };
+        updateCoordsDisplay(lat, lng);
+        if (locationStatus) {
+            locationStatus.textContent = 'A saved location is available for donor maps.';
+        }
+
+        if (shouldReverseGeocode && window.MapService?.reverseGeocode) {
+            setMapStatus('Resolving address...');
+            try {
+                const geo = await window.MapService.reverseGeocode(lat, lng);
+                if (geo) {
+                    if (geo.city) {
+                        const cityInput = document.querySelector('[name="city"]');
+                        if (cityInput) cityInput.value = geo.city;
+                    }
+                    if (geo.state) {
+                        const stateInput = document.querySelector('[name="state"]');
+                        if (stateInput) stateInput.value = geo.state;
+                    }
+                    if (geo.pincode) {
+                        const pinInput = document.querySelector('[name="pincode"]');
+                        if (pinInput) pinInput.value = geo.pincode;
+                    }
+                    if (geo.address) {
+                        const addrInput = document.querySelector('[name="address"]');
+                        if (addrInput && (!addrInput.value || addrInput.value.trim() === '')) {
+                            addrInput.value = geo.address;
+                        }
+                    }
+                    setMapStatus('Location pinned');
+                } else {
+                    setMapStatus('Location pinned');
+                }
+            } catch (geoErr) {
+                console.warn('Reverse geocode error:', geoErr);
+                setMapStatus('Location pinned');
+            }
+        } else {
+            setMapStatus('Location pinned');
+        }
+    };
+
+    function initProfileMap() {
+        const mapContainer = document.getElementById('profile-location-map');
+        if (!mapContainer || !window.L || !window.MapService) {
+            return;
+        }
+
+        const hasSaved = Number.isFinite(locationCoordinates.latitude) && Number.isFinite(locationCoordinates.longitude);
+        const initialLat = hasSaved ? locationCoordinates.latitude : 26.8467;
+        const initialLng = hasSaved ? locationCoordinates.longitude : 80.9462;
+        const initialZoom = hasSaved ? 14 : 11;
+
+        try {
+            profileMap = window.MapService.createMap(mapContainer, {
+                center: [initialLat, initialLng],
+                zoom: initialZoom
+            });
+
+            if (!profileMap) return;
+
+            const pinIcon = window.MapService.createDraggableArrowPin('My Location', '#E60023');
+            profileMarker = L.marker([initialLat, initialLng], {
+                draggable: true,
+                icon: pinIcon || undefined
+            }).addTo(profileMap);
+
+            if (hasSaved) {
+                updateCoordsDisplay(initialLat, initialLng);
+                setMapStatus('Saved location loaded');
+            } else {
+                updateCoordsDisplay(null, null);
+                setMapStatus('Click map or search address');
+            }
+
+            profileMarker.on('dragend', async () => {
+                const pos = profileMarker.getLatLng();
+                await handleNewCoordinates(pos.lat, pos.lng, true);
+            });
+
+            profileMap.on('click', async (e) => {
+                const { lat, lng } = e.latlng;
+                profileMarker.setLatLng([lat, lng]);
+                await handleNewCoordinates(lat, lng, true);
+            });
+
+            // Map search input
+            const mapSearchInput = document.getElementById('profile-map-search');
+            if (mapSearchInput) {
+                mapSearchInput.addEventListener('keydown', async (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const query = mapSearchInput.value.trim();
+                        if (!query) return;
+                        setMapStatus('Searching address...');
+                        const result = await window.MapService.geocodeAddress(query);
+                        if (result && Number.isFinite(result.lat) && Number.isFinite(result.lng)) {
+                            profileMap.setView([result.lat, result.lng], 14);
+                            profileMarker.setLatLng([result.lat, result.lng]);
+                            await handleNewCoordinates(result.lat, result.lng, true);
+                            setMapStatus('Location found');
+                        } else {
+                            setMapStatus('Address not found', true);
+                        }
+                    }
+                });
+            }
+
+            // Locate Me button in Location Details card
+            const btnDonorLocateMe = document.getElementById('btn-donor-locate-me');
+            if (btnDonorLocateMe) {
+                btnDonorLocateMe.addEventListener('click', async () => {
+                    btnDonorLocateMe.disabled = true;
+                    setMapStatus('Detecting GPS location...');
+                    const loc = await window.MapService.getUserLocation(true);
+                    btnDonorLocateMe.disabled = false;
+                    if (loc && Number.isFinite(loc.lat) && Number.isFinite(loc.lng)) {
+                        profileMap.setView([loc.lat, loc.lng], 15);
+                        profileMarker.setLatLng([loc.lat, loc.lng]);
+                        await handleNewCoordinates(loc.lat, loc.lng, true);
+                        setMapStatus('GPS location detected');
+                    } else {
+                        setMapStatus('GPS unavailable', true);
+                    }
+                });
+            }
+        } catch (err) {
+            console.error('Error initializing profile map:', err);
+        }
+    }
+
     if (locationStatus && locationCoordinates.latitude && locationCoordinates.longitude) {
         locationStatus.textContent = 'A saved location is available for donor maps.';
     }
@@ -153,6 +306,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
             locationCoordinates = { latitude: location.lat, longitude: location.lng };
+            if (profileMap && profileMarker) {
+                profileMap.setView([location.lat, location.lng], 15);
+                profileMarker.setLatLng([location.lat, location.lng]);
+            }
+            await handleNewCoordinates(location.lat, location.lng, true);
             if (locationStatus) locationStatus.textContent = 'Current location saved for donor maps.';
             setStatus('Location saved.');
         });
@@ -160,6 +318,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const donorStats = await BloodMatchData.getDonorStats(user.id);
     BloodMatchData.renderDonorStats(donorStats);
+
+    initProfileMap();
 
     const saveButton = document.getElementById('save-profile');
     saveButton.addEventListener('click', async () => {
@@ -170,6 +330,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             date_of_birth: getValue('date_of_birth'),
             blood_group: getValue('blood_group'),
             gender: getValue('gender'),
+            hospital_type: getValue('hospital_type'),
             address: getValue('address'),
             city: getValue('city'),
             state: getValue('state'),
@@ -191,7 +352,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         saveButton.disabled = true;
         setStatus('Saving...');
-        const verificationFields = 'id,full_name,phone,blood_group,city,last_donation_date,availability_status';
+        const verificationFields = 'id,full_name,phone,blood_group,city,last_donation_date,availability_status,hospital_type';
         let saveResult = await client
             .from('users')
             .update(updates)

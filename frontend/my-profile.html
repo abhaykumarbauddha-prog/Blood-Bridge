@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blood Bridge | My Profile</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Leaflet CSS for Map & Geolocation -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         :root {
             /* Main Brand Colors */
@@ -38,6 +40,11 @@
         .nav-item:hover { background-color: var(--bg-light-gray); }
         .nav-item.active { background-color: var(--bg-pink); color: var(--brand-primary); border-left: 4px solid var(--brand-primary); padding-left: 20px; }
         .badge { background-color: var(--brand-primary); color: var(--bg-white); font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; margin-left: auto; }
+        .nav-item-group { display: flex; flex-direction: column; }
+        .nav-sub-items { display: flex; flex-direction: column; padding-left: 36px; gap: 2px; margin-top: 2px; margin-bottom: 4px; }
+        .nav-sub-item { padding: 6px 14px; font-size: 0.82rem; color: var(--text-secondary); text-decoration: none; border-radius: 6px; display: flex; align-items: center; gap: 8px; font-weight: 500; transition: background 0.15s; }
+        .nav-sub-item:hover { background-color: var(--bg-light-gray); color: var(--brand-primary); }
+        .nav-sub-item.active-sub { color: var(--brand-primary); font-weight: 700; background-color: var(--bg-pink); }
 
         /* Main Content */
         .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
@@ -116,14 +123,21 @@
     <aside class="sidebar">
         <div class="sidebar-logo">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="#E60023"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
-            Blood<span>Match</span>
+            Blood<span>Bridge</span>
         </div>
         <ul class="nav-list">
             <a href="dashboard.html" class="nav-item"><span>🏠</span> Dashboard</a>
             <a href="my-profile.html" class="nav-item active"><span>👤</span> My Profile</a>
-            <a href="find-donors.html" class="nav-item"><span>🔍</span> Find Donors</a>
-            <a href="blood-request.html" class="nav-item"><span>🩸</span> Blood Requests</a>
+            <a href="smart-match.html" class="nav-item" style="color: #7C3AED; font-weight: 600;"><span>⚡</span> Smart Donor Matcher <span class="badge" style="background: linear-gradient(135deg, #7C3AED, #EC4899); font-size: 0.65rem;">AI</span></a>
+            <a href="blood-request.html" class="nav-item"><span>🩸</span> Blood Request</a>
             <a href="nearby-request.html" class="nav-item"><span>📍</span> Nearby Requests</a>
+            <div class="nav-item-group">
+                <a href="chat.html" class="nav-item"><span>💬</span> Live Chat</a>
+                <div class="nav-sub-items">
+                    <a href="chat.html?tab=requesters" class="nav-sub-item"><span>👥</span> Requesters</a>
+                    <a href="chat.html?tab=donors" class="nav-sub-item"><span>🩸</span> Donors</a>
+                </div>
+            </div>
             <a href="notifications.html" class="nav-item"><span>🔔</span> Notifications <span class="badge notification-badge" data-unread-badge hidden></span></a>
             <a href="donation-history.html" class="nav-item"><span>🕒</span> Donation History</a>
             <a href="settings.html" class="nav-item"><span>⚙️</span> Settings</a>
@@ -224,15 +238,47 @@
                                     </select>
                                 </div>
                             </div>
+                            <div class="form-row" id="group-hospital-type" style="margin-top: 14px;">
+                                <div class="form-group" style="width: 100%;">
+                                    <label>Hospital / Facility Type <small style="color: var(--text-secondary);">(For Hospitals & Blood Banks)</small></label>
+                                    <select name="hospital_type" class="form-control">
+                                        <option value="">Not Applicable / Select Type</option>
+                                        <option value="Government">Government / Public Hospital</option>
+                                        <option value="Private">Private Hospital</option>
+                                        <option value="Charitable / Trust">Charitable / Trust Hospital</option>
+                                        <option value="Semi-Government">Semi-Government / Autonomous / PSU</option>
+                                        <option value="Military / Defense">Military / Defense Hospital</option>
+                                        <option value="Blood Bank">Dedicated Blood Bank / Red Cross</option>
+                                    </select>
+                                </div>
+                            </div>
                             <button type="button" id="set-profile-location" class="btn btn-outline" style="margin-top: 8px;">📍 Set My Current Location</button>
                             <small id="profile-location-status" style="display: block; margin-top: 8px; color: var(--text-secondary);">Location is required to appear on donor maps.</small>
                         </form>
                     </div>
 
                     <div class="card" style="margin-bottom: 24px;">
-                        <div class="card-header">
+                        <div class="card-header" style="justify-content: space-between; align-items: center;">
                             <h3><span style="color: var(--brand-primary);">📍</span> Location Details</h3>
+                            <button type="button" id="btn-donor-locate-me" class="btn btn-outline" style="font-size: 0.78rem; padding: 6px 12px; background: white;">🎯 Locate My Current Location</button>
                         </div>
+
+                        <!-- Interactive Map Search & Container -->
+                        <div style="margin-bottom: 14px;">
+                            <div style="display: flex; gap: 8px; margin-bottom: 10px; align-items: center; background: var(--bg-light-gray); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-light);">
+                                <span>🔍</span>
+                                <input type="text" id="profile-map-search" placeholder="Search address or city and press Enter..." style="border: none; background: transparent; width: 100%; outline: none; font-size: 0.85rem;">
+                            </div>
+                            <div id="profile-location-map" style="width: 100%; height: 250px; border-radius: 8px; border: 1px solid var(--border-light); position: relative; z-index: 1;"></div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-pink); padding: 8px 12px; border-radius: 6px; margin-top: 8px; font-size: 0.8rem;">
+                                <div>
+                                    <strong style="color: var(--brand-primary);">Selected Location:</strong>
+                                    <span id="profile-location-coords" style="color: var(--text-secondary); margin-left: 4px;">Drag arrow pin or click map to reposition</span>
+                                </div>
+                                <span id="profile-map-status" style="font-size: 0.75rem; color: var(--brand-primary); font-weight: 600;"></span>
+                            </div>
+                        </div>
+
                         <form id="location-profile-form">
                             <div class="form-group" style="margin-bottom: 20px;">
                                 <label>Full Address</label>
@@ -344,12 +390,13 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="js/supabase.js"></script>
     <script src="js/data-helpers.js"></script>
     <script src="js/map-service.js"></script>
     <script src="js/profile.js"></script>
     <script src="js/profile-sync.js"></script>
-
+    <script src="js/chatbot.js"></script>
 </body>
 </html>
 

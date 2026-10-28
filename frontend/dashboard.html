@@ -104,6 +104,11 @@
             border-radius: 12px;
             margin-left: auto;
         }
+        .nav-item-group { display: flex; flex-direction: column; }
+        .nav-sub-items { display: flex; flex-direction: column; padding-left: 36px; gap: 2px; margin-top: 2px; margin-bottom: 4px; }
+        .nav-sub-item { padding: 6px 14px; font-size: 0.82rem; color: var(--text-secondary); text-decoration: none; border-radius: 6px; display: flex; align-items: center; gap: 8px; font-weight: 500; transition: background 0.15s; }
+        .nav-sub-item:hover { background-color: var(--bg-light-gray); color: var(--brand-primary); }
+        .nav-sub-item.active-sub { color: var(--brand-primary); font-weight: 700; background-color: var(--bg-pink); }
         .sidebar-cta {
             margin: auto 24px 0;
             background-color: var(--bg-pink);
@@ -604,38 +609,27 @@
     <aside class="sidebar">
         <div class="sidebar-logo">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="#E60023"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
-            Blood<span>Match</span>
+            Blood<span>Bridge</span>
         </div>
         <div class="sidebar-tagline">Donate Today Save Tomorrow</div>
 
         <ul class="nav-list">
-            <a href="dashboard.html" class="nav-item active">
-                <span>🏠</span> Dashboard
-            </a>
-            <a href="my-profile.html" class="nav-item">
-                <span>👤</span> My Profile
-            </a>
-            <a href="find-donors.html" class="nav-item">
-                <span>🔍</span> Find Donors
-            </a>
-            <a href="blood-request.html" class="nav-item">
-                <span>🩸</span> Blood Requests
-            </a>
-            <a href="nearby-request.html" class="nav-item">
-                <span>📍</span> Nearby Requests
-            </a>
-            <a href="notifications.html" class="nav-item">
-                <span>🔔</span> Notifications <span class="badge notification-badge" data-unread-badge hidden></span>
-            </a>
-            <a href="donation-history.html" class="nav-item">
-                <span>🕒</span> Donation History
-            </a>
-            <a href="settings.html" class="nav-item">
-                <span>⚙️</span> Settings
-            </a>
-            <a href="help-support.html" class="nav-item">
-                <span>❓</span> Help & Support
-            </a>
+            <a href="dashboard.html" class="nav-item active"><span>🏠</span> Dashboard</a>
+            <a href="my-profile.html" class="nav-item"><span>👤</span> My Profile</a>
+            <a href="smart-match.html" class="nav-item" style="color: #7C3AED; font-weight: 600;"><span>⚡</span> Smart Donor Matcher <span class="badge" style="background: linear-gradient(135deg, #7C3AED, #EC4899); font-size: 0.65rem;">AI</span></a>
+            <a href="blood-request.html" class="nav-item"><span>🩸</span> Blood Request</a>
+            <a href="nearby-request.html" class="nav-item"><span>📍</span> Nearby Requests</a>
+            <div class="nav-item-group">
+                <a href="chat.html" class="nav-item"><span>💬</span> Live Chat</a>
+                <div class="nav-sub-items">
+                    <a href="chat.html?tab=requesters" class="nav-sub-item"><span>👥</span> Requesters</a>
+                    <a href="chat.html?tab=donors" class="nav-sub-item"><span>🩸</span> Donors</a>
+                </div>
+            </div>
+            <a href="notifications.html" class="nav-item"><span>🔔</span> Notifications <span class="badge notification-badge" data-unread-badge hidden></span></a>
+            <a href="donation-history.html" class="nav-item"><span>🕒</span> Donation History</a>
+            <a href="settings.html" class="nav-item"><span>⚙️</span> Settings</a>
+            <a href="help-support.html" class="nav-item"><span>❓</span> Help & Support</a>
         </ul>
 
         <div class="sidebar-cta">
@@ -721,7 +715,7 @@
                 <div class="welcome-content">
                     <p id="greeting-time-text" style="color: var(--text-dark); font-weight: 500; margin-bottom: 4px;">Good Morning,</p>
                     <h2 data-profile-welcome>Loading... 👋</h2>
-                    <p>Thank you for being a part of BloodMatch. Your willingness to donate can save lives.</p>
+                    <p>Thank you for being a part of Blood Bridge. Your willingness to donate can save lives.</p>
                     <div class="welcome-actions">
                         <button type="button" class="btn btn-primary" onclick="window.location.href='nearby-request.html'">🩸 Donate Blood →</button>
                         <button type="button" id="btn-update-profile" class="btn btn-outline" onclick="window.location.href='my-profile.html'">👥 Update Profile</button>
@@ -920,5 +914,6 @@
     <script src="js/map-service.js"></script>
     <script src="js/dashboard.js"></script>
     <script src="js/profile-sync.js"></script>
+    <script src="js/chatbot.js"></script>
 </body>
 </html>

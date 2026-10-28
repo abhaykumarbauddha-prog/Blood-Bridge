@@ -26,29 +26,61 @@
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { background-color: var(--bg-light-gray); color: var(--text-dark); display: flex; height: 100vh; overflow: hidden; }
+        html, body { background-color: var(--bg-light-gray); color: var(--text-dark); display: flex; height: 100vh; overflow: hidden; }
 
-        /* Sidebar */
-        .sidebar { width: 260px; background-color: var(--bg-white); border-right: 1px solid var(--border-light); display: flex; flex-direction: column; padding: 24px 0; flex-shrink: 0; overflow-y: auto; }
-        .sidebar::-webkit-scrollbar { width: 4px; }
+        /* Sidebar - 100% Static with NO scrolling or scrollbar */
+        .sidebar {
+            width: 260px;
+            height: 100vh;
+            background-color: var(--bg-white);
+            border-right: 1px solid var(--border-light);
+            display: flex;
+            flex-direction: column;
+            padding: 24px 0 16px 0;
+            flex-shrink: 0;
+            overflow: hidden; /* Static: no scrollbar */
+        }
         .sidebar-logo { padding: 0 24px; display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 1.5rem; margin-bottom: 8px; }
         .sidebar-logo span { color: var(--brand-primary); }
-        .hospital-account-tag { margin: 0 24px 24px; display: flex; align-items: center; gap: 12px; background: var(--bg-light-gray); padding: 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; }
+        .hospital-account-tag { margin: 0 24px 18px; display: flex; align-items: center; gap: 12px; background: var(--bg-light-gray); padding: 10px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; }
         .hospital-account-tag img { width: 32px; height: 32px; border-radius: 4px; }
         
-        .nav-list { list-style: none; display: flex; flex-direction: column; gap: 4px; }
-        .nav-item { padding: 12px 24px; display: flex; align-items: center; gap: 12px; color: var(--text-secondary); font-weight: 500; cursor: pointer; text-decoration: none; font-size: 0.95rem; }
+        .nav-list { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+        .nav-item { padding: 10px 24px; display: flex; align-items: center; gap: 12px; color: var(--text-secondary); font-weight: 500; cursor: pointer; text-decoration: none; font-size: 0.9rem; }
         .nav-item:hover { background-color: var(--bg-light-gray); }
-        .nav-item.active { background-color: var(--bg-pink); color: var(--brand-primary); border-left: 4px solid var(--brand-primary); padding-left: 20px; }
+        .nav-item.active { background-color: var(--bg-pink); color: var(--brand-primary); border-left: 4px solid var(--brand-primary); padding-left: 20px; font-weight: 600; }
         .badge { background-color: var(--brand-primary); color: var(--bg-white); font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; margin-left: auto; }
 
-        .sidebar-cta { margin: auto 24px 24px; background-color: var(--bg-pink); padding: 20px; border-radius: 12px; text-align: center; }
-        .sidebar-cta h4 { color: var(--text-dark); margin-bottom: 8px; font-size: 0.95rem; }
-        .sidebar-cta p { font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.4; }
-        .sidebar-cta button { width: 100%; background-color: var(--brand-primary); color: var(--bg-white); border: none; padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        .sidebar-action-wrap { margin-top: auto; padding: 16px 20px 8px; }
+        .sidebar-btn-request { width: 100%; background-color: var(--brand-primary); color: var(--bg-white); border: none; padding: 11px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.88rem; box-shadow: 0 2px 6px rgba(230,0,35,0.25); transition: background 0.15s; }
+        .sidebar-btn-request:hover { background-color: #c9001f; }
 
-        /* Main Content */
-        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+        /* Main Content - Permanent static scrollbar track (not dynamic/floating like donor/requester) */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow-y: scroll; /* Static permanent scrollbar */
+            scrollbar-gutter: stable; /* Static gutter - prevents content jump */
+            scrollbar-width: thin;
+            scrollbar-color: #CBD5E1 #F1F5F9;
+        }
+        .main-content::-webkit-scrollbar {
+            width: 9px;
+        }
+        .main-content::-webkit-scrollbar-track {
+            background: #F1F5F9;
+            border-left: 1px solid var(--border-light);
+        }
+        .main-content::-webkit-scrollbar-thumb {
+            background: #CBD5E1;
+            border-radius: 6px;
+            border: 2px solid #F1F5F9;
+        }
+        .main-content::-webkit-scrollbar-thumb:hover {
+            background: #94A3B8;
+        }
 
         /* Topbar */
         .topbar { background-color: var(--bg-white); height: 72px; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-light); position: sticky; top: 0; z-index: 10; }
@@ -175,6 +207,49 @@
         .modal-actions button { padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.9rem; border: none; }
         .btn-cancel { background: var(--bg-light-gray); color: var(--text-secondary); }
         .btn-save-stock { background: var(--brand-primary); color: white; }
+
+        @keyframes sectionPulse {
+            0% { box-shadow: 0 0 0 0 rgba(230, 0, 35, 0.4); border-color: var(--brand-primary); }
+            50% { box-shadow: 0 0 0 8px rgba(230, 0, 35, 0.2); border-color: var(--brand-primary); }
+            100% { box-shadow: 0 0 0 0 rgba(230, 0, 35, 0); }
+        }
+        .highlight-pulse {
+            animation: sectionPulse 1.8s ease-in-out;
+            border-color: var(--brand-primary) !important;
+        }
+        .action-box:focus-visible {
+            outline: 2px solid var(--brand-primary);
+            outline-offset: 2px;
+        }
+        .modal-card .form-group {
+            margin-bottom: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .modal-card .form-group label {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+        .modal-card .form-control {
+            width: 100%;
+            padding: 9px 12px;
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            font-size: 0.88rem;
+            outline: none;
+            background: var(--bg-white);
+            color: var(--text-dark);
+        }
+        .modal-card .form-control:focus {
+            border-color: var(--brand-primary);
+        }
+        .modal-card .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
     </style>
 </head>
 <body>
@@ -183,7 +258,7 @@
     <aside class="sidebar">
         <div class="sidebar-logo">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="#E60023"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
-            Blood<span>Match</span>
+            Blood<span>Bridge</span>
         </div>
         
         <div class="hospital-account-tag">
@@ -196,21 +271,22 @@
 
         <ul class="nav-list">
             <a href="hospital-dashboard.html" class="nav-item active"><span>🏥</span> Dashboard</a>
+            <a href="blood-request.html" class="nav-item"><span>➕</span> Create Request</a>
             <a href="nearby-request.html" class="nav-item"><span>📄</span> Blood Requests</a>
             <a href="#inventory-section" class="nav-item"><span>💧</span> Blood Inventory</a>
+            <a href="smart-match.html" class="nav-item" style="color: #7C3AED; font-weight: 600;"><span>⚡</span> Smart Match <span class="badge" style="background: linear-gradient(135deg, #7C3AED, #EC4899); font-size: 0.65rem;">AI</span></a>
             <a href="find-donors.html" class="nav-item"><span>🔍</span> Find Donors</a>
-            <a href="find-donors.html" class="nav-item"><span>👥</span> Donor Management</a>
+            <a href="chat.html" class="nav-item"><span>💬</span> Messages / Chat</a>
             <a href="my-profile.html" class="nav-item"><span>🏥</span> Hospital Profile</a>
             <a href="notifications.html" class="nav-item"><span>🔔</span> Notifications <span class="badge notification-badge" data-unread-badge hidden></span></a>
             <a href="settings.html" class="nav-item"><span>⚙️</span> Settings</a>
             <a href="auth.html" class="nav-item" id="hospital-logout-btn"><span>🚪</span> Logout</a>
         </ul>
 
-        <div class="sidebar-cta">
-            <div style="font-size: 2rem; color: var(--brand-primary); margin-bottom: 8px;">♡</div>
-            <h4>Together<br>We Save Lives</h4>
-            <p>Access donors, manage requests and help patients in critical need.</p>
-            <button type="button" onclick="window.location.href='blood-request.html'">Request Blood →</button>
+        <div class="sidebar-action-wrap">
+            <button type="button" class="sidebar-btn-request" onclick="window.location.href='blood-request.html'">
+                <span>➕</span> Create Request
+            </button>
         </div>
     </aside>
 
@@ -244,10 +320,11 @@
                     <div class="welcome-text" style="z-index: 2;">
                         <p style="color: var(--text-dark); font-weight: 500; margin-bottom: 4px;">Welcome Back,</p>
                         <h2><span data-hospital-welcome>Loading hospital profile...</span> <span style="color: var(--brand-primary); font-size: 1.5rem;">✔</span></h2>
-                        <p>Manage blood requests, connect with donors, and ensure timely care for patients.</p>
+                        <p>Hospital Clinical Console • Emergency blood requests, live inventory & verified donor network.</p>
                     </div>
-                    <div style="z-index: 2; text-align: right; margin-right: 40px;">
-                        <h3 style="font-family: 'Brush Script MT', cursive; color: var(--brand-primary); font-size: 2rem; transform: rotate(-5deg);">Every<br>Patient<br>Matters ❤️</h3>
+                    <div style="z-index: 2; text-align: right; display: flex; gap: 10px; align-items: center;">
+                        <button type="button" id="btn-banner-new-request" style="background: var(--brand-primary); color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.88rem; box-shadow: 0 2px 6px rgba(230,0,35,0.2);">➕ New Request</button>
+                        <button type="button" id="btn-quick-stock" style="background: white; border: 1px solid var(--border-light); color: var(--text-dark); padding: 10px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.88rem;">📦 Manage Stock</button>
                     </div>
                 </div>
 
@@ -290,7 +367,7 @@
                 <!-- Inner Grid Row 1 -->
                 <div class="inner-grid">
                     <!-- Recent Blood Requests -->
-                    <div class="card">
+                    <div class="card" id="hospital-requests-card">
                         <div class="card-header">
                             <h3>Recent Blood Requests</h3>
                             <a href="nearby-request.html" class="view-all">View All →</a>
@@ -329,57 +406,56 @@
             <!-- Inner Grid Row 2 -->
                 <div class="inner-grid">
                     <!-- Donor Matching -->
-                    <div class="card">
+                    <div class="card" id="hospital-donors-section">
                         <div class="card-header">
                             <h3>Donor Matching</h3>
-                            <a href="find-donors.html" class="view-all">View All →</a>
+                            <a href="find-donors.html" class="view-all">View All in Directory →</a>
                         </div>
                         <div id="hospital-donor-matching-list" class="donor-match-list">
                             <!-- Populated dynamically from users (role = 'Donor') -->
                         </div>
                     </div>
 
-                    <!-- Request Statistics -->
+                    <!-- Request Live Analytics Breakdown -->
                     <div class="card">
                         <div class="card-header">
-                            <h3>Request Statistics</h3>
-                            <select style="border: 1px solid var(--border-light); padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; outline: none;"><option>This Month</option></select>
+                            <h3>Live Request Analytics</h3>
+                            <span class="badge" style="background: var(--bg-pink); color: var(--brand-primary); font-size: 0.72rem; font-weight: 600; padding: 3px 8px; border-radius: 12px;">Real-Time</span>
                         </div>
-                        <div class="chart-mockup">
-                            <div class="chart-legend">
-                                <span><div class="legend-dot" style="background: var(--brand-primary);"></div> Total Requests</span>
-                                <span><div class="legend-dot" style="background: var(--status-available);"></div> Fulfilled</span>
-                                <span><div class="legend-dot" style="background: var(--status-pending);"></div> Pending</span>
+                        <div style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 18px;">
+                            <div>
+                                <div style="display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 5px;">
+                                    <span style="color: var(--text-secondary); font-weight: 500;">Fulfilled Cases</span>
+                                    <strong id="analytics-fulfilled-pct" style="color: var(--status-available);">0%</strong>
+                                </div>
+                                <div style="background: var(--bg-light-gray); height: 8px; border-radius: 4px; overflow: hidden;">
+                                    <div id="analytics-fulfilled-bar" style="width: 0%; height: 100%; background: var(--status-available); border-radius: 4px; transition: width 0.4s ease;"></div>
+                                </div>
                             </div>
-                            <div class="bar-group">
-                                <div class="chart-bar" style="height: 80%; background: var(--brand-primary);"></div>
-                                <div class="chart-bar" style="height: 50%; background: var(--status-available);"></div>
-                                <div class="chart-bar" style="height: 30%; background: var(--status-pending);"></div>
+                            <div>
+                                <div style="display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 5px;">
+                                    <span style="color: var(--text-secondary); font-weight: 500;">Critical Emergency Requests</span>
+                                    <strong id="analytics-critical-pct" style="color: var(--status-critical);">0%</strong>
+                                </div>
+                                <div style="background: var(--bg-light-gray); height: 8px; border-radius: 4px; overflow: hidden;">
+                                    <div id="analytics-critical-bar" style="width: 0%; height: 100%; background: var(--status-critical); border-radius: 4px; transition: width 0.4s ease;"></div>
+                                </div>
                             </div>
-                            <div class="bar-group">
-                                <div class="chart-bar" style="height: 70%; background: var(--brand-primary);"></div>
-                                <div class="chart-bar" style="height: 45%; background: var(--status-available);"></div>
-                                <div class="chart-bar" style="height: 25%; background: var(--status-pending);"></div>
-                            </div>
-                            <div class="bar-group">
-                                <div class="chart-bar" style="height: 90%; background: var(--brand-primary);"></div>
-                                <div class="chart-bar" style="height: 60%; background: var(--status-available);"></div>
-                                <div class="chart-bar" style="height: 30%; background: var(--status-pending);"></div>
-                            </div>
-                            <div class="bar-group">
-                                <div class="chart-bar" style="height: 60%; background: var(--brand-primary);"></div>
-                                <div class="chart-bar" style="height: 40%; background: var(--status-available);"></div>
-                                <div class="chart-bar" style="height: 20%; background: var(--status-pending);"></div>
+                            <div>
+                                <div style="display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 5px;">
+                                    <span style="color: var(--text-secondary); font-weight: 500;">Active / In-Progress</span>
+                                    <strong id="analytics-pending-pct" style="color: var(--status-pending);">0%</strong>
+                                </div>
+                                <div style="background: var(--bg-light-gray); height: 8px; border-radius: 4px; overflow: hidden;">
+                                    <div id="analytics-pending-bar" style="width: 0%; height: 100%; background: var(--status-pending); border-radius: 4px; transition: width 0.4s ease;"></div>
+                                </div>
                             </div>
                         </div>
-                        <div class="chart-labels">
-                            <span>Week 1</span><span>Week 2</span><span>Week 3</span><span>Week 4</span>
-                        </div>
-                        <div class="stats-summary">
-                            <div><h4 id="stat-summary-total">-</h4><p>Total Requests</p></div>
-                            <div><h4 id="stat-summary-fulfilled" class="green">-</h4><p>Fulfilled</p></div>
-                            <div><h4 id="stat-summary-pending" class="orange">-</h4><p>Pending</p></div>
-                            <div><h4 id="stat-summary-critical" style="color: var(--status-critical);">-</h4><p>Critical</p></div>
+                        <div class="stats-summary" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; text-align: center; border-top: 1px solid var(--border-light); padding-top: 12px;">
+                            <div><h4 id="stat-summary-total" style="font-size: 1.15rem; color: var(--text-dark);">-</h4><p style="font-size: 0.72rem; color: var(--text-secondary);">Total</p></div>
+                            <div><h4 id="stat-summary-fulfilled" class="green" style="font-size: 1.15rem; color: var(--status-available);">-</h4><p style="font-size: 0.72rem; color: var(--text-secondary);">Fulfilled</p></div>
+                            <div><h4 id="stat-summary-pending" class="orange" style="font-size: 1.15rem; color: var(--status-pending);">-</h4><p style="font-size: 0.72rem; color: var(--text-secondary);">Pending</p></div>
+                            <div><h4 id="stat-summary-critical" style="font-size: 1.15rem; color: var(--status-critical);">-</h4><p style="font-size: 0.72rem; color: var(--text-secondary);">Critical</p></div>
                         </div>
                     </div>
                 </div>
@@ -389,14 +465,17 @@
             <div class="side-col">
                 
                 <!-- Hospital Information -->
-                <div class="card hospital-info-card">
+                <div class="card hospital-info-card" id="hospital-info-card">
                     <div style="text-align: right; margin-bottom: -24px; position: relative; z-index: 2;">
-                        <button type="button" onclick="window.location.href='my-profile.html'" style="background: var(--bg-white); border: 1px solid var(--border-light); padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; cursor: pointer;">✎ Edit</button>
+                        <button type="button" id="btn-edit-hospital-info" style="background: var(--bg-white); border: 1px solid var(--border-light); padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; cursor: pointer;">✎ Edit</button>
                     </div>
                     <h3 style="font-size: 1rem; margin-bottom: 16px;">Hospital Information</h3>
                     <img src="assets/hospital-building.svg" alt="Hospital Building" data-hospital-avatar>
                     <h3><span data-hospital-info-name>Loading hospital profile...</span> <span style="color: var(--brand-primary);">✔</span></h3>
-                    <p data-hospital-type>Hospital type not set</p>
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin: 4px 0 14px 0;">
+                        <span class="badge" style="background: var(--bg-pink); color: var(--brand-primary); font-size: 0.8rem; font-weight: 600; padding: 4px 12px; border-radius: 16px;" data-hospital-type>Hospital type not set</span>
+                        <button type="button" id="btn-open-type-modal" title="Choose Hospital Type" style="background: var(--bg-white); border: 1px solid var(--border-light); color: var(--brand-primary); border-radius: 50%; width: 24px; height: 24px; font-size: 0.75rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 0;" aria-label="Change hospital type">✎</button>
+                    </div>
                     
                     <div class="info-list">
                         <div><span>📍</span> <span data-hospital-location>Location not set</span></div>
@@ -409,42 +488,38 @@
                         <div style="font-size: 1.5rem; color: var(--brand-primary);">🛡️</div>
                         <div>
                             <h5>Verified Hospital</h5>
-                            <p>Registered on BloodMatch</p>
+                            <p>Registered on Blood Bridge</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- Quick Actions -->
                 <div class="card">
-                    <h3 style="font-size: 1rem; margin-bottom: 16px;">Quick Actions</h3>
+                    <h3 style="font-size: 1rem; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;">
+                        <span>Quick Actions</span>
+                        <span style="font-size: 0.72rem; color: var(--text-secondary); font-weight: normal;">Live Connected</span>
+                    </h3>
                     <div class="quick-actions-grid">
-                        <div class="action-box" onclick="window.location.href='blood-request.html'">
+                        <div class="action-box" id="btn-quick-create-request" role="button" tabindex="0" title="Create emergency blood request">
                             <span class="icon" style="color: var(--brand-primary);">➕</span>
                             <p>Create Blood Request</p>
                         </div>
-                        <div class="action-box" onclick="window.location.href='find-donors.html'">
+                        <div class="action-box" id="btn-quick-view-donors" role="button" tabindex="0" title="View matching donors within 100km">
                             <span class="icon" style="color: var(--status-info);">👥</span>
                             <p>View Donors</p>
                         </div>
-                        <div class="action-box" id="btn-open-inventory-modal">
+                        <div class="action-box" id="btn-open-inventory-modal" role="button" tabindex="0" title="Manage blood inventory units">
                             <span class="icon" style="color: var(--status-available);">📦</span>
                             <p>Manage Inventory</p>
                         </div>
-                        <div class="action-box" onclick="window.location.href='my-profile.html'">
+                        <div class="action-box" id="btn-quick-hospital-type" role="button" tabindex="0" title="Choose hospital type">
+                            <span class="icon" style="color: #2563EB;">🏛️</span>
+                            <p>Choose Hospital Type</p>
+                        </div>
+                        <div class="action-box" id="btn-quick-update-profile" role="button" tabindex="0" title="Update hospital profile details">
                             <span class="icon" style="color: #9333EA;">✎</span>
                             <p>Update Profile</p>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Recent Notifications -->
-                <div class="card">
-                    <div class="card-header" style="margin-bottom: 16px;">
-                        <h3 style="font-size: 1rem;">Recent Notifications</h3>
-                        <a href="notifications.html" class="view-all">View All →</a>
-                    </div>
-                    <div class="notif-list">
-                        <div style="padding: 16px; color: var(--text-secondary); text-align: center;">Open Notifications to view updates from the database.</div>
                     </div>
                 </div>
 
@@ -470,6 +545,185 @@
                 </div>
             </div>
         </div>
+        <!-- Choose Hospital Type Modal -->
+        <div class="modal-overlay" id="hospital-type-modal">
+            <div class="modal-card" style="max-width: 480px; width: 90%;">
+                <div class="modal-header">
+                    <h3 style="font-size: 1.15rem; display: flex; align-items: center; gap: 8px;">
+                        <span>🏛️</span> Choose Hospital Type
+                    </h3>
+                    <button type="button" class="modal-close" id="btn-close-type-modal" style="background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--text-secondary);">&times;</button>
+                </div>
+                <div class="modal-body" style="padding: 16px 0;">
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.5;">
+                        Select your hospital or medical institution category. This helps donors and patients easily find and verify your facility.
+                    </p>
+                    <div class="form-group" style="margin-bottom: 14px;">
+                        <label style="display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 6px;">Hospital Type</label>
+                        <select id="select-hospital-type" class="form-control" style="width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border-light); font-size: 0.9rem;">
+                            <option value="" disabled selected>-- Select Hospital Type --</option>
+                            <option value="Government">Government / Public Hospital</option>
+                            <option value="Private">Private Hospital</option>
+                            <option value="Charitable / Trust">Charitable / Trust Hospital</option>
+                            <option value="Semi-Government">Semi-Government / Autonomous / PSU</option>
+                            <option value="Military / Defense">Military / Defense Hospital</option>
+                            <option value="Blood Bank">Dedicated Blood Bank / Red Cross</option>
+                        </select>
+                    </div>
+                    <div id="hospital-type-feedback" style="display: none; padding: 10px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 500;"></div>
+                </div>
+                <div class="modal-actions" style="margin-top: 16px; display: flex; justify-content: flex-end; gap: 10px;">
+                    <button type="button" class="btn-cancel" id="btn-cancel-type-modal">Cancel</button>
+                    <button type="button" class="btn-save-stock" id="btn-save-hospital-type" style="background: var(--brand-primary); color: white;">Save Hospital Type</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Create Blood Request Modal -->
+        <div class="modal-overlay" id="hospital-quick-request-modal">
+            <div class="modal-card" style="max-width: 520px; width: 92%;">
+                <div class="modal-header">
+                    <h3 style="font-size: 1.15rem; display: flex; align-items: center; gap: 8px;">
+                        <span style="color: var(--brand-primary);">➕</span> Create Blood Request
+                    </h3>
+                    <button type="button" class="modal-close" id="btn-close-quick-request-modal">&times;</button>
+                </div>
+                <form id="quick-blood-request-form">
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.4;">
+                        Fast emergency blood request from your hospital console. It broadcasts immediately to compatible donors and syncs with your Recent Blood Requests table.
+                    </p>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Patient Name *</label>
+                            <input type="text" id="quick-patient-name" class="form-control" placeholder="Patient full name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Blood Group *</label>
+                            <select id="quick-blood-group" class="form-control" required>
+                                <option value="A+">A+</option><option value="A-">A-</option>
+                                <option value="B+">B+</option><option value="B-">B-</option>
+                                <option value="AB+">AB+</option><option value="AB-">AB-</option>
+                                <option value="O+" selected>O+</option><option value="O-">O-</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Units Required *</label>
+                            <input type="number" id="quick-units" class="form-control" min="1" max="50" value="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Urgency Level *</label>
+                            <select id="quick-urgency" class="form-control">
+                                <option value="Normal">Normal</option>
+                                <option value="Urgent">Urgent</option>
+                                <option value="Critical" selected>Critical (Emergency)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Required Date *</label>
+                            <input type="date" id="quick-req-date" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Required Time *</label>
+                            <input type="time" id="quick-req-time" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Hospital / Facility Name *</label>
+                        <input type="text" id="quick-hospital-name" class="form-control" placeholder="Hospital name" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>City *</label>
+                            <input type="text" id="quick-hospital-city" class="form-control" placeholder="City" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Facility Address *</label>
+                            <input type="text" id="quick-hospital-address" class="form-control" placeholder="Ward / building address" required>
+                        </div>
+                    </div>
+                    <div id="quick-request-feedback" style="display: none; padding: 10px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 500; margin-top: 10px;"></div>
+                    <div class="modal-actions" style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
+                        <a href="blood-request.html?source=hospital" style="color: var(--brand-primary); font-size: 0.82rem; font-weight: 500; text-decoration: none;">
+                            Open Full Form with Map ↗
+                        </a>
+                        <div style="display: flex; gap: 10px;">
+                            <button type="button" class="btn-cancel" id="btn-cancel-quick-request-modal">Cancel</button>
+                            <button type="submit" class="btn-save-stock" id="btn-submit-quick-request">Submit Request</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Update Hospital Profile Modal -->
+        <div class="modal-overlay" id="hospital-profile-modal">
+            <div class="modal-card" style="max-width: 520px; width: 92%;">
+                <div class="modal-header">
+                    <h3 style="font-size: 1.15rem; display: flex; align-items: center; gap: 8px;">
+                        <span>🏥</span> Update Hospital Profile
+                    </h3>
+                    <button type="button" class="modal-close" id="btn-close-profile-modal">&times;</button>
+                </div>
+                <form id="quick-hospital-profile-form">
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.4;">
+                        Update your hospital contact info, facility category, and address. Changes reflect immediately on your Hospital Information card and public donor listings.
+                    </p>
+                    <div class="form-group">
+                        <label>Hospital / Facility Name *</label>
+                        <input type="text" id="profile-modal-name" class="form-control" placeholder="Hospital or medical center name" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Hospital Type *</label>
+                            <select id="profile-modal-type" class="form-control">
+                                <option value="Government">Government / Public Hospital</option>
+                                <option value="Private">Private Hospital</option>
+                                <option value="Charitable / Trust">Charitable / Trust Hospital</option>
+                                <option value="Semi-Government">Semi-Government / Autonomous / PSU</option>
+                                <option value="Military / Defense">Military / Defense Hospital</option>
+                                <option value="Blood Bank">Dedicated Blood Bank / Red Cross</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Contact Phone *</label>
+                            <input type="tel" id="profile-modal-phone" class="form-control" placeholder="+91 ... / Landline" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>City *</label>
+                            <input type="text" id="profile-modal-city" class="form-control" placeholder="City" required>
+                        </div>
+                        <div class="form-group">
+                            <label>State</label>
+                            <input type="text" id="profile-modal-state" class="form-control" placeholder="State">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Facility Address</label>
+                        <input type="text" id="profile-modal-address" class="form-control" placeholder="Street, area, landmarks">
+                    </div>
+                    <div class="form-group">
+                        <label>Website URL</label>
+                        <input type="url" id="profile-modal-website" class="form-control" placeholder="https://examplehospital.org">
+                    </div>
+                    <div id="hospital-profile-feedback" style="display: none; padding: 10px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 500; margin-top: 10px;"></div>
+                    <div class="modal-actions" style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
+                        <a href="my-profile.html" style="color: var(--brand-primary); font-size: 0.82rem; font-weight: 500; text-decoration: none;">
+                            Open Full Profile Settings ↗
+                        </a>
+                        <div style="display: flex; gap: 10px;">
+                            <button type="button" class="btn-cancel" id="btn-cancel-profile-modal">Cancel</button>
+                            <button type="submit" class="btn-save-stock" id="btn-save-hospital-profile">Save Changes</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -479,5 +733,6 @@
     <script src="js/map-service.js"></script>
     <script src="js/hospital-dashboard.js"></script>
     <script src="js/profile-sync.js"></script>
+    <script src="js/chatbot.js"></script>
 </body>
 </html>

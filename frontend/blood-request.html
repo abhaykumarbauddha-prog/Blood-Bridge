@@ -42,6 +42,11 @@
         .nav-item:hover { background-color: var(--bg-light-gray); }
         .nav-item.active { background-color: var(--bg-pink); color: var(--brand-primary); border-left: 4px solid var(--brand-primary); padding-left: 20px; }
         .badge { background-color: var(--brand-primary); color: var(--bg-white); font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; margin-left: auto; }
+        .nav-item-group { display: flex; flex-direction: column; }
+        .nav-sub-items { display: flex; flex-direction: column; padding-left: 36px; gap: 2px; margin-top: 2px; margin-bottom: 4px; }
+        .nav-sub-item { padding: 6px 14px; font-size: 0.82rem; color: var(--text-secondary); text-decoration: none; border-radius: 6px; display: flex; align-items: center; gap: 8px; font-weight: 500; transition: background 0.15s; }
+        .nav-sub-item:hover { background-color: var(--bg-light-gray); color: var(--brand-primary); }
+        .nav-sub-item.active-sub { color: var(--brand-primary); font-weight: 700; background-color: var(--bg-pink); }
 
         .sidebar-cta { margin: auto 24px 24px; background-color: var(--bg-pink); padding: 20px; border-radius: 12px; text-align: center; }
         .sidebar-cta h4 { color: var(--text-dark); margin-bottom: 8px; font-size: 0.95rem; }
@@ -151,14 +156,21 @@
     <aside class="sidebar">
         <div class="sidebar-logo">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="#E60023"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
-            Blood<span>Match</span>
+            Blood<span>Bridge</span>
         </div>
         <ul class="nav-list">
             <a href="dashboard.html" class="nav-item"><span>🏠</span> Dashboard</a>
             <a href="my-profile.html" class="nav-item"><span>👤</span> My Profile</a>
-            <a href="find-donors.html" class="nav-item"><span>🔍</span> Find Donors</a>
-            <a href="blood-request.html" class="nav-item active"><span>🩸</span> Blood Requests</a>
+            <a href="smart-match.html" class="nav-item" style="color: #7C3AED; font-weight: 600;"><span>⚡</span> Smart Donor Matcher <span class="badge" style="background: linear-gradient(135deg, #7C3AED, #EC4899); font-size: 0.65rem;">AI</span></a>
+            <a href="blood-request.html" class="nav-item active"><span>🩸</span> Blood Request</a>
             <a href="nearby-request.html" class="nav-item"><span>📍</span> Nearby Requests</a>
+            <div class="nav-item-group">
+                <a href="chat.html" class="nav-item"><span>💬</span> Live Chat</a>
+                <div class="nav-sub-items">
+                    <a href="chat.html?tab=requesters" class="nav-sub-item"><span>👥</span> Requesters</a>
+                    <a href="chat.html?tab=donors" class="nav-sub-item"><span>🩸</span> Donors</a>
+                </div>
+            </div>
             <a href="notifications.html" class="nav-item"><span>🔔</span> Notifications <span class="badge notification-badge" data-unread-badge hidden></span></a>
             <a href="donation-history.html" class="nav-item"><span>🕒</span> Donation History</a>
             <a href="settings.html" class="nav-item"><span>⚙️</span> Settings</a>
@@ -273,6 +285,40 @@
                                     <h5>Critical</h5>
                                     <p>Immediate need</p>
                                 </div>
+                            </label>
+                        </div>
+
+                        <div class="form-group" style="margin-top: 20px; margin-bottom: 8px;">
+                            <label style="display: flex; align-items: center; justify-content: space-between;">
+                                <span>🎯 Donor Search Radius (Smart Matching)</span>
+                                <span style="font-size: 0.75rem; color: #7C3AED; font-weight: 600;">⚡ Multi-Criteria AI Scan</span>
+                            </label>
+                        </div>
+                        <div class="radius-selector-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 10px; margin-bottom: 20px;">
+                            <label class="radius-chip-card" style="border: 1px solid var(--border-light); border-radius: 8px; padding: 10px 8px; text-align: center; cursor: pointer; transition: all 0.2s;">
+                                <input type="radio" name="search_radius_km" value="5" style="display: none;">
+                                <div style="font-weight: 700; font-size: 0.95rem;">5 km</div>
+                                <div style="font-size: 0.7rem; color: var(--text-secondary);">Very Local</div>
+                            </label>
+                            <label class="radius-chip-card" style="border: 1px solid var(--border-light); border-radius: 8px; padding: 10px 8px; text-align: center; cursor: pointer; transition: all 0.2s;">
+                                <input type="radio" name="search_radius_km" value="10" style="display: none;">
+                                <div style="font-weight: 700; font-size: 0.95rem;">10 km</div>
+                                <div style="font-size: 0.7rem; color: var(--text-secondary);">City Core</div>
+                            </label>
+                            <label class="radius-chip-card active" style="border: 2px solid var(--brand-primary); background: var(--bg-pink); border-radius: 8px; padding: 10px 8px; text-align: center; cursor: pointer; transition: all 0.2s;">
+                                <input type="radio" name="search_radius_km" value="25" checked style="display: none;">
+                                <div style="font-weight: 700; font-size: 0.95rem; color: var(--brand-primary);">25 km</div>
+                                <div style="font-size: 0.7rem; color: var(--brand-primary); font-weight: 600;">Recommended</div>
+                            </label>
+                            <label class="radius-chip-card" style="border: 1px solid var(--border-light); border-radius: 8px; padding: 10px 8px; text-align: center; cursor: pointer; transition: all 0.2s;">
+                                <input type="radio" name="search_radius_km" value="50" style="display: none;">
+                                <div style="font-weight: 700; font-size: 0.95rem;">50 km</div>
+                                <div style="font-size: 0.7rem; color: var(--text-secondary);">Metro Area</div>
+                            </label>
+                            <label class="radius-chip-card" style="border: 1px solid var(--border-light); border-radius: 8px; padding: 10px 8px; text-align: center; cursor: pointer; transition: all 0.2s;">
+                                <input type="radio" name="search_radius_km" value="100" style="display: none;">
+                                <div style="font-weight: 700; font-size: 0.95rem;">100 km</div>
+                                <div style="font-size: 0.7rem; color: var(--text-secondary);">Regional</div>
                             </label>
                         </div>
 
@@ -409,5 +455,6 @@
     <script src="js/map-service.js"></script>
     <script src="js/requests.js"></script>
     <script src="js/profile-sync.js"></script>
+    <script src="js/chatbot.js"></script>
 </body>
 </html>

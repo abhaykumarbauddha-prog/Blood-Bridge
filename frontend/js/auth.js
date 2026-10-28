@@ -48,7 +48,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Demo role session generator (only if explicitly clicked)
+    // Demo role session generator (only if explicitly clicked). Admin access
+    // is deliberately excluded: Admin privileges are database-assigned only.
     function createMockSession(email, role, name = 'Demo User') {
         const userId = 'd' + Date.now().toString(16) + '000000000000'.slice(0, 12);
         const user = {
@@ -74,6 +75,10 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('[data-demo-role]').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const role = e.currentTarget.getAttribute('data-demo-role') || 'Donor';
+            if (role === 'Admin') {
+                alert('Admin accounts are created and assigned through the database only.');
+                return;
+            }
             createMockSession(`demo.${role.toLowerCase()}@bloodbridge.org`, role, `Demo ${role}`);
             alert(`Welcome! Logged in as ${role}.`);
             navigateToRoleDashboard(role);

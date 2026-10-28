@@ -26,6 +26,13 @@ window.requireRole = async function requireRole(allowedRoles) {
         }
     } catch (_) {}
 
+    // Admin access must always come from the database role table. Never trust
+    // localStorage or user metadata for this privilege.
+    if (!userRole && roles.includes('Admin')) {
+        window.location.replace('dashboard.html');
+        return false;
+    }
+
     if (!userRole) {
         userRole = user.user_metadata?.role || localStorage.getItem('blood_bridge_user_role') || 'Donor';
     }
@@ -51,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
         window.requireRole(['Donor', 'Requester']);
     } else if (page === 'hospital-dashboard.html') {
         window.requireRole('Hospital');
-    } else if (page === 'admin-dashboard.html') {
+    } else if (page === 'admin-dashboard.html' || page === 'admin-management.html') {
         window.requireRole('Admin');
     }
 });

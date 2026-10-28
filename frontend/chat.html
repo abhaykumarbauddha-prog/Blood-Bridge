@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood Bridge | Live Messages & Chat</title>
+    <meta name="description" content="Blood Bridge in-app real-time messaging system connecting blood requesters, donors, hospitals, and blood banks.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --brand-primary: #E60023;
+            --brand-dark: #B3001B;
+            --bg-pink: #FFF0F2;
+            --bg-white: #FFFFFF;
+            --bg-light-gray: #F5F7FA;
+            --text-dark: #101828;
+            --text-secondary: #475467;
+            --border-light: #E4E7EC;
+            --status-available: #16A34A;
+            --status-pending: #D97706;
+            --status-critical: #DC2626;
+            --status-info: #2563EB;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-light-gray); color: var(--text-dark); display: flex; height: 100vh; overflow: hidden; }
+
+        /* Sidebar */
+        .sidebar { width: 260px; background-color: var(--bg-white); border-right: 1px solid var(--border-light); display: flex; flex-direction: column; padding: 24px 0; flex-shrink: 0; overflow-y: auto; }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar-logo { padding: 0 24px; display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 1.5rem; margin-bottom: 8px; }
+        .sidebar-logo span { color: var(--brand-primary); }
+        .nav-list { list-style: none; display: flex; flex-direction: column; gap: 4px; margin-top: 16px; }
+        .nav-item { padding: 12px 24px; display: flex; align-items: center; gap: 12px; color: var(--text-secondary); font-weight: 500; cursor: pointer; text-decoration: none; font-size: 0.95rem; }
+        .nav-item:hover { background-color: var(--bg-light-gray); }
+        .nav-item.active { background-color: var(--bg-pink); color: var(--brand-primary); border-left: 4px solid var(--brand-primary); padding-left: 20px; font-weight: 600; }
+        .badge { background-color: var(--brand-primary); color: var(--bg-white); font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; margin-left: auto; }
+
+        /* Main Area */
+        .main-content { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+        /* Topbar */
+        .topbar { background-color: var(--bg-white); height: 72px; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-light); flex-shrink: 0; }
+        .topbar-title { display: flex; align-items: center; gap: 12px; }
+        .topbar-title h2 { font-size: 1.4rem; font-weight: 700; color: var(--text-dark); }
+        .topbar-title .live-indicator { display: inline-flex; align-items: center; gap: 6px; background: #DCFCE7; color: var(--status-available); padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+        .topbar-title .live-dot { width: 8px; height: 8px; background: var(--status-available); border-radius: 50%; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.2); } 100% { opacity: 1; transform: scale(1); } }
+        
+        .topbar-right { display: flex; align-items: center; gap: 20px; }
+        .user-profile-mini { display: flex; align-items: center; gap: 12px; }
+        .user-profile-mini img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-light); }
+
+        /* Chat Layout */
+        .chat-container { display: flex; flex: 1; overflow: hidden; background: var(--bg-white); }
+
+        /* Left Chat Sidebar (Conversations List) */
+        .conv-panel { width: 360px; border-right: 1px solid var(--border-light); display: flex; flex-direction: column; background: #FAFBFC; flex-shrink: 0; }
+        .conv-header { padding: 20px 24px; border-bottom: 1px solid var(--border-light); background: var(--bg-white); }
+        .conv-header h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .conv-search { position: relative; }
+        .conv-search input { width: 100%; padding: 10px 14px 10px 38px; border: 1px solid var(--border-light); border-radius: 8px; font-size: 0.88rem; outline: none; background: var(--bg-light-gray); }
+        .conv-search input:focus { border-color: var(--brand-primary); background: var(--bg-white); }
+        .conv-search span { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 0.9rem; color: var(--text-secondary); }
+
+        .conv-tabs { display: flex; border-bottom: 1px solid var(--border-light); background: var(--bg-white); }
+        .conv-tab { flex: 1; padding: 10px 0; text-align: center; font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); cursor: pointer; border-bottom: 2px solid transparent; }
+        .conv-tab.active { color: var(--brand-primary); border-bottom-color: var(--brand-primary); background: var(--bg-pink); }
+
+        .conv-list { flex: 1; overflow-y: auto; }
+        .conv-list::-webkit-scrollbar { width: 5px; }
+        .conv-list::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
+
+        .conv-item { display: flex; align-items: center; gap: 14px; padding: 16px 20px; border-bottom: 1px solid var(--border-light); cursor: pointer; transition: all 0.15s ease; position: relative; }
+        .conv-item:hover { background-color: #F1F5F9; }
+        .conv-item.active { background-color: #FEF2F2; border-left: 4px solid var(--brand-primary); padding-left: 16px; }
+
+        .conv-avatar-wrap { position: relative; flex-shrink: 0; }
+        .conv-avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; background: #E2E8F0; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #475467; font-size: 1.1rem; }
+        .conv-online-badge { width: 12px; height: 12px; background: var(--status-available); border: 2px solid #FFFFFF; border-radius: 50%; position: absolute; bottom: 0; right: 0; }
+
+        .conv-body { flex: 1; min-width: 0; }
+        .conv-body-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+        .conv-name { font-weight: 600; font-size: 0.95rem; color: var(--text-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .conv-time { font-size: 0.72rem; color: #94A3B8; flex-shrink: 0; }
+        .conv-body-sub { display: flex; align-items: center; gap: 6px; }
+        .conv-role-tag { font-size: 0.68rem; padding: 1px 6px; border-radius: 4px; font-weight: 600; background: #EEF2F6; color: #475467; }
+        .conv-role-donor { background: #DCFCE7; color: #166534; }
+        .conv-role-hospital { background: #DBEAFE; color: #1E40AF; }
+        .conv-role-bank { background: #FEF3C7; color: #92400E; }
+        .conv-blood-tag { font-size: 0.7rem; font-weight: 700; color: var(--brand-primary); }
+
+        .conv-snippet { font-size: 0.82rem; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 4px; }
+        .conv-unread { background: var(--brand-primary); color: white; border-radius: 10px; min-width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; padding: 0 6px; margin-left: 6px; flex-shrink: 0; }
+
+        /* Right Chat Conversation View */
+        .chat-view { flex: 1; display: flex; flex-direction: column; background: #FFFFFF; position: relative; }
+
+        /* Empty state */
+        .chat-empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px; color: var(--text-secondary); }
+        .chat-empty-state .empty-icon { width: 80px; height: 80px; border-radius: 50%; background: var(--bg-pink); color: var(--brand-primary); display: flex; align-items: center; justify-content: center; font-size: 2.4rem; margin-bottom: 20px; }
+        .chat-empty-state h3 { font-size: 1.3rem; font-weight: 700; color: var(--text-dark); margin-bottom: 8px; }
+        .chat-empty-state p { max-width: 380px; line-height: 1.5; font-size: 0.9rem; margin-bottom: 20px; }
+        .chat-empty-state .btn-start { background: var(--brand-primary); color: white; border: none; padding: 10px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; }
+
+        /* Active Chat Header */
+        .chat-header { padding: 16px 28px; border-bottom: 1px solid var(--border-light); display: flex; align-items: center; justify-content: space-between; background: #FFFFFF; flex-shrink: 0; }
+        .chat-header-user { display: flex; align-items: center; gap: 14px; }
+        .chat-header-user img, .chat-header-user .chat-h-avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; background: #E2E8F0; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #475467; font-size: 1.1rem; }
+        .chat-header-name { font-size: 1.05rem; font-weight: 700; color: var(--text-dark); }
+        .chat-header-status { font-size: 0.8rem; color: var(--status-available); display: flex; align-items: center; gap: 6px; }
+        .chat-header-badges { display: flex; gap: 6px; margin-top: 2px; }
+
+        .chat-header-actions { display: flex; gap: 10px; }
+        .btn-chat-action { background: var(--bg-light-gray); border: 1px solid var(--border-light); padding: 8px 14px; border-radius: 6px; font-size: 0.82rem; font-weight: 600; color: var(--text-dark); cursor: pointer; display: flex; align-items: center; gap: 6px; text-decoration: none; }
+        .btn-chat-action:hover { background: #E2E8F0; }
+
+        /* Quick Suggestion Chips */
+        .quick-chips-bar { padding: 8px 24px; background: #F8FAFC; border-bottom: 1px solid var(--border-light); display: flex; gap: 8px; overflow-x: auto; flex-shrink: 0; }
+        .quick-chips-bar::-webkit-scrollbar { height: 3px; }
+        .quick-chip { background: white; border: 1px solid var(--border-light); padding: 6px 12px; border-radius: 16px; font-size: 0.78rem; font-weight: 500; color: var(--text-secondary); cursor: pointer; white-space: nowrap; transition: all 0.15s; }
+        .quick-chip:hover { border-color: var(--brand-primary); color: var(--brand-primary); background: var(--bg-pink); }
+
+        /* Message Stream */
+        .chat-messages-stream { flex: 1; padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; background: #F8FAFC; }
+        .chat-messages-stream::-webkit-scrollbar { width: 6px; }
+        .chat-messages-stream::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
+
+        .msg-date-divider { text-align: center; margin: 12px 0; position: relative; }
+        .msg-date-divider::before { content: ''; position: absolute; left: 0; top: 50%; width: 100%; height: 1px; background: var(--border-light); z-index: 1; }
+        .msg-date-divider span { background: #F8FAFC; padding: 2px 14px; border-radius: 12px; font-size: 0.72rem; color: #94A3B8; position: relative; z-index: 2; font-weight: 500; }
+
+        .msg-bubble-wrap { display: flex; gap: 10px; max-width: 72%; }
+        .msg-bubble-wrap.outgoing { align-self: flex-end; flex-direction: row-reverse; }
+        .msg-bubble-wrap.incoming { align-self: flex-start; }
+
+        .msg-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #CBD5E1; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; color: #475467; flex-shrink: 0; align-self: flex-end; }
+
+        .msg-content { display: flex; flex-direction: column; }
+        .msg-bubble { padding: 12px 16px; border-radius: 16px; font-size: 0.92rem; line-height: 1.45; word-break: break-word; position: relative; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .msg-bubble-wrap.incoming .msg-bubble { background: #FFFFFF; color: var(--text-dark); border-bottom-left-radius: 4px; border: 1px solid var(--border-light); }
+        .msg-bubble-wrap.outgoing .msg-bubble { background: linear-gradient(135deg, var(--brand-primary), #DC2626); color: #FFFFFF; border-bottom-right-radius: 4px; }
+
+        .msg-meta { display: flex; align-items: center; gap: 4px; font-size: 0.68rem; margin-top: 4px; color: #94A3B8; }
+        .msg-bubble-wrap.outgoing .msg-meta { justify-content: flex-end; }
+        .msg-check { font-size: 0.75rem; color: #94A3B8; }
+        .msg-check.read { color: #3B82F6; font-weight: 700; }
+
+        /* Chat Input Box */
+        .chat-input-bar { padding: 16px 24px; background: #FFFFFF; border-top: 1px solid var(--border-light); display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+        .nav-item-group { display: flex; flex-direction: column; }
+        .nav-sub-items { display: flex; flex-direction: column; padding-left: 36px; gap: 2px; margin-top: 2px; margin-bottom: 4px; }
+        .nav-sub-item { padding: 6px 14px; font-size: 0.82rem; color: var(--text-secondary); text-decoration: none; border-radius: 6px; display: flex; align-items: center; gap: 8px; font-weight: 500; transition: background 0.15s; }
+        .nav-sub-item:hover { background-color: var(--bg-light-gray); color: var(--brand-primary); }
+        .nav-sub-item.active-sub { color: var(--brand-primary); font-weight: 700; background-color: var(--bg-pink); }
+
+        .chat-input-wrapper { flex: 1; display: flex; align-items: center; background: var(--bg-light-gray); border: 1px solid var(--border-light); border-radius: 24px; padding: 4px 16px; transition: border-color 0.2s; }
+        .chat-input-wrapper:focus-within { border-color: var(--brand-primary); background: #FFFFFF; }
+        .chat-input-field { flex: 1; border: none; background: transparent; padding: 10px 8px; font-size: 0.92rem; outline: none; resize: none; max-height: 120px; line-height: 1.4; }
+        .btn-send { width: 44px; height: 44px; border-radius: 50%; background: var(--brand-primary); border: none; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: transform 0.15s, background 0.15s; }
+        .btn-send:hover { background: var(--brand-dark); transform: scale(1.05); }
+        .btn-send:disabled { background: #CBD5E1; cursor: not-allowed; transform: none; }
+
+        @media (max-width: 900px) {
+            .conv-panel { width: 280px; }
+            .sidebar { display: none; }
+        }
+        @media (max-width: 650px) {
+            .conv-panel { width: 100%; }
+            .chat-view { display: none; }
+            .chat-view.active-mobile { display: flex; position: fixed; inset: 0; z-index: 999; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="#E60023"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+            Blood<span>Bridge</span>
+        </div>
+        <ul class="nav-list">
+            <a href="dashboard.html" class="nav-item"><span>🏠</span> Dashboard</a>
+            <a href="my-profile.html" class="nav-item"><span>👤</span> My Profile</a>
+            <a href="smart-match.html" class="nav-item" style="color: #7C3AED; font-weight: 600;"><span>⚡</span> Smart Donor Matcher <span class="badge" style="background: linear-gradient(135deg, #7C3AED, #EC4899); font-size: 0.65rem;">AI</span></a>
+            <a href="blood-request.html" class="nav-item"><span>🩸</span> Blood Request</a>
+            <a href="nearby-request.html" class="nav-item"><span>📍</span> Nearby Requests</a>
+            <div class="nav-item-group">
+                <a href="chat.html" class="nav-item active"><span>💬</span> Live Chat</a>
+                <div class="nav-sub-items">
+                    <a href="chat.html?tab=requesters" class="nav-sub-item" id="sidebar-sub-requesters"><span>👥</span> Requesters</a>
+                    <a href="chat.html?tab=donors" class="nav-sub-item" id="sidebar-sub-donors"><span>🩸</span> Donors</a>
+                </div>
+            </div>
+            <a href="notifications.html" class="nav-item"><span>🔔</span> Notifications <span class="badge notification-badge" data-unread-badge hidden></span></a>
+            <a href="donation-history.html" class="nav-item"><span>🕒</span> Donation History</a>
+            <a href="settings.html" class="nav-item"><span>⚙️</span> Settings</a>
+            <a href="help-support.html" class="nav-item"><span>❓</span> Help & Support</a>
+        </ul>
+    </aside>
+
+    <main class="main-content">
+        <!-- Topbar -->
+        <header class="topbar">
+            <div class="topbar-title">
+                <h2>💬 Direct Messages</h2>
+                <div class="live-indicator"><span class="live-dot"></span> Live Chat Active</div>
+            </div>
+            <div class="topbar-right">
+                <a href="smart-match.html" class="btn-chat-action" style="background: var(--bg-pink); color: var(--brand-primary); border-color: var(--brand-primary);">
+                    ⚡ Smart Match Donors
+                </a>
+                <div class="user-profile-mini">
+                    <img src="assets/profile-placeholder.svg" alt="Profile" data-profile-avatar>
+                    <div>
+                        <h5 style="font-size: 0.9rem;" id="current-user-name">Loading...</h5>
+                        <p style="font-size: 0.75rem; color: var(--text-secondary);" id="current-user-role">User</p>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Chat Body -->
+        <div class="chat-container">
+            <!-- Left: Conversation List -->
+            <div class="conv-panel">
+                <div class="conv-header">
+                    <h3>
+                        <span>Conversations</span>
+                        <span id="conv-count-badge" style="font-size: 0.8rem; color: var(--text-secondary); font-weight: normal;">0 chats</span>
+                    </h3>
+                    <div class="conv-search">
+                        <span>🔍</span>
+                        <input type="text" id="conv-search-input" placeholder="Search conversations...">
+                    </div>
+                </div>
+
+                <div class="conv-tabs">
+                    <div class="conv-tab active" data-tab="all">All Chats</div>
+                    <div class="conv-tab" data-tab="requesters">👥 Requesters</div>
+                    <div class="conv-tab" data-tab="donors">🩸 Donors</div>
+                </div>
+
+                <div class="conv-list" id="conversations-list">
+                    <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary); font-size: 0.88rem;">
+                        Loading conversations...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Active Chat Area -->
+            <div class="chat-view" id="chat-view">
+                <!-- Empty Placeholder -->
+                <div class="chat-empty-state" id="chat-empty-state">
+                    <div class="empty-icon">💬</div>
+                    <h3>Your Messages</h3>
+                    <p>Select a conversation from the list or accept a request from Nearby Requests to start live donor-requester coordination.</p>
+                    <a href="nearby-request.html" class="btn-start">📍 Explore Nearby Requests</a>
+                </div>
+
+                <!-- Chat Header (Visible when active) -->
+                <div class="chat-header" id="active-chat-header" style="display: none;">
+                    <div class="chat-header-user">
+                        <div class="conv-avatar-wrap">
+                            <div class="chat-h-avatar" id="header-avatar">?</div>
+                            <span class="conv-online-badge"></span>
+                        </div>
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div class="chat-header-name" id="header-name">Donor Name</div>
+                                <span id="header-lifecycle-badge" style="font-size: 0.72rem; padding: 2px 8px; border-radius: 12px; font-weight: 700; background: #DCFCE7; color: #166534;">🟢 Active Coordination</span>
+                            </div>
+                            <div class="chat-header-badges">
+                                <span class="conv-role-tag conv-role-donor" id="header-role">Donor</span>
+                                <span class="conv-blood-tag" id="header-blood">🩸 O+</span>
+                                <span style="font-size: 0.75rem; color: var(--text-secondary);" id="header-city">City</span>
+                                <span style="font-size: 0.75rem; color: var(--brand-primary); font-weight: 600;" id="header-req-info"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chat-header-actions">
+                        <button type="button" class="btn-chat-action" id="btn-chat-complete-donation" style="display: none; background: #10B981; color: white; border: none; font-weight: 600; cursor: pointer;">✅ Mark Donation Completed</button>
+                        <a href="nearby-request.html" class="btn-chat-action">📍 View Requests</a>
+                        <button type="button" class="btn-chat-action" id="btn-call-helpline">📞 Emergency Helpline</button>
+                    </div>
+                </div>
+
+                <!-- Quick Suggestion Chips -->
+                <div class="quick-chips-bar" id="quick-chips-bar" style="display: none;">
+                    <button class="quick-chip" data-phrase="Hello, I am ready to coordinate for this blood donation.">🩸 Ready to donate</button>
+                    <button class="quick-chip" data-phrase="Could you please confirm the exact hospital room or blood bank section?">🏥 Room or blood bank?</button>
+                    <button class="quick-chip" data-phrase="What time should I arrive at the hospital?">⏰ Preferred arrival time?</button>
+                    <button class="quick-chip" data-phrase="I am on my way to the hospital now.">🚗 On my way!</button>
+                    <button class="quick-chip" data-phrase="I have arrived at the hospital reception.">📍 Arrived at hospital</button>
+                </div>
+
+                <!-- Messages Stream -->
+                <div class="chat-messages-stream" id="messages-stream" style="display: none;">
+                    <!-- Populated dynamically -->
+                </div>
+
+                <!-- Locked Notice for Concluded/Completed Donation -->
+                <div id="chat-locked-notice" style="display: none; padding: 18px 24px; text-align: center; background: #FEF2F2; border-top: 1px solid #FEE2E2; color: #991B1B;">
+                    <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 4px;">🔒 Blood Donation Completed • Coordination Chat Concluded</div>
+                    <div style="font-size: 0.8rem; color: #7F1D1D;">This blood donation has been verified and completed. Chatting is only available until donation completion; this thread is now closed and saved as read-only.</div>
+                </div>
+
+                <!-- Chat Input Bar -->
+                <div class="chat-input-bar" id="chat-input-bar" style="display: none;">
+                    <div class="chat-input-wrapper">
+                        <input type="text" class="chat-input-field" id="message-input" placeholder="Type a message... (Press Enter to send)" autocomplete="off">
+                    </div>
+                    <button type="button" class="btn-send" id="btn-send-message" title="Send Message">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Supabase JS & Dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/data-helpers.js"></script>
+    <script src="js/profile-sync.js"></script>
+    <script src="js/chat.js"></script>
+    <script src="js/chatbot.js"></script>
+</body>
+</html>

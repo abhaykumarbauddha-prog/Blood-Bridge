@@ -133,14 +133,26 @@
 
         .tabs { display: flex; gap: 16px; border-bottom: 1px solid var(--border-light); margin-bottom: 16px; }
         .tab { padding: 8px 4px; font-size: 0.85rem; font-weight: 500; color: var(--text-secondary); cursor: pointer; border-bottom: 2px solid transparent; }
-        .tab.active { color: var(--brand-primary); border-bottom-color: var(--brand-primary); }
+        .tab.active { color: var(--brand-primary); border-bottom-color: var(--brand-primary); font-weight: 600; }
         
-        .report-item { display: flex; align-items: center; justify-content: space-between; padding-bottom: 12px; margin-bottom: 12px; border-bottom: 1px solid var(--border-light); }
-        .report-item:last-child { border: none; margin: 0; padding: 0; }
-        .report-info h5 { font-size: 0.85rem; margin-bottom: 2px; }
-        .report-info p { font-size: 0.75rem; color: var(--text-secondary); }
-        .btn-review { border: 1px solid var(--brand-primary); color: var(--brand-primary); background: transparent; padding: 4px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
-        .btn-review:hover { background: var(--bg-pink); }
+        /* Bar chart styles */
+        .chart-bar-col { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; }
+        .chart-bars-pair { display: flex; align-items: flex-end; gap: 4px; height: 110px; width: 100%; justify-content: center; }
+        .chart-bar-item { width: 14px; border-radius: 3px 3px 0 0; transition: height 0.4s ease, opacity 0.2s; cursor: pointer; position: relative; }
+        .chart-bar-item:hover { opacity: 0.85; transform: scaleY(1.04); }
+        .chart-bar-req { background: var(--brand-primary); }
+        .chart-bar-don { background: var(--status-available); }
+
+        /* Report item styles */
+        .report-box { background: var(--bg-light-gray); border: 1px solid var(--border-light); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 8px; transition: border-color 0.2s; }
+        .report-box:hover { border-color: var(--brand-primary); }
+        .btn-mod { padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: 0.15s; border: none; }
+        .btn-mod-resolve { background: var(--status-available); color: white; }
+        .btn-mod-resolve:hover { background: #15803D; }
+        .btn-mod-reject { background: white; border: 1px solid var(--status-critical); color: var(--status-critical); }
+        .btn-mod-reject:hover { background: #FEE2E2; }
+        .btn-mod-reopen { background: white; border: 1px solid var(--border-light); color: var(--text-dark); }
+        .btn-mod-reopen:hover { background: var(--bg-light-gray); }
 
         .system-list { display: flex; flex-direction: column; gap: 12px; }
         .system-item { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; }
@@ -156,26 +168,26 @@
     <aside class="sidebar">
         <div class="sidebar-logo">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="#E60023"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
-            Blood<span>Match</span>
+            Blood<span>Bridge</span>
         </div>
         <div class="sidebar-tagline">Donate Today Save Tomorrow</div>
 
         <div class="nav-section">MAIN</div>
         <ul class="nav-list">
             <a href="admin-dashboard.html" class="nav-item active"><span>📊</span> Dashboard</a>
-            <a href="find-donors.html" class="nav-item"><span>👥</span> Users</a>
-            <a href="find-donors.html" class="nav-item"><span>🩸</span> Donors</a>
-            <a href="nearby-request.html" class="nav-item"><span>📄</span> Blood Requests</a>
-            <a href="hospital-dashboard.html" class="nav-item"><span>🏥</span> Hospitals</a>
-            <a href="dashboard.html" class="nav-item"><span>❤️</span> Donations</a>
-            <a href="notifications.html" class="nav-item"><span>🔔</span> Notifications <span class="badge notification-badge" data-unread-badge hidden></span></a>
+            <a href="admin-management.html?section=users" class="nav-item"><span>👥</span> Users</a>
+            <a href="admin-management.html?section=donors" class="nav-item"><span>🩸</span> Donors</a>
+            <a href="admin-management.html?section=requests" class="nav-item"><span>📄</span> Blood Requests</a>
+            <a href="admin-management.html?section=hospitals" class="nav-item"><span>🏥</span> Hospitals</a>
+            <a href="admin-management.html?section=donations" class="nav-item"><span>❤️</span> Donations</a>
+            <a href="admin-management.html?section=notifications" class="nav-item"><span>🔔</span> Notifications</a>
         </ul>
 
         <div class="nav-section">MANAGEMENT</div>
         <ul class="nav-list">
-            <a href="nearby-request.html" class="nav-item"><span>📁</span> Reports</a>
-            <a href="nearby-request.html" class="nav-item"><span>⏱️</span> Audit Logs</a>
-            <a href="settings.html" class="nav-item"><span>⚙️</span> System Settings</a>
+            <a href="admin-management.html?section=reports" class="nav-item"><span>📁</span> Reports</a>
+            <a href="admin-management.html?section=audit" class="nav-item"><span>⏱️</span> Audit Logs</a>
+            <a href="admin-management.html?section=settings" class="nav-item"><span>⚙️</span> System Settings</a>
             <a href="auth.html" class="nav-item" id="admin-logout-btn"><span>🚪</span> Logout</a>
         </ul>
 
@@ -183,7 +195,7 @@
             <div style="font-size: 2rem; color: var(--brand-primary); margin-bottom: 8px;">♡</div>
             <h4>Together<br>We Can Save Lives</h4>
             <p>Manage, Monitor and Grow our Blood Donation Community</p>
-            <button onclick="window.location.href='nearby-request.html'">View Reports →</button>
+            <button onclick="window.location.href='admin-management.html?section=reports'">View Reports →</button>
         </div>
     </aside>
 
@@ -266,15 +278,28 @@
             <!-- Middle Charts Grid -->
             <div class="grid-3">
                 <div class="card">
-                    <div class="card-header">
-                        <h3>Blood Requests vs Donations</h3>
-                        <div style="display: flex; gap: 12px; font-size: 0.8rem; color: var(--text-secondary);">
-                            <span style="display: flex; align-items: center; gap: 4px;"><div style="width: 8px; height: 8px; border-radius: 50%; background: var(--brand-primary);"></div> Blood Requests</span>
-                            <span style="display: flex; align-items: center; gap: 4px;"><div style="width: 8px; height: 8px; border-radius: 50%; background: var(--status-available);"></div> Successful Donations</span>
+                    <div class="card-header" style="margin-bottom: 12px;">
+                        <div>
+                            <h3>Blood Requests vs Donations</h3>
+                            <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px;">Live comparison & completion metrics</p>
+                        </div>
+                        <div style="display: flex; gap: 12px; font-size: 0.78rem; color: var(--text-secondary);">
+                            <span style="display: flex; align-items: center; gap: 4px;"><div style="width: 8px; height: 8px; border-radius: 50%; background: var(--brand-primary);"></div> Requests</span>
+                            <span style="display: flex; align-items: center; gap: 4px;"><div style="width: 8px; height: 8px; border-radius: 50%; background: var(--status-available);"></div> Donations</span>
                         </div>
                     </div>
-                    <div class="chart-placeholder" id="admin-request-donation-chart">
-                        <div style="width: 100%; text-align: center; color: var(--text-secondary);">Donation data unavailable yet.</div>
+
+                    <!-- Live Stats Summary Pills -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding: 8px 12px; background: var(--bg-light-gray); border-radius: 8px; font-size: 0.78rem;">
+                        <div><strong id="chart-total-requests" style="color: var(--brand-primary); font-size: 0.95rem;">-</strong> <span style="color: var(--text-secondary);">Requests</span></div>
+                        <div style="border-left: 1px solid var(--border-light); height: 20px;"></div>
+                        <div><strong id="chart-total-donations" style="color: var(--status-available); font-size: 0.95rem;">-</strong> <span style="color: var(--text-secondary);">Donations</span></div>
+                        <div style="border-left: 1px solid var(--border-light); height: 20px;"></div>
+                        <div><strong id="chart-fulfillment-rate" style="color: #2563EB; font-size: 0.95rem;">-%</strong> <span style="color: var(--text-secondary);">Fulfilled</span></div>
+                    </div>
+
+                    <div id="admin-request-donation-chart" style="width: 100%; height: 160px; display: flex; flex-direction: column; justify-content: flex-end;">
+                        <div style="width: 100%; text-align: center; color: var(--text-secondary); font-size: 0.85rem; padding: 40px 0;">Loading chart data...</div>
                     </div>
                 </div>
                 
@@ -298,7 +323,7 @@
                 <div class="card">
                     <div class="card-header">
                         <h3>Donor Locations</h3>
-                        <a href="find-donors.html" class="view-all">View Full Map →</a>
+                        <a href="admin-management.html?section=donors" class="view-all">View Full Map →</a>
                     </div>
                     <div id="admin-donors-map" style="width: 100%; height: 160px; border-radius: 8px; margin-bottom: 12px; border: 1px solid var(--border-light); position: relative; z-index: 1;"></div>
                     <div id="admin-map-legend" style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-secondary);">
@@ -313,7 +338,7 @@
                 <div class="card">
                     <div class="card-header">
                         <h3>Recent Blood Requests</h3>
-                        <a href="nearby-request.html" class="view-all">View All →</a>
+                        <a href="admin-management.html?section=requests" class="view-all">View All →</a>
                     </div>
                     <table>
                         <thead>
@@ -336,7 +361,7 @@
                 <div class="card">
                     <div class="card-header">
                         <h3>Recent Registered Donors</h3>
-                        <a href="find-donors.html" class="view-all">View All →</a>
+                        <a href="admin-management.html?section=donors" class="view-all">View All →</a>
                     </div>
                     <table>
                         <thead>
@@ -354,33 +379,47 @@
                     </table>
                 </div>
             </div>
-                </div>
-            </div>
 
             <!-- Bottom Data Grid -->
             <div class="grid-3-bottom">
                 
                 <!-- Recent Activities -->
-                <div class="card">
-                    <div class="card-header">
-                        <h3>Recent Activities</h3>
-                        <a href="notifications.html" class="view-all">View All →</a>
+                <div class="card" style="display: flex; flex-direction: column;">
+                    <div class="card-header" style="margin-bottom: 14px;">
+                        <div>
+                            <h3>Recent Activities</h3>
+                            <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px;">Real-time platform activity stream</p>
+                        </div>
+                        <a href="admin-management.html?section=notifications" class="view-all">View All →</a>
                     </div>
-                    <div class="activity-list" style="padding: 24px 0; color: var(--text-secondary); text-align: center;">No activity data available yet.</div>
+                    <div class="activity-list" id="admin-activity-list" style="overflow-y: auto; max-height: 280px; display: flex; flex-direction: column; gap: 14px; padding-right: 4px;">
+                        <div style="padding: 24px 0; color: var(--text-secondary); text-align: center; font-size: 0.85rem;">Loading recent activities...</div>
+                    </div>
                 </div>
 
                 <!-- Reports & Moderation -->
-                <div class="card">
-                    <div class="card-header">
-                        <h3>Reports & Moderation</h3>
-                        <a href="help-support.html" class="view-all">View All →</a>
+                <div class="card" style="display: flex; flex-direction: column;">
+                    <div class="card-header" style="margin-bottom: 12px;">
+                        <div>
+                            <h3>Reports & Moderation</h3>
+                            <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px;">User feedback, disputes & moderation cases</p>
+                        </div>
+                        <a href="admin-management.html?section=reports" class="view-all">Manage All →</a>
                     </div>
-                    <div class="tabs">
-                        <div class="tab active">Pending</div>
-                        <div class="tab">Resolved</div>
-                        <div class="tab">Rejected</div>
+                    <div class="tabs" style="margin-bottom: 14px; border-bottom: 1px solid var(--border-light); display: flex; gap: 12px;">
+                        <div class="tab active" data-report-tab="pending" id="tab-report-pending" style="display: flex; align-items: center; gap: 6px; cursor: pointer; padding-bottom: 8px;">
+                            Pending <span id="badge-reports-pending" style="font-size: 0.68rem; padding: 1px 7px; border-radius: 10px; background: #FEF3C7; color: var(--status-pending); font-weight: 600;">0</span>
+                        </div>
+                        <div class="tab" data-report-tab="resolved" id="tab-report-resolved" style="display: flex; align-items: center; gap: 6px; cursor: pointer; padding-bottom: 8px;">
+                            Resolved <span id="badge-reports-resolved" style="font-size: 0.68rem; padding: 1px 7px; border-radius: 10px; background: #DCFCE7; color: var(--status-available); font-weight: 600;">0</span>
+                        </div>
+                        <div class="tab" data-report-tab="rejected" id="tab-report-rejected" style="display: flex; align-items: center; gap: 6px; cursor: pointer; padding-bottom: 8px;">
+                            Rejected <span id="badge-reports-rejected" style="font-size: 0.68rem; padding: 1px 7px; border-radius: 10px; background: #FEE2E2; color: var(--status-critical); font-weight: 600;">0</span>
+                        </div>
                     </div>
-                    <div style="padding: 24px 0; color: var(--text-secondary); text-align: center;">No reports available yet.</div>
+                    <div id="admin-reports-container" style="overflow-y: auto; max-height: 250px; display: flex; flex-direction: column; gap: 10px; padding-right: 4px;">
+                        <div style="padding: 24px 0; color: var(--text-secondary); text-align: center; font-size: 0.85rem;">Loading reports...</div>
+                    </div>
                 </div>
 
                 <!-- System Overview -->

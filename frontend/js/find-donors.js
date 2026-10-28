@@ -275,9 +275,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <div><h4>🩸</h4><p>${escapeHtml(blood)}</p></div>
                         <div><h4>${donor.last_donation_date ? 'Recent' : 'Active'}</h4><p>Status</p></div>
                     </div>
-                    <button type="button" class="btn-contact primary btn-request-donor" data-donor-name="${escapeHtml(name)}" data-donor-blood="${escapeHtml(blood)}">
-                        Request Blood
-                    </button>
+                    <div style="display: flex; gap: 8px; margin-top: 12px;">
+                        <button type="button" class="btn-contact primary btn-request-donor" style="flex: 1;" data-donor-name="${escapeHtml(name)}" data-donor-blood="${escapeHtml(blood)}">
+                            Request Blood
+                        </button>
+                        <a href="chat.html?with=${donor.id}" class="btn-contact" style="background: var(--bg-pink); color: var(--brand-primary); border: 1px solid var(--brand-primary); padding: 8px 14px; border-radius: 8px; font-weight: 600; text-decoration: none; display: flex; align-items: center; justify-content: center; font-size: 0.85rem;" title="Chat directly with ${escapeHtml(name)}">
+                            💬 Chat
+                        </a>
+                    </div>
                 </div>
             `;
         }).join('');
@@ -306,16 +311,21 @@ document.addEventListener('DOMContentLoaded', async () => {
             const marker = L.marker([donor.lat, donor.lng], { icon }).addTo(markerLayer || donorsMap);
 
             const popupContent = `
-                <div style="font-family: inherit; min-width: 180px; text-align: center;">
+                <div style="font-family: inherit; min-width: 190px; text-align: center;">
                     <div style="font-weight: 700; font-size: 14px; margin-bottom: 2px;">${escapeHtml(donor.full_name || 'Donor')} ✔</div>
                     <p style="margin: 0 0 6px; font-size: 12px; color: #475467;">
                         🩸 Blood Group: <b>${escapeHtml(donor.blood_group || 'O+')}</b><br>
                         📍 ${donor.distanceKm} km away (${escapeHtml(donor.city || '')})<br>
                         Status: <b style="color: #16A34A;">${donor.is_available ? 'Available' : 'Unavailable'}</b>
                     </p>
-                    <a href="blood-request.html" style="display: block; background: #E60023; color: white; text-decoration: none; padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 11px;">
-                        Request Blood
-                    </a>
+                    <div style="display: flex; gap: 6px; justify-content: center;">
+                        <a href="blood-request.html" style="background: #E60023; color: white; text-decoration: none; padding: 6px 10px; border-radius: 6px; font-weight: 600; font-size: 11px;">
+                            Request Blood
+                        </a>
+                        <a href="chat.html?with=${donor.id}" style="background: #FFF0F2; color: #E60023; border: 1px solid #E60023; text-decoration: none; padding: 6px 10px; border-radius: 6px; font-weight: 600; font-size: 11px;">
+                            💬 Chat
+                        </a>
+                    </div>
                 </div>
             `;
             marker.bindPopup(popupContent);

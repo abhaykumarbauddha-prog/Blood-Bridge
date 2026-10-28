@@ -1,5 +1,5 @@
 // Shared data helpers. Missing tables/data return null so the UI never invents values.
-window.BloodMatchData = (() => {
+window.BloodBridgeData = window.BloodMatchData = (() => {
     const client = () => window.bloodBridgeSupabase;
 
     function formatDateTime(value) {

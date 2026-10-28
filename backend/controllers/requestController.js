@@ -55,7 +55,7 @@ async function triggerSmartMatching(client, request) {
             const notifications = matchedDonors.map(donor => ({
                 user_id: donor.id,
                 type: 'request',
-                title: `Urgent Blood Match: ${blood_group} Needed! 🩸`,
+                title: `Blood Bridge Urgent: ${blood_group} Needed! 🩸`,
                 body: `Hello ${donor.full_name || 'Donor'}, patient ${patient_name} urgently needs ${units || 1} unit(s) of ${blood_group} blood at ${hospital_name}, ${city || 'nearby'}. Your blood profile is a compatible match!`,
                 link: 'nearby-request.html'
             }));
@@ -71,13 +71,17 @@ async function triggerSmartMatching(client, request) {
 
         // 4. Send broadcast confirmation notification to the requester
         if (requester_id) {
-            await client.from('notifications').insert([{
-                user_id: requester_id,
-                type: 'system',
-                title: 'Blood Request Broadcasted! 📢',
-                body: `Your request for ${patient_name} (${units || 1} unit(s) of ${blood_group}) has been broadcasted to ${matchedDonors.length} matching donors.`,
-                link: 'nearby-request.html'
-            }]).catch(err => console.warn('Requester notif note:', err.message));
+            try {
+                await client.from('notifications').insert([{
+                    user_id: requester_id,
+                    type: 'system',
+                    title: 'Blood Request Broadcasted! 📢',
+                    body: `Your request for ${patient_name} (${units || 1} unit(s) of ${blood_group}) has been broadcasted to ${matchedDonors.length} matching donors.`,
+                    link: 'nearby-request.html'
+                }]);
+            } catch (rErr) {
+                console.warn('Requester notif note:', rErr.message);
+            }
         }
 
     } catch (err) {
@@ -91,7 +95,7 @@ async function triggerSmartMatching(client, request) {
 exports.createRequest = async (req, res) => {
     try {
         const client = supabase.forRequest(req);
-        const { patient_name, blood_group, units, urgency, hospital_name, hospital_address, city, required_date, required_time, additional_info, requester_id, latitude, longitude } = req.body || {};
+        const { patient_name, blood_group, units, urgency, hospital_name, hospital_address, city, required_date, required_time, additional_info, requester_id, latitude, longitude, search_radius_km } = req.body || {};
 
         const requiredFields = {
             patient_name,
@@ -141,6 +145,7 @@ exports.createRequest = async (req, res) => {
             return res.status(409).json({ success: false, error: 'A similar request was already created within the last 6 hours.' });
         }
 
+        const parsedRadius = Number(search_radius_km) || 25;
         let { data, error } = await client
             .from('blood_requests')
             .insert([{
@@ -158,6 +163,7 @@ exports.createRequest = async (req, res) => {
                 requester_id,
                 latitude,
                 longitude,
+                search_radius_km: parsedRadius,
                 status: 'open'
             }])
             .select();
@@ -343,13 +349,69 @@ exports.acceptRequest = async (req, res) => {
                 .eq('id', donorId);
         }
 
-        // 6. Send Notification to the REQUESTER:
+        // 6. Connect Live Chat Conversation between Requester and Donor
+        let conversationId = null;
+        if (request.requester_id && donorId && request.requester_id !== donorId) {
+            try {
+                const [p1, p2] = [request.requester_id, donorId].sort();
+                let { data: existingConv } = await client
+                    .from('conversations')
+                    .select('id')
+                    .eq('participant_1', p1)
+                    .eq('participant_2', p2)
+                    .eq('request_id', requestId)
+                    .maybeSingle();
+
+                if (!existingConv) {
+                    const { data: newConv } = await client
+                        .from('conversations')
+                        .insert([{
+                            participant_1: p1,
+                            participant_2: p2,
+                            request_id: requestId,
+                            last_message_text: isComplete
+                                ? `🎉 Donation Completed for ${request.patient_name} • Chat concluded.`
+                                : `🤝 Request Accepted! Live coordination chat opened.`,
+                            last_message_at: new Date().toISOString()
+                        }])
+                        .select()
+                        .maybeSingle();
+                    existingConv = newConv;
+                }
+
+                if (existingConv?.id) {
+                    conversationId = existingConv.id;
+                    const initialChatMsg = isComplete
+                        ? `🎉 Blood donation completed for patient ${request.patient_name} at ${request.hospital_name}! Thank you for saving a life. This coordination chat has now been concluded.`
+                        : `🤝 Request Accepted! Donor ${donorName} has agreed to donate blood for patient ${request.patient_name} (${request.blood_group}) at ${request.hospital_name}. Live chat is now open to coordinate arrival, timing, and donation.`;
+
+                    await client.from('chat_messages').insert([{
+                        conversation_id: existingConv.id,
+                        sender_id: donorId,
+                        message: initialChatMsg
+                    }]);
+
+                    await client.from('conversations').update({
+                        last_message_text: initialChatMsg.substring(0, 180),
+                        last_message_at: new Date().toISOString()
+                    }).eq('id', existingConv.id);
+                }
+            } catch (convErr) {
+                console.warn('Live chat setup note on acceptance:', convErr.message);
+            }
+        }
+
+        // 7. Send Notification to the REQUESTER:
         if (request.requester_id) {
             const contactMsg = donorPhone ? ` Contact: ${donorPhone}.` : '';
             const notifTitle = isComplete ? 'Blood Donation Completed! 🎉' : 'Donor Accepted Your Request! ❤️';
             const notifBody = isComplete
                 ? `Wonderful news! Donor ${donorName} has accepted and completed the blood donation for ${request.patient_name} at ${request.hospital_name}.${contactMsg} The request is now marked as Completed.`
-                : `Good news! Donor ${donorName} has accepted your blood request for ${request.patient_name} at ${request.hospital_name}.${contactMsg}`;
+                : `Good news! Donor ${donorName} has accepted your blood request for ${request.patient_name} at ${request.hospital_name}.${contactMsg} You can now coordinate live in chat!`;
+
+            const chatLink = conversationId
+                ? `chat.html?conversation_id=${conversationId}&request_id=${requestId}&tab=donors`
+                : 'nearby-request.html';
 
             await client
                 .from('notifications')
@@ -358,15 +420,19 @@ exports.acceptRequest = async (req, res) => {
                     type: isComplete ? 'system' : 'response',
                     title: notifTitle,
                     body: notifBody,
-                    link: 'nearby-request.html'
+                    link: chatLink
                 }]);
         }
 
-        // 7. Send Confirmation Notification to the DONOR:
+        // 8. Send Confirmation Notification to the DONOR:
         const donorNotifTitle = isComplete ? 'Blood Donation Successful! 🏆' : `Donation Pledge Saved: ${request.patient_name} 🩸`;
         const donorNotifBody = isComplete
             ? `Thank you, ${donorName}! Your blood donation for patient ${request.patient_name} at ${request.hospital_name} has been completed and recorded in your Donation History.`
-            : `You accepted to donate for ${request.patient_name} at ${request.hospital_name}, ${request.city}. You can view and manage this pledge in Donation History.`;
+            : `You accepted to donate for ${request.patient_name} at ${request.hospital_name}, ${request.city}. Live chat with requester is now active!`;
+
+        const donorChatLink = conversationId
+            ? `chat.html?conversation_id=${conversationId}&request_id=${requestId}&tab=requesters`
+            : 'donation-history.html';
 
         await client
             .from('notifications')
@@ -375,15 +441,16 @@ exports.acceptRequest = async (req, res) => {
                 type: isComplete ? 'badge_earned' : 'response',
                 title: donorNotifTitle,
                 body: donorNotifBody,
-                link: 'donation-history.html'
+                link: donorChatLink
             }]);
 
         res.status(200).json({
             success: true,
             message: isComplete
                 ? 'Blood request completed successfully! Donor history and requester notified.'
-                : 'Blood request accepted successfully! Donation pledge saved and requester notified.',
-            data: responseData
+                : 'Blood request accepted successfully! Live coordination chat is now active.',
+            data: responseData,
+            conversation_id: conversationId
         });
 
     } catch (error) {
@@ -484,6 +551,32 @@ exports.completeDonation = async (req, res) => {
                         link: 'nearby-request.html'
                     }]);
             }
+        }
+
+        // 6. Post system conclusion message in live chat and mark conversation concluded
+        try {
+            const { data: conv } = await client
+                .from('conversations')
+                .select('id')
+                .eq('request_id', requestId)
+                .maybeSingle();
+
+            if (conv?.id) {
+                const conclusionMsg = `🎉 Blood donation successfully completed for patient ${request.patient_name} at ${request.hospital_name}! Thank you for saving a life. This coordination chat has now been concluded and is read-only.`;
+
+                await client.from('chat_messages').insert([{
+                    conversation_id: conv.id,
+                    sender_id: effectiveDonorId || request.requester_id,
+                    message: conclusionMsg
+                }]);
+
+                await client.from('conversations').update({
+                    last_message_text: `🔒 Donation Completed • Coordination concluded.`,
+                    last_message_at: new Date().toISOString()
+                }).eq('id', conv.id);
+            }
+        } catch (convErr) {
+            console.warn('Live chat conclusion note on completion:', convErr.message);
         }
 
         res.status(200).json({

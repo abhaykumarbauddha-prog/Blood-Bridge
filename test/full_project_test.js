@@ -36,6 +36,7 @@ const jsFiles = [
     'frontend/js/dashboard.js',
     'frontend/js/hospital-dashboard.js',
     'frontend/js/admin-dashboard.js',
+    'frontend/js/admin-management.js',
     'frontend/js/requests.js',
     'frontend/js/nearby-requests.js',
     'frontend/js/find-donors.js',
@@ -97,6 +98,8 @@ const expectedMigrations = [
     '20261011_phase6_hospital_inventory.sql',
     '20261011_phase7_remaining_pages.sql',
     '20261011_phase8_completion_fixes.sql'
+    , '20261026_admin_dashboard_security.sql'
+    , '20261026_admin_management.sql'
 ];
 
 expectedMigrations.forEach(migration => {
@@ -114,11 +117,11 @@ const endpoints = [
     '/',
     '/index.html',
     '/auth.html',
-    '/auth-simple.html',
     '/reset-password.html',
     '/dashboard.html',
     '/hospital-dashboard.html',
     '/admin-dashboard.html',
+    '/admin-management.html?section=users',
     '/blood-request.html',
     '/nearby-request.html',
     '/find-donors.html',
@@ -129,8 +132,11 @@ const endpoints = [
     '/help-support.html',
     '/terms.html',
     '/privacy.html',
+    '/chat.html',
+    '/smart-match.html',
     '/api/donors',
     '/api/requests',
+    '/api/hospitals',
     '/api/hospitals/stats'
 ];
 
@@ -185,6 +191,9 @@ function testHttpEndpoint(urlPath) {
     // ----------------------------------------------------
     console.log('\n6. Backend Unit & Validation Checks:');
     const requestController = require('../backend/controllers/requestController');
+    const chatController = require('../backend/controllers/chatController');
+    const hospitalController = require('../backend/controllers/hospitalController');
+
     function mockResponse() {
         return {
             statusCode: 200,
@@ -201,6 +210,26 @@ function testHttpEndpoint(urlPath) {
     const res2 = mockResponse();
     await requestController.updateRequestStatus({ params: { id: 'test' }, body: { status: 'invalid_status' } }, res2);
     assertTest('requestController.updateRequestStatus rejects invalid status with 400', res2.statusCode === 400);
+
+    const res3 = mockResponse();
+    await chatController.getConversations({ query: {} }, res3);
+    assertTest('chatController.getConversations rejects missing user_id with 400', res3.statusCode === 400);
+
+    const res4 = mockResponse();
+    await chatController.createConversation({ body: { participant_1: 'user-a' } }, res4);
+    assertTest('chatController.createConversation rejects incomplete participants with 400', res4.statusCode === 400);
+
+    const res5 = mockResponse();
+    await chatController.createConversation({ body: { participant_1: 'user-a', participant_2: 'user-a' } }, res5);
+    assertTest('chatController.createConversation rejects self-conversation with 400', res5.statusCode === 400);
+
+    const res6 = mockResponse();
+    await chatController.sendMessage({ body: {} }, res6);
+    assertTest('chatController.sendMessage rejects empty message payload with 400', res6.statusCode === 400);
+
+    const res7 = mockResponse();
+    await hospitalController.updateHospitalType({ body: {} }, res7);
+    assertTest('hospitalController.updateHospitalType rejects empty payload with 400', res7.statusCode === 400);
 
     console.log('\n====================================================');
     console.log(`TOTAL TESTS: ${totalTests} | PASSED: ${passedTests} | FAILED: ${failedTests}`);

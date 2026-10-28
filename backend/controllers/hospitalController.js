@@ -8,6 +8,7 @@ const FALLBACK_HOSPITALS = [
         phone: '+91 522 678 1000',
         city: 'Lucknow',
         state: 'Uttar Pradesh',
+        hospital_type: 'Private',
         avatar_url: null
     },
     {
@@ -16,6 +17,7 @@ const FALLBACK_HOSPITALS = [
         phone: '+91 522 225 7450',
         city: 'Lucknow',
         state: 'Uttar Pradesh',
+        hospital_type: 'Government',
         avatar_url: null
     },
     {
@@ -24,6 +26,7 @@ const FALLBACK_HOSPITALS = [
         phone: '+91 522 450 5050',
         city: 'Lucknow',
         state: 'Uttar Pradesh',
+        hospital_type: 'Private',
         avatar_url: null
     },
     {
@@ -32,6 +35,7 @@ const FALLBACK_HOSPITALS = [
         phone: '+91 11 2658 8500',
         city: 'Delhi',
         state: 'Delhi',
+        hospital_type: 'Government',
         avatar_url: null
     }
 ];
@@ -48,7 +52,7 @@ exports.getHospitals = async (req, res) => {
         const client = supabase.forRequest(req);
         const { data, error } = await client
             .from('users')
-            .select('id, full_name, phone, city, state, avatar_url')
+            .select('id, full_name, phone, city, state, avatar_url, hospital_type')
             .eq('role', 'Hospital')
             .order('full_name');
         if (error || !data || data.length === 0) {
@@ -125,6 +129,61 @@ exports.updateInventory = async (req, res) => {
 
         if (error) throw error;
         res.status(200).json({ success: true, message: 'Inventory updated', data: data });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+};
+
+// Hospital type update karne ke liye
+exports.updateHospitalType = async (req, res) => {
+    try {
+        const client = supabase.forRequest(req);
+        const { hospital_id, hospital_type } = req.body;
+        if (!hospital_id || !hospital_type) {
+            return res.status(400).json({ success: false, error: 'hospital_id and hospital_type are required.' });
+        }
+
+        const { data, error } = await client
+            .from('users')
+            .update({ hospital_type: String(hospital_type).trim() })
+            .eq('id', hospital_id)
+            .select('id, full_name, hospital_type')
+            .maybeSingle();
+
+        if (error) throw error;
+        res.status(200).json({ success: true, message: 'Hospital type updated successfully', data });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+};
+
+// Hospital full profile update karne ke liye
+exports.updateHospitalProfile = async (req, res) => {
+    try {
+        const client = supabase.forRequest(req);
+        const { hospital_id, full_name, phone, city, state, address, website, hospital_type } = req.body;
+        if (!hospital_id) {
+            return res.status(400).json({ success: false, error: 'hospital_id is required.' });
+        }
+
+        const updates = {};
+        if (full_name !== undefined) updates.full_name = String(full_name).trim();
+        if (phone !== undefined) updates.phone = String(phone).trim();
+        if (city !== undefined) updates.city = String(city).trim();
+        if (state !== undefined) updates.state = String(state).trim();
+        if (address !== undefined) updates.address = String(address).trim();
+        if (website !== undefined) updates.website = String(website).trim();
+        if (hospital_type !== undefined) updates.hospital_type = String(hospital_type).trim();
+
+        const { data, error } = await client
+            .from('users')
+            .update(updates)
+            .eq('id', hospital_id)
+            .select('id, full_name, phone, city, state, address, website, hospital_type')
+            .maybeSingle();
+
+        if (error) throw error;
+        res.status(200).json({ success: true, message: 'Hospital profile updated successfully', data });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }

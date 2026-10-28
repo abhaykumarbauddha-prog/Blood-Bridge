@@ -8,7 +8,7 @@ require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const HOST = process.env.HOST || '127.0.0.1';
+const HOST = process.env.HOST || '0.0.0.0';
 const allowedOrigin = process.env.CORS_ORIGIN || `http://${HOST}:${PORT}`;
 
 // Security middleware configured for local development and CDN assets
